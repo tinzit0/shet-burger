@@ -1,0 +1,2 @@
+import { Power } from 'lucide-react';
+export default function StoreSwitch({active,onToggle}){return <div className="store-switch"><div><span>ESTADO DE LA TIENDA</span><strong>{active?'Tienda activa':'Tienda inactiva'}</strong><small>{active?'Los clientes pueden comprar':'Compras deshabilitadas'}</small></div><button className={active?'active':''} onClick={onToggle}><Power/> {active?'ACTIVA':'INACTIVA'}</button></div>}

@@ -1,0 +1,3 @@
+import { ArrowUpRight, Camera } from 'lucide-react';
+import { instagramUrl } from '../data';
+export default function FooterCTA({ onOrder }) { return <><section className="cta"><img src="/assets/logo shet burger.png" alt=""/><p>¿LISTO PARA CAER?</p><h2>MUERDE LA<br/><em>TENTACIÓN.</em></h2><button className="button-primary" type="button" onClick={onOrder}>ORDENAR AHORA <ArrowUpRight/></button></section><footer><a className="brand" href="#top"><img src="/assets/logo shet burger.png" alt="SHET BURGER"/><span>SHET BURGER</span></a><p>Fat smash burgers · Retiro & delivery</p><a href={instagramUrl} target="_blank" rel="noreferrer"><Camera size={16}/>@shetburger</a><small><a href="/admin">ADMIN</a> · © 2026 SHET BURGER</small></footer></>; }

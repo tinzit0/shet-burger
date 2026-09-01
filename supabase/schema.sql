@@ -14,11 +14,19 @@ create table if not exists public.orders (
   created_at timestamptz not null default now()
 );
 
+alter table public.orders add column if not exists receipt_name text;
+alter table public.orders add column if not exists receipt_path text;
+
 alter table public.orders enable row level security;
+drop policy if exists "public can create orders" on public.orders;
+drop policy if exists "public can read orders by number" on public.orders;
+drop policy if exists "public can update orders" on public.orders;
 create policy "public can create orders" on public.orders for insert to anon with check (true);
 create policy "public can read orders by number" on public.orders for select to anon using (true);
 create policy "public can update orders" on public.orders for update to anon using (true) with check (true);
 
 insert into storage.buckets (id, name, public) values ('order-receipts', 'order-receipts', false) on conflict (id) do nothing;
+drop policy if exists "public can upload receipts" on storage.objects;
+drop policy if exists "public can read receipts" on storage.objects;
 create policy "public can upload receipts" on storage.objects for insert to anon with check (bucket_id = 'order-receipts');
 create policy "public can read receipts" on storage.objects for select to anon using (bucket_id = 'order-receipts');

@@ -4,7 +4,6 @@ import { instagramUrl } from '../data';
 export default function Hero({ onOrder }) {
   return <section className="hero-premium hero-premium--centered" id="top">
     <div className="hero-premium__grain"/><div className="hero-premium__glow"/>
-    <div className="hero-centered__mark"><img src="/assets/logo shet burger.png" alt="SHET BURGER"/><span>SHET BURGER</span></div>
     <div className="hero-centered__copy">
       <p className="hero-premium__eyebrow">SMASH BURGERS · CONCEPCIÓN</p>
       <h1>EL SABOR<br/><em>SE ARMA</em><br/>CAPA A CAPA.</h1>

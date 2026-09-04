@@ -65,6 +65,14 @@ export async function loadCustomerOrders(userId) {
   return { data: data?.map(normalizeOrder) || [], error };
 }
 
+export async function storedOrderExists(order) {
+  if (!supabase || !order?.order_number) return true;
+  const { data, error } = await supabase.from('orders').select('id').eq('order_number', order.order_number).maybeSingle();
+  // Si las políticas no permiten consultar pedidos invitados, no retiramos
+  // el pedido local por error de permisos.
+  return error ? true : Boolean(data);
+}
+
 export async function updateStoredOrder(id, status, stage) {
   if (!supabase) return { error: new Error('Supabase no configurado') };
   return supabase.from('orders').update({ status, stage }).eq('id', id).select().single();

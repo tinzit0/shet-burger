@@ -25,7 +25,7 @@ export default function App(){
  useEffect(()=>{localStorage.setItem('shet-demo-stock',JSON.stringify(stock))},[stock]);
  useEffect(()=>{localStorage.setItem('shet-store-open',String(storeOpen))},[storeOpen]);
  useEffect(()=>{
-  if(!supabase)return;
+  if(!supabase||window.location.pathname.startsWith('/admin'))return;
   supabase.auth.getSession().then(({data})=>{setUser(data.session?.user||null);if(data.session&&localStorage.getItem('shet-open-account-after-auth')==='true'){localStorage.removeItem('shet-open-account-after-auth');setAccountOpen(true)}});
   const{data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user||null));
   return()=>subscription.unsubscribe();

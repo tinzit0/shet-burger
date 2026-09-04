@@ -76,3 +76,6 @@
 /* El switch pertenece al panel autenticado, nunca a la pantalla de login. */
 .admin-login + .store-switch{display:none}.admin-shell + .store-switch{top:94px;right:5vw;bottom:auto}
 @media(max-width:600px){.store-switch{right:15px;left:15px;bottom:15px;justify-content:space-between;padding:13px}.admin-shell + .store-switch{top:86px;bottom:auto;left:auto;right:15px}.store-switch strong{font-size:14px}.store-closed-banner{margin:-45px 0 30px;font-size:8px}.store-closed-banner span{display:block;margin:5px 0 0}}
+/* Estado de tienda integrado en un lugar estable dentro del panel. */
+.admin-content>.store-switch{position:static;width:100%;margin:0 0 22px;justify-content:space-between;border:1px solid #ffffff17;box-shadow:none}
+@media(max-width:600px){.admin-content>.store-switch{position:static;inset:auto;width:100%;margin-bottom:18px;padding:14px 15px}}

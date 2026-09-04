@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { Check, Clock3, LogOut, PackageCheck, ShoppingBag, Truck, X } from 'lucide-react';
+import { getOrderStage } from '../lib/orderStatus';
 
 const money = value => `$${Number(value || 0).toLocaleString('es-CL')}`;
 const stages = [
@@ -8,13 +10,12 @@ const stages = [
   ['Listo para servir', PackageCheck],
   ['Pedido entregado', Check],
 ];
-const getOrderStage = order => Number({ 'Pedido recibido': 0, 'En preparación': 1, 'Listo para servir': 2, 'Pedido entregado': 3 }[order.status] ?? order.stage ?? 0);
-
 export default function CustomerAccount({ user, orders, loading, onClose, onSignOut }) {
   const [filter,setFilter]=useState('all');
   const name = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Cliente';
   const avatar = user?.user_metadata?.avatar_url;
   const filteredOrders = orders.filter(order => filter==='all' || (filter==='active' ? getOrderStage(order)<3 : getOrderStage(order)>=3));
+  useEffect(()=>{document.body.style.overflow='hidden';const escape=event=>{if(event.key==='Escape')onClose()};window.addEventListener('keydown',escape);return()=>{document.body.style.overflow='';window.removeEventListener('keydown',escape)}},[onClose]);
 
   return <div className="account-overlay">
     <button className="account-backdrop" type="button" onClick={onClose} aria-label="Cerrar cuenta"/>

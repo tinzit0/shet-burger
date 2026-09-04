@@ -1,18 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL || 'https://kxldsjodgfonrrlwjbws.supabase.co';
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_J5s_2YqtASIYSqu2k00SGA_copdr39x';
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export const supabase = url && key ? createClient(url, key) : null;
-export const adminSupabase = url && key ? createClient(url, key, { auth: { storageKey: 'shet-admin-anonymous-client', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }) : null;
 export const supabaseConfigured = Boolean(supabase);
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(redirectPath = '/') {
   if (!supabase) return { error: new Error('Supabase no configurado') };
   return supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin },
+    options: { redirectTo: new URL(redirectPath, window.location.origin).toString() },
   });
+}
+
+export async function isCurrentUserAdmin() {
+  if (!supabase) return false;
+  const { data, error } = await supabase.rpc('is_admin');
+  return !error && data === true;
 }
 
 export async function signOutCustomer() {

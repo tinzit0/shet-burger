@@ -1,10 +1,11 @@
-import { adminSupabase, supabase } from './supabase';
+import { supabase } from './supabase';
+import { getOrderStage } from './orderStatus';
 
 export const normalizeOrder = order => ({
   ...order,
   id: order.id || order.order_number,
   mode: order.fulfillment || order.mode,
-  stage: Number(order.stage ?? ({ 'En preparación': 1, 'Listo para servir': 2, 'Pedido entregado': 3 }[order.status] || 0)),
+  stage: getOrderStage(order),
   customer: order.customer || {
     name: order.customer_name || '',
     phone: order.customer_phone || '',
@@ -17,23 +18,42 @@ export async function saveOrder(order, receiptFile) {
   const { receipt_preview, ...databaseOrder } = order;
   let receiptPath = null;
   if (receiptFile) {
-    receiptPath = `${order.order_number}/${Date.now()}-${receiptFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const ownerFolder = order.user_id || 'guest';
+    receiptPath = `${ownerFolder}/${order.order_number}/${Date.now()}-${receiptFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const upload = await supabase.storage.from('order-receipts').upload(receiptPath, receiptFile, { upsert: false });
     if (upload.error) return { data: null, error: upload.error };
   }
-  const { data, error } = await supabase.from('orders').insert({ ...databaseOrder, receipt_path: receiptPath }).select().single();
+  const payload = { ...databaseOrder, receipt_path: receiptPath };
+  const { data, error } = await supabase.rpc('place_order', {
+    p_order_number: databaseOrder.order_number,
+    p_customer_name: databaseOrder.customer_name,
+    p_customer_phone: databaseOrder.customer_phone,
+    p_fulfillment: databaseOrder.fulfillment,
+    p_address: databaseOrder.address || '',
+    p_items: databaseOrder.items,
+    p_receipt_name: databaseOrder.receipt_name,
+    p_receipt_path: receiptPath,
+  }).single();
+  if (error && /place_order|function.*exist/i.test(error.message || '')) {
+    if (!order.user_id) {
+      const { error: insertError } = await supabase.from('orders').insert(payload);
+      return { data: insertError ? null : { ...payload, id: order.order_number }, error: insertError };
+    }
+    const fallback = await supabase.from('orders').insert(payload).select().single();
+    return fallback;
+  }
   return { data, error };
 }
 
 export async function getReceiptUrl(path) {
-  if (!adminSupabase || !path) return null;
-  const { data } = await adminSupabase.storage.from('order-receipts').createSignedUrl(path, 3600);
+  if (!supabase || !path) return null;
+  const { data } = await supabase.storage.from('order-receipts').createSignedUrl(path, 3600);
   return data?.signedUrl || null;
 }
 
 export async function loadOrders() {
-  if (!adminSupabase) return { data: null, error: new Error('Supabase no configurado') };
-  const { data, error } = await adminSupabase.from('orders').select('*').order('created_at', { ascending: false });
+  if (!supabase) return { data: null, error: new Error('Supabase no configurado') };
+  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
   return { data: data?.map(normalizeOrder) || [], error };
 }
 
@@ -44,20 +64,27 @@ export async function loadCustomerOrders(userId) {
 }
 
 export async function updateStoredOrder(id, status, stage) {
-  if (!adminSupabase) return { error: new Error('Supabase no configurado') };
-  return adminSupabase.from('orders').update({ status, stage }).eq('id', id);
+  if (!supabase) return { error: new Error('Supabase no configurado') };
+  return supabase.from('orders').update({ status, stage }).eq('id', id).select().single();
 }
 
 export async function deleteStoredOrder(id) {
-  if (!adminSupabase) return { error: new Error('Supabase no configurado') };
-  return adminSupabase.from('orders').delete().eq('id', id);
+  if (!supabase) return { error: new Error('Supabase no configurado') };
+  const { data: order, error: readError } = await supabase.from('orders').select('receipt_path').eq('id', id).single();
+  if (readError) return { error: readError };
+  if (order?.receipt_path) {
+    const { error: storageError } = await supabase.storage.from('order-receipts').remove([order.receipt_path]);
+    if (storageError) return { error: storageError };
+  }
+  return supabase.from('orders').delete().eq('id', id);
 }
 
 export function subscribeToOrders(onChange) {
-  if (!adminSupabase) return () => {};
-  const channel = adminSupabase
-    .channel('shared-admin-orders')
+  if (!supabase) return () => {};
+  const channelName = `shared-orders-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const channel = supabase
+    .channel(channelName)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, onChange)
     .subscribe();
-  return () => { adminSupabase.removeChannel(channel); };
+  return () => { void supabase.removeChannel(channel); };
 }

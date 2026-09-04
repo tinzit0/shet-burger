@@ -45,7 +45,7 @@ export async function loadCustomerOrders(userId) {
 
 export async function updateStoredOrder(id, status, stage) {
   if (!adminSupabase) return { error: new Error('Supabase no configurado') };
-  return adminSupabase.from('orders').update({ status }).eq('id', id);
+  return adminSupabase.from('orders').update({ status, stage }).eq('id', id);
 }
 
 export async function deleteStoredOrder(id) {

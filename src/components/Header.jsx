@@ -29,6 +29,7 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack }) 
       <a href="#menu" onClick={close}>Menú</a>
       <a href="#ingredientes" onClick={close}>Nosotros</a>
       <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={close}>Contacto</a>
+      <a className="brand-header__mobile-admin" href="/admin" onClick={close}>Panel admin</a>
       <a className="brand-header__mobile-order" href={instagramUrl} target="_blank" rel="noreferrer" onClick={close}>Ordenar ahora <ArrowUpRight /></a>
     </nav>
     <div className="brand-header__utilities">{latestOrder && <button className="brand-header__track" type="button" onClick={onTrack}>VER COMPRA</button>}<a className="brand-header__admin" href="/admin">PANEL ADMIN</a><button className="brand-header__order" type="button" onClick={onCart}>PEDIDO <ShoppingBag size={15}/>{cartCount > 0 && <b>{cartCount}</b>}</button></div>

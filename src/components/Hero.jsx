@@ -1,8 +1,10 @@
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import { instagramUrl } from '../data';
+import miradaVideo from '../../assets/mirada.mp4';
 
 export default function Hero({ onOrder }) {
-  return <section className="hero-premium hero-premium--centered" id="top">
+  return <section className="hero-premium hero-premium--centered hero-premium--video" id="top">
+    <video className="hero-premium__video" autoPlay muted loop playsInline preload="metadata" poster="/assets/hero.png" aria-hidden="true"><source src={miradaVideo} type="video/mp4"/></video>
     <div className="hero-premium__grain"/><div className="hero-premium__glow"/>
     <div className="hero-centered__copy">
       <p className="hero-premium__eyebrow">SMASH BURGERS · CONCEPCIÓN</p>

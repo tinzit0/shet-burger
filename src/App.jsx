@@ -11,14 +11,15 @@ import AdminPanel from './components/AdminPanel';
 import AdminAnalytics from './components/AdminAnalytics';
 import OrderTracker from './components/OrderTracker';
 import CustomerAccount from './components/CustomerAccount';
+import CustomerAuth from './components/CustomerAuth';
 import { products } from './data';
 import { deleteStoredOrder, loadCustomerOrders, loadOrders, normalizeOrder, saveOrder, subscribeToOrders, updateStoredOrder } from './lib/orders';
-import { signInWithGoogle, signOutCustomer, supabase } from './lib/supabase';
+import { signOutCustomer, supabase } from './lib/supabase';
 
 const fileData=file=>new Promise(resolve=>{if(!file)return resolve(null);const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(file)});
 
 export default function App(){
- const[cart,setCart]=useState([]),[open,setOpen]=useState(false),[trackOpen,setTrackOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[user,setUser]=useState(null),[customerOrders,setCustomerOrders]=useState([]),[customerLoading,setCustomerLoading]=useState(false),[storeOpen,setStoreOpen]=useState(()=>localStorage.getItem('shet-store-open')!=='false'),[orders,setOrders]=useState(()=>JSON.parse(localStorage.getItem('shet-demo-orders')||'[]')),[stock,setStock]=useState(()=>{const base=Object.fromEntries(products.map(product=>[product.id,true]));return {...base,...JSON.parse(localStorage.getItem('shet-demo-stock')||'{}')}});
+ const[cart,setCart]=useState([]),[open,setOpen]=useState(false),[trackOpen,setTrackOpen]=useState(false),[authOpen,setAuthOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[user,setUser]=useState(null),[customerOrders,setCustomerOrders]=useState([]),[customerLoading,setCustomerLoading]=useState(false),[storeOpen,setStoreOpen]=useState(()=>localStorage.getItem('shet-store-open')!=='false'),[orders,setOrders]=useState(()=>JSON.parse(localStorage.getItem('shet-demo-orders')||'[]')),[stock,setStock]=useState(()=>{const base=Object.fromEntries(products.map(product=>[product.id,true]));return {...base,...JSON.parse(localStorage.getItem('shet-demo-stock')||'{}')}});
  const latestOrder=(user?customerOrders[0]:null)||orders[0]||null;
  useEffect(()=>{localStorage.setItem('shet-demo-orders',JSON.stringify(orders))},[orders]);
  useEffect(()=>{localStorage.setItem('shet-demo-stock',JSON.stringify(stock))},[stock]);
@@ -50,7 +51,7 @@ export default function App(){
  },[]);
  const statusUpdate=async(id,status,stage)=>{setOrders(items=>items.map(order=>order.id===id?{...order,status,stage}:order));await updateStoredOrder(id,status,stage)};
  const deleteOrder=async id=>{setOrders(items=>items.filter(order=>order.id!==id));await deleteStoredOrder(id)};
- const openAccount=async()=>{if(user){setAccountOpen(true);return}localStorage.setItem('shet-open-account-after-auth','true');const{error}=await signInWithGoogle();if(error){localStorage.removeItem('shet-open-account-after-auth');alert(`No se pudo ingresar con Google: ${error.message}`)}};
+ const openAccount=()=>{if(user){setAccountOpen(true);return}setAuthOpen(true)};
  const closeCustomerSession=async()=>{await signOutCustomer();setAccountOpen(false);setCustomerOrders([])};
  if(window.location.pathname==='/admin/analytics')return <AdminAnalytics orders={orders}/>;
  if(window.location.pathname==='/admin')return <AdminPanel products={products} stock={stock} onToggleStock={id=>setStock(items=>({...items,[id]:!items[id]}))} orders={orders} onUpdateOrder={statusUpdate} onDeleteOrder={deleteOrder} storeOpen={storeOpen} onToggleStore={()=>setStoreOpen(value=>!value)}/>;
@@ -66,5 +67,5 @@ export default function App(){
   setCart([]);
  };
  const count=cart.reduce((sum,item)=>sum+item.quantity,0);
- return <><Header cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><main><Hero onOrder={()=>setOpen(true)}/><BurgerStory/><Campaign/><MenuSection onAdd={add} stock={stock} storeOpen={storeOpen}/><Ingredients/><FooterCTA onOrder={()=>setOpen(true)}/></main>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</>;
+ return <><Header cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><main><Hero onOrder={()=>setOpen(true)}/><BurgerStory/><Campaign/><MenuSection onAdd={add} stock={stock} storeOpen={storeOpen}/><Ingredients/><FooterCTA onOrder={()=>setOpen(true)}/></main>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)} onAuthenticated={()=>{setAuthOpen(false);setAccountOpen(true)}}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</>;
 }

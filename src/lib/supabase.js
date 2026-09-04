@@ -19,3 +19,20 @@ export async function signOutCustomer() {
   if (!supabase) return;
   return supabase.auth.signOut();
 }
+
+export async function signInWithEmail(email, password) {
+  if (!supabase) return { error: new Error('Supabase no configurado') };
+  return supabase.auth.signInWithPassword({ email, password });
+}
+
+export async function signUpWithEmail(email, password, name) {
+  if (!supabase) return { error: new Error('Supabase no configurado') };
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: name },
+      emailRedirectTo: window.location.origin,
+    },
+  });
+}

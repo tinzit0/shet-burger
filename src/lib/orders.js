@@ -73,6 +73,12 @@ export async function storedOrderExists(order) {
   return error ? true : Boolean(data);
 }
 
+export async function loadPublicOrder(orderNumber) {
+  if (!supabase || !orderNumber) return { data: null, error: null };
+  const result = await supabase.from('orders').select('*').eq('order_number', orderNumber).maybeSingle();
+  return { data: result.data ? normalizeOrder(result.data) : null, error: result.error };
+}
+
 export async function updateStoredOrder(id, status, stage) {
   if (!supabase) return { error: new Error('Supabase no configurado') };
   const key = /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id)) ? 'id' : 'order_number';

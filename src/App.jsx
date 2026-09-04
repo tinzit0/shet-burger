@@ -13,7 +13,7 @@ import OrderTracker from './components/OrderTracker';
 import CustomerAccount from './components/CustomerAccount';
 import CustomerAuth from './components/CustomerAuth';
 import { products } from './data';
-import { deleteStoredOrder, loadCustomerOrders, loadOrders, normalizeOrder, saveOrder, storedOrderExists, subscribeToOrders, updateStoredOrder } from './lib/orders';
+import { deleteStoredOrder, loadCustomerOrders, loadOrders, loadPublicOrder, normalizeOrder, saveOrder, subscribeToOrders, updateStoredOrder } from './lib/orders';
 import { isCurrentUserAdmin, signInWithGoogle, signOutCustomer, supabase } from './lib/supabase';
 import { loadStoreState, subscribeToStore, updateProductAvailability, updateStoreOpen } from './lib/store';
 
@@ -55,10 +55,10 @@ export default function App(){
  useEffect(()=>{
   if(user||window.location.pathname.startsWith('/admin')||!latestOrder)return;
   let active=true;
-  const verify=async()=>{const exists=await storedOrderExists(latestOrder);if(active&&!exists){setOrders(items=>items.filter(order=>order.id!==latestOrder.id&&order.order_number!==latestOrder.order_number));setTrackOpen(false)}};
-  verify();const timer=window.setInterval(verify,8000);
+  const verify=async()=>{const result=await loadPublicOrder(latestOrder.order_number);if(!active||result.error)return;if(!result.data){setOrders(items=>items.filter(order=>order.id!==latestOrder.id&&order.order_number!==latestOrder.order_number));setTrackOpen(false);return}setOrders(items=>items.map(order=>order.order_number===latestOrder.order_number?result.data:order))};
+  verify();const timer=window.setInterval(verify,trackOpen?3000:8000);
   return()=>{active=false;window.clearInterval(timer)};
- },[user,latestOrder?.id,latestOrder?.order_number]);
+ },[user,latestOrder?.id,latestOrder?.order_number,trackOpen]);
  useEffect(()=>{
   if(!window.location.pathname.startsWith('/admin')||(!adminAllowed&&!demoAdmin))return;
   let active=true;

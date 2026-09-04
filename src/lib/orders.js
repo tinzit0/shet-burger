@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { adminSupabase, supabase } from './supabase';
 
 export const normalizeOrder = order => ({
   ...order,
@@ -26,32 +26,38 @@ export async function saveOrder(order, receiptFile) {
 }
 
 export async function getReceiptUrl(path) {
-  if (!supabase || !path) return null;
-  const { data } = await supabase.storage.from('order-receipts').createSignedUrl(path, 3600);
+  if (!adminSupabase || !path) return null;
+  const { data } = await adminSupabase.storage.from('order-receipts').createSignedUrl(path, 3600);
   return data?.signedUrl || null;
 }
 
 export async function loadOrders() {
-  if (!supabase) return { data: null, error: new Error('Supabase no configurado') };
-  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+  if (!adminSupabase) return { data: null, error: new Error('Supabase no configurado') };
+  const { data, error } = await adminSupabase.from('orders').select('*').order('created_at', { ascending: false });
+  return { data: data?.map(normalizeOrder) || [], error };
+}
+
+export async function loadCustomerOrders(userId) {
+  if (!supabase || !userId) return { data: [], error: null };
+  const { data, error } = await supabase.from('orders').select('*').eq('user_id', userId).order('created_at', { ascending: false });
   return { data: data?.map(normalizeOrder) || [], error };
 }
 
 export async function updateStoredOrder(id, status, stage) {
-  if (!supabase) return { error: new Error('Supabase no configurado') };
-  return supabase.from('orders').update({ status }).eq('id', id);
+  if (!adminSupabase) return { error: new Error('Supabase no configurado') };
+  return adminSupabase.from('orders').update({ status }).eq('id', id);
 }
 
 export async function deleteStoredOrder(id) {
-  if (!supabase) return { error: new Error('Supabase no configurado') };
-  return supabase.from('orders').delete().eq('id', id);
+  if (!adminSupabase) return { error: new Error('Supabase no configurado') };
+  return adminSupabase.from('orders').delete().eq('id', id);
 }
 
 export function subscribeToOrders(onChange) {
-  if (!supabase) return () => {};
-  const channel = supabase
+  if (!adminSupabase) return () => {};
+  const channel = adminSupabase
     .channel('shared-admin-orders')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, onChange)
     .subscribe();
-  return () => { supabase.removeChannel(channel); };
+  return () => { adminSupabase.removeChannel(channel); };
 }

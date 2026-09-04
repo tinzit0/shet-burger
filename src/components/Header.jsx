@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ArrowUpRight, Menu, ShoppingBag, X } from 'lucide-react';
+import { ArrowUpRight, Menu, ShoppingBag, UserRound, X } from 'lucide-react';
 import { instagramUrl } from '../data';
 
-export default function Header({ cartCount = 0, onCart, latestOrder, onTrack }) {
+export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, user, onAccount }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -29,10 +29,11 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack }) 
       <a href="#menu" onClick={close}>Menú</a>
       <a href="#ingredientes" onClick={close}>Nosotros</a>
       <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={close}>Contacto</a>
+      <button className="brand-header__mobile-account" type="button" onClick={()=>{close();onAccount()}}><UserRound/> {user ? 'Mis pedidos' : 'Ingresar con Google'}</button>
       <a className="brand-header__mobile-admin" href="/admin" onClick={close}>Panel admin</a>
       <a className="brand-header__mobile-order" href={instagramUrl} target="_blank" rel="noreferrer" onClick={close}>Ordenar ahora <ArrowUpRight /></a>
     </nav>
-    <div className="brand-header__utilities">{latestOrder && <button className="brand-header__track" type="button" onClick={onTrack}>VER COMPRA</button>}<a className="brand-header__admin" href="/admin">PANEL ADMIN</a><button className="brand-header__order" type="button" onClick={onCart}>PEDIDO <ShoppingBag size={15}/>{cartCount > 0 && <b>{cartCount}</b>}</button></div>
+    <div className="brand-header__utilities"><button className="brand-header__account" type="button" onClick={onAccount}><UserRound/> {user ? 'MIS PEDIDOS' : 'INGRESAR'}</button>{latestOrder && <button className="brand-header__track" type="button" onClick={onTrack}>VER COMPRA</button>}<a className="brand-header__admin" href="/admin">PANEL ADMIN</a><button className="brand-header__order" type="button" onClick={onCart}>PEDIDO <ShoppingBag size={15}/>{cartCount > 0 && <b>{cartCount}</b>}</button></div>
     <button className="brand-header__toggle" type="button" onClick={() => setOpen(value => !value)} aria-label={open ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={open}><span>{open ? 'CERRAR' : 'MENÚ'}</span>{open ? <X /> : <Menu />}</button>
   </header>;
 }

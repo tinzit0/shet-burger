@@ -12,16 +12,20 @@ Sitio de pedidos construido con React, Vite y Supabase. Incluye catálogo, carri
 ## Configuración inicial de Supabase
 
 1. Ejecuta `supabase/schema.sql` si la tabla de pedidos todavía no existe.
-2. Inicia sesión una vez con Google usando la cuenta del dueño.
-3. Revisa el correo indicado al final de `supabase/production-hardening.sql`.
-4. Ejecuta completo `supabase/production-hardening.sql` en SQL Editor.
-5. Confirma con `select * from public.admin_users;` que el administrador fue creado.
+2. Ejecuta `supabase/customer-google.sql` para habilitar el historial personal de clientes.
+3. Configura Google OAuth siguiendo la sección correspondiente.
+4. Inicia sesión una vez con Google usando la cuenta del dueño.
+5. Revisa el correo indicado al final de `supabase/production-hardening.sql`.
+6. Para producción, ejecuta completo `supabase/production-hardening.sql` en SQL Editor.
+7. Confirma con `select * from public.admin_users;` que el administrador fue creado.
 
 La migración elimina el acceso administrativo anónimo, protege los comprobantes y crea la configuración compartida de tienda y disponibilidad. El acceso demo del boceto no debe usarse junto a esa migración en producción: la migración está diseñada para el administrador autenticado con Google. Si la consulta no devuelve filas, vuelve a iniciar sesión con Google y ejecuta solamente el `insert into public.admin_users` ubicado al final de la migración.
 
 ## Google OAuth
 
 En Supabase configura la URL pública en **Authentication > URL Configuration > Site URL** y agrega `http://localhost:5173/**` para desarrollo y `https://TU-DOMINIO/**` para producción. En Google Cloud, la URL de callback autorizada es la que muestra Supabase en la configuración del proveedor Google.
+
+Los clientes pueden comprar como invitados, pero solamente los pedidos creados mientras tienen su sesión de Google activa quedan asociados automáticamente a “Mis pedidos” y aparecen en otros dispositivos al iniciar sesión con la misma cuenta.
 
 ## Variables necesarias
 

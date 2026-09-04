@@ -24,28 +24,22 @@ create index if not exists orders_user_id_created_at_idx on public.orders (user_
 
 alter table public.orders enable row level security;
 drop policy if exists "public can create orders" on public.orders;
+drop policy if exists "public can create guest orders" on public.orders;
 drop policy if exists "public can read orders by number" on public.orders;
 drop policy if exists "public can update orders" on public.orders;
 drop policy if exists "public can delete orders" on public.orders;
 drop policy if exists "authenticated can create own orders" on public.orders;
 drop policy if exists "authenticated can read orders" on public.orders;
+drop policy if exists "authenticated can read own orders" on public.orders;
 drop policy if exists "authenticated can update orders" on public.orders;
 drop policy if exists "authenticated can delete orders" on public.orders;
-create policy "public can create guest orders" on public.orders for insert to anon with check (user_id is null and customer_phone ~ '^\\+569[0-9]{8}$' and total > 0);
+create policy "public can create guest orders" on public.orders for insert to anon with check (user_id is null and customer_phone ~ '^[+]569[0-9]{8}$' and total > 0);
 -- La lectura, actualización y eliminación quedan restringidas a usuarios autenticados
 -- y administradores. production-hardening.sql completa las políticas de administrador.
-create policy "authenticated can create own orders" on public.orders for insert to authenticated with check ((select auth.uid()) = user_id and customer_phone ~ '^\\+569[0-9]{8}$' and total > 0);
+create policy "authenticated can create own orders" on public.orders for insert to authenticated with check ((select auth.uid()) = user_id and customer_phone ~ '^[+]569[0-9]{8}$' and total > 0);
 create policy "authenticated can read own orders" on public.orders for select to authenticated using ((select auth.uid()) = user_id);
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'orders'
-  ) then
-    alter publication supabase_realtime add table public.orders;
-  end if;
-end $$;
+-- Realtime se habilita en una consulta separada para evitar bloqueos al repetir este esquema.
 
 insert into storage.buckets (id, name, public) values ('order-receipts', 'order-receipts', false) on conflict (id) do nothing;
 drop policy if exists "public can upload receipts" on storage.objects;

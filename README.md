@@ -38,3 +38,7 @@ Las variables `VITE_*` son visibles en el navegador. Solo se debe utilizar la cl
 ## Despliegue
 
 El hosting debe redirigir `/admin` y `/admin/analytics` hacia `index.html` para permitir recargas directas. Después de desplegar, prueba pedidos, fases, tienda cerrada, disponibilidad, cuenta de cliente y panel administrativo desde teléfono y computador.
+
+## Pedidos entre dispositivos en el boceto
+
+El panel demo consulta los pedidos desde Supabase cada 8 segundos y también escucha Realtime. Todos los dispositivos deben usar el mismo `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. En el proyecto demo, conserva las políticas públicas existentes de lectura de `orders`; la migración de producción las restringe intencionalmente y requiere iniciar sesión con Google como administrador.

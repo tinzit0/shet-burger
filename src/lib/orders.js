@@ -37,7 +37,9 @@ export async function saveOrder(order, receiptFile) {
   if (error && /place_order|function.*exist/i.test(error.message || '')) {
     if (!order.user_id) {
       const { error: insertError } = await supabase.from('orders').insert(payload);
-      return { data: insertError ? null : { ...payload, id: order.order_number }, error: insertError };
+      if (insertError) return { data: null, error: insertError };
+      const remote = await supabase.from('orders').select('*').eq('order_number', order.order_number).single();
+      return { data: remote.data || { ...payload, id: order.order_number }, error: remote.error && remote.error.code !== 'PGRST116' ? remote.error : null };
     }
     const fallback = await supabase.from('orders').insert(payload).select().single();
     return fallback;

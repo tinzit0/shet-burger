@@ -27,6 +27,8 @@ En Supabase configura la URL pública en **Authentication > URL Configuration > 
 
 Los clientes pueden comprar como invitados, pero solamente los pedidos creados mientras tienen su sesión de Google activa quedan asociados automáticamente a “Mis pedidos” y aparecen en otros dispositivos al iniciar sesión con la misma cuenta.
 
+Si el panel sigue usando el acceso demo, ejecuta `supabase/demo-admin.sql` después de `schema.sql`. Esto permite que el panel demo lea y actualice pedidos desde cualquier dispositivo. No uses esta migración en producción: expone los pedidos a usuarios anónimos y debe reemplazarse por `production-hardening.sql` con administrador Google.
+
 ## Variables necesarias
 
 - `VITE_SUPABASE_URL`

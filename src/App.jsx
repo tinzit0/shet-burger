@@ -22,7 +22,7 @@ const readStoredJSON=(key,fallback)=>{try{const value=localStorage.getItem(key);
 
 export default function App(){
  const[cart,setCart]=useState([]),[open,setOpen]=useState(false),[trackOpen,setTrackOpen]=useState(false),[authOpen,setAuthOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[user,setUser]=useState(null),[authReady,setAuthReady]=useState(false),[demoAdmin,setDemoAdmin]=useState(()=>localStorage.getItem('shet-admin-auth')==='true'),[adminAllowed,setAdminAllowed]=useState(null),[customerOrders,setCustomerOrders]=useState([]),[customerLoading,setCustomerLoading]=useState(false),[storeOpen,setStoreOpen]=useState(()=>localStorage.getItem('shet-store-open')!=='false'),[orders,setOrders]=useState(()=>{const saved=readStoredJSON('shet-demo-orders',[]);return Array.isArray(saved)?saved:[]}),[stock,setStock]=useState(()=>{const base=Object.fromEntries(products.map(product=>[product.id,true]));const saved=readStoredJSON('shet-demo-stock',{});return saved&&typeof saved==='object'&&!Array.isArray(saved)?{...base,...saved}:base});
- const latestOrder=(user?customerOrders[0]:null)||orders[0]||null;
+ const latestOrder=user?(customerOrders[0]||null):(orders[0]||null);
  useEffect(()=>{localStorage.setItem('shet-demo-orders',JSON.stringify(orders))},[orders]);
  useEffect(()=>{localStorage.setItem('shet-demo-stock',JSON.stringify(stock))},[stock]);
  useEffect(()=>{localStorage.setItem('shet-store-open',String(storeOpen))},[storeOpen]);

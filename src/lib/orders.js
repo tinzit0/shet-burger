@@ -72,13 +72,21 @@ export async function updateStoredOrder(id, status, stage) {
 
 export async function deleteStoredOrder(id) {
   if (!supabase) return { error: new Error('Supabase no configurado') };
-  const { data: order, error: readError } = await supabase.from('orders').select('receipt_path').eq('id', id).single();
-  if (readError) return { error: readError };
-  if (order?.receipt_path) {
-    const { error: storageError } = await supabase.storage.from('order-receipts').remove([order.receipt_path]);
-    if (storageError) return { error: storageError };
+  const key = /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id)) ? 'id' : 'order_number';
+  const { data: order, error: readError } = await supabase.from('orders').select('receipt_path').eq(key, id).single();
+  if (readError) {
+    // Algunos esquemas demo no permiten leer la fila antes de borrarla.
+    // Intentamos igualmente eliminar el pedido para no dejarlo visible.
+    const deletion = await supabase.from('orders').delete().eq(key, id);
+    return deletion.error ? { error: readError } : deletion;
   }
-  return supabase.from('orders').delete().eq('id', id);
+  if (order?.receipt_path) {
+    // La eliminación del pedido no debe bloquearse si el rol demo no tiene
+    // permiso para borrar archivos del bucket. En producción, el admin sí
+    // podrá limpiarlo mediante la política de Storage correspondiente.
+    await supabase.storage.from('order-receipts').remove([order.receipt_path]);
+  }
+  return supabase.from('orders').delete().eq(key, id);
 }
 
 export function subscribeToOrders(onChange) {

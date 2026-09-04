@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Check, Clock3, LogOut, PackageCheck, ShoppingBag, Truck, X } from 'lucide-react';
 
 const money = value => `$${Number(value || 0).toLocaleString('es-CL')}`;
@@ -9,8 +10,10 @@ const stages = [
 ];
 
 export default function CustomerAccount({ user, orders, loading, onClose, onSignOut }) {
+  const [filter,setFilter]=useState('all');
   const name = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Cliente';
   const avatar = user?.user_metadata?.avatar_url;
+  const filteredOrders = orders.filter(order => filter==='all' || (filter==='active' ? Number(order.stage || 0)<3 : Number(order.stage || 0)>=3));
 
   return <div className="account-overlay">
     <button className="account-backdrop" type="button" onClick={onClose} aria-label="Cerrar cuenta"/>
@@ -21,7 +24,8 @@ export default function CustomerAccount({ user, orders, loading, onClose, onSign
       </header>
       <div className="account-body">
         <div className="account-title"><div><small>HISTORIAL PERSONAL</small><h2>Mis pedidos</h2></div><b>{orders.length}</b></div>
-        {loading ? <div className="account-empty"><Clock3/><p>Cargando tus pedidos…</p></div> : !orders.length ? <div className="account-empty"><ShoppingBag/><h3>Aún no tienes pedidos</h3><p>Los pedidos que hagas con esta cuenta aparecerán aquí.</p></div> : <div className="account-orders">{orders.map(order => {
+        {!!orders.length&&<nav className="account-filters" aria-label="Filtrar pedidos"><button className={filter==='all'?'active':''} type="button" onClick={()=>setFilter('all')}>TODOS <b>{orders.length}</b></button><button className={filter==='active'?'active':''} type="button" onClick={()=>setFilter('active')}>EN CURSO <b>{orders.filter(order=>Number(order.stage||0)<3).length}</b></button><button className={filter==='past'?'active':''} type="button" onClick={()=>setFilter('past')}>ANTERIORES <b>{orders.filter(order=>Number(order.stage||0)>=3).length}</b></button></nav>}
+        {loading ? <div className="account-empty"><Clock3/><p>Cargando tus pedidos…</p></div> : !orders.length ? <div className="account-empty"><ShoppingBag/><h3>Aún no tienes pedidos</h3><p>Los pedidos que hagas con esta cuenta aparecerán aquí.</p></div> : !filteredOrders.length ? <div className="account-empty account-empty--compact"><PackageCheck/><h3>No hay pedidos aquí</h3><p>Prueba seleccionando otra categoría.</p></div> : <div className="account-orders">{filteredOrders.map(order => {
           const currentStage = Number(order.stage || 0);
           return <article className="account-order" key={order.id}>
             <div className="account-order__top"><div><small>PEDIDO</small><strong>#{order.order_number || order.id}</strong></div><div><b>{money(order.total)}</b><span>{new Date(order.created_at || Date.now()).toLocaleDateString('es-CL')}</span></div></div>

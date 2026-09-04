@@ -75,7 +75,8 @@ export async function storedOrderExists(order) {
 
 export async function updateStoredOrder(id, status, stage) {
   if (!supabase) return { error: new Error('Supabase no configurado') };
-  return supabase.from('orders').update({ status, stage }).eq('id', id).select().single();
+  const key = /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id)) ? 'id' : 'order_number';
+  return supabase.from('orders').update({ status, stage }).eq(key, id);
 }
 
 export async function deleteStoredOrder(id) {

@@ -30,6 +30,7 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, us
       <a href="#ingredientes" onClick={close}>Nosotros</a>
       <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={close}>Contacto</a>
       <button className="brand-header__mobile-account" type="button" onClick={()=>{close();onAccount()}}><UserRound/> {user ? 'Mis pedidos' : 'Ingresar con Google'}</button>
+      {latestOrder&&<button className="brand-header__mobile-track" type="button" onClick={()=>{close();onTrack()}}>Ver compra <ShoppingBag/></button>}
       <a className="brand-header__mobile-admin" href="/admin" onClick={close}>Panel admin</a>
       <a className="brand-header__mobile-order" href={instagramUrl} target="_blank" rel="noreferrer" onClick={close}>Ordenar ahora <ArrowUpRight /></a>
     </nav>

@@ -1,5 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 import scrollPcVideo from '../../assets/scrollpc.mp4';
+import scrollMobileVideo from '../../assets/scrollmovil.mp4';
 import { instagramUrl } from '../data';
 
 function InstagramMark() {
@@ -10,7 +11,8 @@ export default function SocialScroll() {
   return (
     <section className="social-scroll" aria-label="Instagram de SHET BURGER">
       <video className="social-scroll__video" autoPlay muted loop playsInline preload="auto" aria-hidden="true">
-        <source src={scrollPcVideo} type="video/mp4" />
+        <source src={scrollPcVideo} type="video/mp4" media="(min-width: 901px)" />
+        <source src={scrollMobileVideo} type="video/mp4" />
       </video>
       <div className="social-scroll__shade" aria-hidden="true" />
       <div className="social-scroll__content">

@@ -6,6 +6,7 @@ import Campaign from './components/Campaign';
 import MenuSection from './components/MenuSection';
 import Ingredients from './components/Ingredients';
 import FooterCTA from './components/FooterCTA';
+import SocialScroll from './components/SocialScroll';
 import CartDrawer from './components/CartDrawer';
 import AdminPanel from './components/AdminPanel';
 import AdminAnalytics from './components/AdminAnalytics';
@@ -102,5 +103,5 @@ export default function App(){
   setCart([]);
  };
  const count=cart.reduce((sum,item)=>sum+item.quantity,0);
- return <><Header cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><main><Hero onOrder={()=>setOpen(true)}/><BurgerStory/><Campaign/><MenuSection onAdd={add} stock={stock} storeOpen={storeOpen}/><Ingredients/><FooterCTA onOrder={()=>setOpen(true)}/></main>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm} onTrack={()=>setTrackOpen(true)} products={products} stock={stock} onAdd={add}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</>;
+ return <><Header cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><main><Hero onOrder={()=>setOpen(true)}/><BurgerStory/><Campaign/><MenuSection onAdd={add} stock={stock} storeOpen={storeOpen}/><Ingredients/><SocialScroll/><FooterCTA onOrder={()=>setOpen(true)}/></main>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm} onTrack={()=>setTrackOpen(true)} products={products} stock={stock} onAdd={add}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</>;
 }

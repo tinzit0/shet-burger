@@ -46,7 +46,7 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, us
     <nav id="main-navigation" className={`brand-header__nav${open ? ' is-open' : ''}`} aria-label="Navegación principal">
       <a href="/" data-route onClick={close} aria-current={path === '/' ? 'page' : undefined}>INICIO</a>
       <a href="/delivery" data-route onClick={close} aria-current={path === '/delivery' ? 'page' : undefined}>PEDIR</a>
-      {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noreferrer" onClick={close}>NUESTRO LOCAL ↗</a> : <span className="nav-local-pending" aria-disabled="true">NUESTRO LOCAL ↗<small>UBICACIÓN POR CONFIRMAR</small></span>}
+      <a href={directionsUrl} target="_blank" rel="noreferrer" onClick={close}>PUNTO DE RETIRO ↗</a>
       <button className="brand-header__mobile-account" type="button" onClick={()=>{close();onAccount()}}><UserRound/> MIS PEDIDOS</button>
       {latestOrder&&<button className="brand-header__mobile-track" type="button" onClick={()=>{close();onTrack()}}>Ver compra <ShoppingBag/></button>}
       <button className="brand-header__mobile-order" type="button" onClick={()=>{close();onCart()}}>CARRITO ({cartCount}) <ArrowUpRight /></button>

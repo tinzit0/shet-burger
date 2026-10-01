@@ -1,6 +1,6 @@
 # SHET BURGER
 
-La separación **HOME / DELIVERY / NUESTRO LOCAL** está documentada en [HOME-DELIVERY.md](HOME-DELIVERY.md): composición audiovisual, rutas, archivos originales, pruebas y despliegue. El carrito y la integración existente con Supabase se conservan.
+La separación **INICIO / PEDIR / PUNTO DE RETIRO** está documentada en [HOME-DELIVERY.md](HOME-DELIVERY.md): composición audiovisual, rutas, archivos originales, pruebas y despliegue. El carrito y la integración existente con Supabase se conservan.
 
 La actualización visual y el sistema de reseñas están documentados en [EDITORIAL.md](EDITORIAL.md): archivos, variables, migración Supabase, moderación, ubicación pendiente y despliegue en Cloudflare.
 

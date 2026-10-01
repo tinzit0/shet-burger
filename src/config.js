@@ -3,10 +3,10 @@ export const business = {
   bank: import.meta.env.VITE_BANK_NAME || 'Banco Estado',
   account: import.meta.env.VITE_BANK_ACCOUNT || 'Cuenta por configurar',
   rut: import.meta.env.VITE_BUSINESS_RUT || 'RUT por configurar',
-  pickupAddress: import.meta.env.VITE_PICKUP_ADDRESS || 'Retiro coordinado con SHET BURGER',
+  pickupAddress: import.meta.env.VITE_PICKUP_ADDRESS || 'Río Loa 130, Nonguén, Concepción, Chile',
 };
 
-// TODO: insertar coordenadas exactas de Shet Burger. No usar la dirección DEMO.
+// Las coordenadas son opcionales; si faltan, Maps utiliza la dirección de retiro.
 const latitude = Number(import.meta.env.VITE_LOCATION_LAT);
 const longitude = Number(import.meta.env.VITE_LOCATION_LNG);
 export const location = {
@@ -16,4 +16,6 @@ export const location = {
 
 export const directionsUrl = location.configured
   ? `https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`
-  : null;
+  : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(business.pickupAddress)}`;
+
+export const pickupMapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(business.pickupAddress)}&output=embed`;

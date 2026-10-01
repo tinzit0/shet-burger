@@ -14,6 +14,7 @@ import { products } from './data';
 import { deleteStoredOrder, loadCustomerOrders, loadOrders, loadPublicOrder, normalizeOrder, saveOrder, subscribeToOrders, updateStoredOrder } from './lib/orders';
 import { isCurrentUserAdmin, signInWithGoogle, signOutCustomer, supabase } from './lib/supabase';
 import { loadStoreState, subscribeToStore, updateProductAvailability, updateStoreOpen } from './lib/store';
+import { calculateOrderTotal, formatDeliveryAddress, getDeliveryZone } from './lib/delivery';
 
 const fileData=file=>new Promise(resolve=>{if(!file)return resolve(null);const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(file)});
 const readStoredJSON=(key,fallback)=>{try{const value=localStorage.getItem(key);return value?JSON.parse(value):fallback}catch{localStorage.removeItem(key);return fallback}};
@@ -84,15 +85,20 @@ export default function App(){
  const add=(product,variant)=>{if(!storeOpen||stock[product.id]===false)return;const selected={label:variant[0],price:Number(variant[1].replace(/\D/g,''))},key=`${product.id}-${selected.label}`;setCart(items=>{const found=items.find(item=>item.key===key);return found?items.map(item=>item.key===key?{...item,quantity:item.quantity+1}:item):[...items,{key,product,variant:selected,quantity:1}]});setOpen(true)};
  const change=(key,quantity)=>setCart(items=>quantity<=0?items.filter(item=>item.key!==key):items.map(item=>item.key===key?{...item,quantity}:item));
  const confirm=async details=>{
-  if(!storeOpen)throw new Error('La tienda está cerrada en este momento.');
+  if(!storeOpen)throw new Error('Los pedidos están cerrados en este momento.');
   if(cart.some(item=>stock[item.product.id]===false))throw new Error('Uno de los productos ya no está disponible.');
-  if(!details.form.name.trim()||details.form.name.trim().length>80)throw new Error('Revisa el nombre ingresado.');
-  if(!/^\+569\d{8}$/.test(details.form.phone))throw new Error('El teléfono debe tener el formato +569 seguido de 8 números.');
+ if(!details.form.name.trim()||details.form.name.trim().length>80)throw new Error('Revisa el nombre ingresado.');
+ if(!/^\+569\d{8}$/.test(details.form.phone))throw new Error('El teléfono debe tener el formato +569 seguido de 8 números.');
+  const deliveryZone=details.mode==='delivery'?getDeliveryZone(details.form.zone):null;
+  if(details.mode==='delivery'&&!deliveryZone)throw new Error('Selecciona una población disponible para delivery.');
   if(details.mode==='delivery'&&(!details.form.address.trim()||details.form.address.trim().length>180))throw new Error('Ingresa una dirección válida.');
   if(!details.receipt)throw new Error('Debes adjuntar el comprobante.');
   if(details.receipt.size>8*1024*1024)throw new Error('El comprobante no puede superar los 8 MB.');
   if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(details.receipt.type))throw new Error('Usa un comprobante JPG, PNG, WEBP o PDF.');
-  const preview=await fileData(details.receipt),order={order_number:`SHET-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0,4).toUpperCase()}`,user_id:user?.id||null,items:cart.map(item=>({product:item.product,quantity:item.quantity,price:item.variant.price,variant:item.variant.label})),total:details.total,fulfillment:details.mode,customer_name:details.form.name.trim(),customer_phone:details.form.phone,address:details.form.address.trim(),status:'Pedido recibido',stage:0,receipt_name:details.receipt?.name||'',receipt_preview:preview,created_at:new Date().toISOString()};
+  const subtotal=cart.reduce((sum,item)=>sum+item.variant.price*item.quantity,0);
+  const total=calculateOrderTotal(subtotal,details.mode,details.form.zone);
+  const address=details.mode==='delivery'?formatDeliveryAddress(details.form.zone,details.form.address):'';
+  const preview=await fileData(details.receipt),order={order_number:`SHET-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0,4).toUpperCase()}`,user_id:user?.id||null,items:cart.map(item=>({product:item.product,quantity:item.quantity,price:item.variant.price,variant:item.variant.label})),total,fulfillment:details.mode,customer_name:details.form.name.trim(),customer_phone:details.form.phone,address,status:'Pedido recibido',stage:0,receipt_name:details.receipt?.name||'',receipt_preview:preview,created_at:new Date().toISOString()};
   const result=await saveOrder(order,details.receipt);
   if(result.error&&result.error.message!=='Supabase no configurado')throw result.error;
   const saved=result.data?normalizeOrder(result.data):normalizeOrder({...order,id:order.order_number,receipt_path:null});

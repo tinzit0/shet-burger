@@ -1,11 +1,11 @@
-# SHET: HOME / DELIVERY / NUESTRO LOCAL
+# SHET: INICIO / PEDIR / PUNTO DE RETIRO
 
 ## Organización
 
 - `/`: hero original, composición FAT / JUICY / SHET, video de campaña a pantalla amplia, cuatro fotografías en una composición asimétrica, marquee, segundo video sticky, reseñas originales, ubicación compacta y CTA hacia Delivery.
 - `/delivery`: presentación de compra y `MenuSection` original con sus cinco categorías, variantes, precios, disponibilidad y conexión al carrito. Cierre con ubicación e Instagram.
 - `/admin` y `/admin/analytics`: mismos componentes, autorización y operaciones existentes.
-- NUESTRO LOCAL: enlace externo compartido, generado en `src/config.js`. Solo se habilita si ambas coordenadas son números válidos. Utiliza `target="_blank" rel="noreferrer"`.
+- PUNTO DE RETIRO: abre la ruta hacia el carrito SHET en Río Loa 130. Si existen coordenadas válidas usa esas coordenadas; en caso contrario usa la dirección configurada. Utiliza `target="_blank" rel="noreferrer"`.
 
 `src/lib/navigation.js` usa History API y `popstate`, sin instalar un router. Solo intercepta enlaces públicos con `data-route`; conserva abrir en otra pestaña con Ctrl/Cmd. El estado de carrito, usuario, tienda y pedidos permanece en `App`. Los enlaces del admin conservan su navegación original. El carrito vacío puede abrir Delivery desde HOME.
 
@@ -27,6 +27,7 @@ Los originales siguen intactos en `assets/videos shet o fotos/`; **no se moviero
 | foto2.jpg | 1170 × 1560 | 415 KB | — |
 | foto3.jpg | 1170 × 1560 | 101 KB | — |
 | foto4.jpg | 1170 × 1560 | 204 KB | — |
+| foto5.jpg | 1170 × 1559 | 180 KB | — |
 | video1.mp4 | 720 × 1280 | 2,17 MB | 12,56 s |
 | video2.mp4 | 720 × 1280 | 2,31 MB | 8,24 s |
 
@@ -34,9 +35,17 @@ Los videos ya son pequeños: no se recomprimieron. Se optimiza la carga, no su c
 
 Las imágenes usan dimensiones, lazy loading y decoding async. Los reveals, parallax y tilt reutilizan `ScrollReveals`, IntersectionObserver y requestAnimationFrame. El marquee se puede pausar; `prefers-reduced-motion` desactiva movimiento automático. No se agregaron dependencias.
 
+## Delivery y punto de retiro
+
+El checkout solicita primero la población y luego la dirección exacta. Nonguén, Collao, Valle Noble, San Guillermo, Palomares y Km 10 cuestan `$1.000`; Concepción Centro cuesta `$3.000`. El total de transferencia, seguimiento y panel administrativo incluyen el despacho.
+
+Ejecutar `supabase/delivery-zones.sql` una vez en Supabase SQL Editor antes de publicar. La función `place_order` valida nuevamente la población y calcula el despacho en el servidor, evitando depender del valor enviado por el navegador.
+
+El retiro no tiene costo y se realiza en el carrito SHET de Río Loa 130, Nonguén. El enlace y el mapa usan `VITE_PICKUP_ADDRESS`; si la variable no existe, `src/config.js` utiliza esa dirección como valor seguro.
+
 ## Configuración pendiente
 
-- `VITE_LOCATION_LAT` y `VITE_LOCATION_LNG`: faltan las coordenadas exactas. No se agregaron valores ficticios. Al definir ambas y reconstruir, se habilitan Header, HOME y Delivery con `https://www.google.com/maps/dir/?api=1&destination=LAT,LNG`.
+- `VITE_LOCATION_LAT` y `VITE_LOCATION_LNG`: son opcionales. Sin coordenadas, Google Maps usa `Río Loa 130, Nonguén, Concepción, Chile`; si se agregan posteriormente, el enlace de ruta utiliza el punto geográfico exacto.
 - `VITE_REVIEWS_ENABLED=true`: activar únicamente si `supabase/reviews.sql` ya está aplicado. En el entorno actual no está activado; se conserva el aviso existente.
 - Se mantienen `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` / `VITE_SUPABASE_ANON_KEY`, datos bancarios y dirección de retiro. Las variables bancarias y de retiro locales ya tienen valores; se deben configurar también en el hosting.
 - No se introdujeron secretos ni nuevas variables. Google OAuth, políticas RLS y Realtime siguen usando la configuración previa. Consultar README para la preparación administrativa existente antes de publicar.
@@ -69,10 +78,11 @@ El build y las pruebas locales no validan las credenciales OAuth reales ni las p
 ## Deploy
 
 1. Incluir el código y los seis originales en el repositorio.
-2. Configurar las variables existentes y las coordenadas exactas en el hosting. Las variables Vite se incorporan durante el build: reconstruir al cambiarlas.
-3. Vercel: preset Vite, comando `npm run build`, salida `dist`. `vercel.json` ya contiene el rewrite SPA que cubre `/delivery`, `/admin` y `/admin/analytics`.
-4. Cloudflare Workers Static Assets: `npm run build` y `npx wrangler deploy` desde una terminal autenticada. `wrangler.jsonc` ya apunta a `./dist` con `not_found_handling: "single-page-application"`. Para otro hosting estático, configurar fallback a `index.html`.
-5. Mantener el dominio y las URLs de retorno autorizadas en Supabase/Google; revisar las instrucciones OAuth y producción del README.
-6. Abrir y recargar las cuatro rutas directamente tras desplegar. Verificar Google Maps una vez configurado el punto exacto.
+2. Ejecutar `supabase/delivery-zones.sql` en Supabase SQL Editor.
+3. Configurar las variables existentes en el hosting, especialmente `VITE_PICKUP_ADDRESS`. Las variables Vite se incorporan durante el build: reconstruir al cambiarlas.
+4. Vercel: preset Vite, comando `npm run build`, salida `dist`. `vercel.json` ya contiene el rewrite SPA que cubre `/delivery`, `/admin` y `/admin/analytics`.
+5. Cloudflare Workers Static Assets: `npm run build` y `npx wrangler deploy` desde una terminal autenticada. `wrangler.jsonc` ya apunta a `./dist` con `not_found_handling: "single-page-application"`. Para otro hosting estático, configurar fallback a `index.html`.
+6. Mantener el dominio y las URLs de retorno autorizadas en Supabase/Google; revisar las instrucciones OAuth y producción del README.
+7. Abrir y recargar las cuatro rutas directamente tras desplegar. Confirmar un pedido de prueba en Nonguén y otro en Concepción Centro.
 
 No se ejecutó un deploy remoto. Respaldo local del código original versionado: `artifacts/before-home-delivery.zip` (commit base `c4fdc25`). Los originales audiovisuales no se alteraron.

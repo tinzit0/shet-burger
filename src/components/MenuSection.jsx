@@ -1,2 +1,24 @@
-import { useState } from 'react';import { Plus } from 'lucide-react';import { categories, products } from '../data';
-export default function MenuSection({onAdd,stock={},storeOpen=true}){const[active,setActive]=useState('burgers'),[variants,setVariants]=useState({});const visible=products.filter(p=>p.category===active);return <section className="menu-section" id="menu">{!storeOpen&&<div className="store-closed-banner">TIENDA CERRADA <span>Las compras están temporalmente deshabilitadas.</span></div>}<div className="section-heading"><p>MENÚ REAL · 2026</p><h2>ELIGE TU<br/><em>VICIO.</em></h2><span>Precios e ingredientes extraídos del menú oficial. Todas las hamburguesas incluyen papas fritas.</span></div><div className="category-tabs" role="tablist">{categories.map(c=><button key={c.id} role="tab" aria-selected={active===c.id} className={active===c.id?'active':''} onClick={()=>setActive(c.id)}>{c.label}</button>)}</div><div className={`product-grid ${active!=='burgers'?'compact-grid':''}`}>{visible.map((p,i)=>{const sold=stock[p.id]===false||!storeOpen,selected=variants[p.id]||p.prices[0];return <article className={`product-card${sold?' is-sold-out':''}`} key={p.id}>{p.image&&<div className="product-visual"><span>{String(i+1).padStart(2,'0')}</span>{p.featured&&<b>FAVORITA</b>}<img src={p.image} loading="lazy" alt={p.name}/>{sold&&<strong>{storeOpen?'AGOTADO':'TIENDA CERRADA'}</strong>}</div>}<div className="product-info"><small>{categories.find(c=>c.id===p.category)?.label}</small><h3>{p.name}</h3><p>{p.description}</p><div className="variant-picker">{p.prices.map(v=><button type="button" key={v[0]} className={selected[0]===v[0]?'active':''} onClick={()=>setVariants(items=>({...items,[p.id]:v}))}>{v[0]} <b>{v[1]}</b></button>)}</div><div className="price-row"><div><span><small>{selected[0]}</small><strong>{selected[1]}</strong></span></div><button disabled={sold} onClick={()=>onAdd(p,selected)}><span>{sold?(storeOpen?'Agotado':'Cerrada'):'Agregar'}</span>{!sold&&<Plus/>}</button></div></div></article>})}</div></section>}
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { categories, products } from '../data';
+import BurgerPhoto from './BurgerPhoto';
+
+export default function MenuSection({ onAdd, stock = {}, storeOpen = true }) {
+  const [active, setActive] = useState('burgers'), [variants, setVariants] = useState({});
+  const visible = products.filter(p => p.category === active);
+  return <section className="menu-section editorial-menu" id="menu" aria-labelledby="menu-title">
+    {!storeOpen && <div className="store-closed-banner">TIENDA CERRADA <span>Las compras están temporalmente deshabilitadas.</span></div>}
+    <div className="editorial-meta"><span>02 / ELIGE TU VICIO</span><span>FAT SMASH BURGERS</span></div>
+    <div className="editorial-menu-heading"><h2 id="menu-title" data-reveal>THE<br/><span>BURGERS.</span></h2><p>Todas las hamburguesas<br/>incluyen papas fritas. ↙</p></div>
+    <div className="category-tabs" aria-label="Categorías del menú">{categories.map(category => <button type="button" key={category.id} aria-pressed={active === category.id} className={active === category.id ? 'active' : ''} onClick={() => setActive(category.id)}>{category.label}</button>)}</div>
+    <div className="editorial-products">{visible.map((product, index) => {
+      const sold = stock[product.id] === false || !storeOpen, selected = variants[product.id] || product.prices[0];
+      return <article className={`menu-item${product.image ? '' : ' menu-item--text'}${sold ? ' is-sold-out' : ''}`} key={product.id}>
+        <span className="menu-item-number">{String(index + 1).padStart(2, '0')} /</span>
+        {product.image && <div className="menu-item-photo" data-tilt><BurgerPhoto product={product}/>{sold && <span>{storeOpen ? 'AGOTADO' : 'TIENDA CERRADA'}</span>}</div>}
+        <div className="menu-item-copy"><h3>{product.name}</h3><p>{product.description}</p><div className="menu-item-options" role="group" aria-label={`Tamaño de ${product.name}`}>{product.prices.map(variant => <button type="button" key={variant[0]} aria-pressed={selected[0] === variant[0]} onClick={() => setVariants(items => ({ ...items, [product.id]: variant }))}>{variant[0]} <b>{variant[1]}</b></button>)}</div></div>
+        <button className="menu-item-add" type="button" disabled={sold} aria-label={`${sold ? 'No disponible' : 'Agregar'} ${product.name} ${selected[0]} por ${selected[1]}`} onClick={() => onAdd(product, selected)}><span>{sold ? (storeOpen ? 'AGOTADO' : 'CERRADA') : 'PEDIR'}<b>{selected[1]}</b></span><Plus aria-hidden="true"/></button>
+      </article>;
+    })}</div>
+  </section>;
+}

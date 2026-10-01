@@ -5,3 +5,11 @@ export const business = {
   rut: import.meta.env.VITE_BUSINESS_RUT || 'RUT por configurar',
   pickupAddress: import.meta.env.VITE_PICKUP_ADDRESS || 'Retiro coordinado con SHET BURGER',
 };
+
+// TODO: insertar coordenadas exactas de Shet Burger. No usar la dirección DEMO.
+const latitude = Number(import.meta.env.VITE_LOCATION_LAT);
+const longitude = Number(import.meta.env.VITE_LOCATION_LNG);
+export const location = {
+  latitude, longitude,
+  configured: Boolean(import.meta.env.VITE_LOCATION_LAT?.trim() && import.meta.env.VITE_LOCATION_LNG?.trim()) && Number.isFinite(latitude) && Math.abs(latitude) <= 90 && Number.isFinite(longitude) && Math.abs(longitude) <= 180,
+};

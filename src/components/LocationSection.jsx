@@ -1,5 +1,5 @@
 import { location, directionsUrl } from '../config';
-import { homePhotos } from './HomeMedia';
+import locationPhoto from '../../assets/videos shet o fotos/foto5.jpg';
 
 export default function LocationSection({ compact = false }) {
   const { latitude: lat, longitude: lng, configured } = location;
@@ -10,7 +10,7 @@ export default function LocationSection({ compact = false }) {
       {configured ? <a className="editorial-link" href={directions} target="_blank" rel="noreferrer">CÓMO LLEGAR ↗</a> : <><button className="editorial-link" disabled>CÓMO LLEGAR ↗</button><p className="location-pending">Pronto encontrarás aquí nuestra ubicación exacta.</p></>}
     </div>
     <div className={`location-map${configured ? ' is-configured' : ''}`}>
-      {compact ? <img className="location-campaign-photo" src={homePhotos[1]} alt="Una pausa con SHET Burger al sol" width="1170" height="1560" loading="lazy" decoding="async"/> : configured ? <><iframe title="Mapa de ubicación de Shet Burger" src={mapUrl} loading="lazy" tabIndex={-1}/><span className="map-pin"><img src="/assets/logo shet burger.png" alt="Shet Burger" width="64" height="64"/></span><a className="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© Colaboradores de OpenStreetMap</a></> : <div className="map-placeholder"><span className="map-cross" aria-hidden="true">↗</span><strong>DE NONGUÉN.<br/>PARA TU ANTOJO.</strong><span>UBICACIÓN EXACTA POR CONFIRMAR</span></div>}
+      {compact ? <img className="location-campaign-photo" src={locationPhoto} alt="Disfrutando una hamburguesa SHET al aire libre" width="1170" height="1559" loading="lazy" decoding="async"/> : configured ? <><iframe title="Mapa de ubicación de Shet Burger" src={mapUrl} loading="lazy" tabIndex={-1}/><span className="map-pin"><img src="/assets/logo shet burger.png" alt="Shet Burger" width="64" height="64"/></span><a className="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© Colaboradores de OpenStreetMap</a></> : <div className="map-placeholder"><span className="map-cross" aria-hidden="true">↗</span><strong>DE NONGUÉN.<br/>PARA TU ANTOJO.</strong><span>UBICACIÓN EXACTA POR CONFIRMAR</span></div>}
     </div>
   </section>;
 }

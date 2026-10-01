@@ -1,7 +1,8 @@
 import { supabase } from './supabase';
 import { validateReview } from './reviewValidation';
 
-export const reviewsConfigured = Boolean(supabase && import.meta.env.VITE_REVIEWS_ENABLED === 'true');
+// La migración de reseñas ya está instalada. Solo desactivar con false explícito.
+export const reviewsConfigured = Boolean(supabase && import.meta.env.VITE_REVIEWS_ENABLED?.trim().toLowerCase() !== 'false');
 export async function loadReviews(page = 0) {
   if (!reviewsConfigured) throw new Error('Las opiniones estarán disponibles pronto.');
   const [list, summary] = await Promise.all([

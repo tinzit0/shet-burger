@@ -8,8 +8,8 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true }) {
   const visible = products.filter(p => p.category === active);
   return <section className="menu-section editorial-menu" id="menu" aria-labelledby="menu-title">
     {!storeOpen && <div className="store-closed-banner">TIENDA CERRADA <span>Las compras están temporalmente deshabilitadas.</span></div>}
-    <div className="editorial-meta"><span>02 / ELIGE TU VICIO</span><span>FAT SMASH BURGERS</span></div>
-    <div className="editorial-menu-heading"><h2 id="menu-title" data-reveal>THE<br/><span>BURGERS.</span></h2><p>Todas las hamburguesas<br/>incluyen papas fritas. ↙</p></div>
+    <div className="editorial-meta"><span>02 / ELIGE TU VICIO</span><span>HAMBURGUESAS SIN LÍMITES</span></div>
+    <div className="editorial-menu-heading"><h2 id="menu-title" data-reveal>EL<br/><span>MENÚ.</span></h2><p>Todas las hamburguesas<br/>incluyen papas fritas. ↙</p></div>
     <div className="category-tabs" aria-label="Categorías del menú">{categories.map(category => <button type="button" key={category.id} aria-pressed={active === category.id} className={active === category.id ? 'active' : ''} onClick={() => setActive(category.id)}>{category.label}</button>)}</div>
     <div className="editorial-products">{visible.map((product, index) => {
       const sold = stock[product.id] === false || !storeOpen, selected = variants[product.id] || product.prices[0];

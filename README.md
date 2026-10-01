@@ -1,5 +1,7 @@
 # SHET BURGER
 
+La separación **HOME / DELIVERY / NUESTRO LOCAL** está documentada en [HOME-DELIVERY.md](HOME-DELIVERY.md): composición audiovisual, rutas, archivos originales, pruebas y despliegue. El carrito y la integración existente con Supabase se conservan.
+
 La actualización visual y el sistema de reseñas están documentados en [EDITORIAL.md](EDITORIAL.md): archivos, variables, migración Supabase, moderación, ubicación pendiente y despliegue en Cloudflare.
 
 Sitio de pedidos construido con React, Vite y Supabase. Incluye catálogo, carrito, transferencia con comprobante, seguimiento, acceso de clientes con Google y panel administrativo. Para el boceto, el panel conserva el acceso demo `shet.burger@gmail.com` / `shet2026`; reemplázalo por autenticación real antes de aceptar pedidos en producción.
@@ -45,7 +47,7 @@ Las variables `VITE_*` son visibles en el navegador. Solo se debe utilizar la cl
 
 ## Despliegue
 
-El hosting debe redirigir `/admin` y `/admin/analytics` hacia `index.html` para permitir recargas directas. Después de desplegar, prueba pedidos, fases, tienda cerrada, disponibilidad, cuenta de cliente y panel administrativo desde teléfono y computador.
+El hosting debe redirigir `/delivery`, `/admin` y `/admin/analytics` hacia `index.html` para permitir recargas directas. Vercel y Cloudflare ya tienen fallback SPA configurado. Después de desplegar, prueba pedidos, fases, tienda cerrada, disponibilidad, cuenta de cliente y panel administrativo desde teléfono y computador.
 
 ## Pedidos entre dispositivos en el boceto
 

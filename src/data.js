@@ -7,7 +7,7 @@ export const layers = [
   { id: 'pattyBottom', src: '/assets/carne-inferior.png', label: 'Doble smash', detail: 'Más sabor, más textura, más SHET.' },
   { id: 'bottom', src: '/assets/pan-inferior.png', label: 'Pan tostado', detail: 'La base perfecta para sostener el vicio.' },
 ];
-export const categories = [{id:'burgers',label:'Burgers'},{id:'promos',label:'Promociones'},{id:'fritos',label:'Fritos'},{id:'bebidas',label:'Bebidas'},{id:'extras',label:'Extras'}];
+export const categories = [{id:'burgers',label:'Hamburguesas'},{id:'promos',label:'Promociones'},{id:'fritos',label:'Fritos'},{id:'bebidas',label:'Bebidas'},{id:'extras',label:'Extras'}];
 export const products = [
   {id:'bbq-beast',category:'burgers',name:'BBQ Beast',image:'/assets/menu/page-2-3.webp',description:'Burger 125g, cheddar, tocino, cebolla caramelizada en salsa BBQ, aros de cebolla, pepinillos y mayonesa en pan de papa.',prices:[['Simple','$9.490'],['Doble','$11.990']],featured:true},
   {id:'onion-shet',category:'burgers',name:'Onion SHET',image:'/assets/menu/page-2-4.webp',description:'Burger 125g, doble cheddar, tocino, cebolla crispy y salsa mayo sriracha —ligeramente picante— en pan de papa.',prices:[['Simple','$9.290'],['Doble','$11.290']]},

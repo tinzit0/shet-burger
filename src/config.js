@@ -13,3 +13,7 @@ export const location = {
   latitude, longitude,
   configured: Boolean(import.meta.env.VITE_LOCATION_LAT?.trim() && import.meta.env.VITE_LOCATION_LNG?.trim()) && Number.isFinite(latitude) && Math.abs(latitude) <= 90 && Number.isFinite(longitude) && Math.abs(longitude) <= 180,
 };
+
+export const directionsUrl = location.configured
+  ? `https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`
+  : null;

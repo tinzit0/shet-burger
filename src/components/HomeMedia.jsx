@@ -60,13 +60,18 @@ export default function HomeMedia() {
       </div>
       <p className="campaign-note">Manos ocupadas.<br/>Cero palabras.</p>
     </section>
+    <div className="campaign-slice" aria-hidden="true">
+      <div>{[0,1].map(n => <span key={n}>RECIÉN HECHA&nbsp; • &nbsp;DOBLE SABOR&nbsp; • &nbsp;CERO ATAJOS&nbsp; • &nbsp;</span>)}</div>
+    </div>
     <section className="campaign-film" id="campaign-film" aria-labelledby="film-title">
       <CampaignVideo src={video1} poster={foto1} label="Video de campaña SHET 01"/>
+      <div className="campaign-film__frame" aria-hidden="true"><i/><i/><span>REC ●</span><b>01 / 02</b></div>
       <div className="campaign-film__copy"><span>DESDE EL BARRIO. CON ACTITUD.</span><h2 id="film-title" data-reveal>HECHO EN<br/><em>NONGUÉN.</em></h2><span>SHET BURGER / CONCEPCIÓN, CHILE</span></div>
     </section>
     <section className="campaign-gallery" aria-labelledby="gallery-title">
       <div className="editorial-meta"><span>02 / FUERA DEL MOLDE</span><span>LA CALLE ES NUESTRA MESA.</span></div>
       <h2 id="gallery-title" data-reveal>BUEN SABOR.<br/><span>CERO MODALES.</span></h2>
+      <span className="campaign-gallery__side" data-drift aria-hidden="true">ANTOJO · CALLE · SHET ·</span>
       <div className="campaign-gallery__layout">
         <Photo index={1} className="campaign-gallery__a"><span>01 — A TU RITMO.</span></Photo>
         <Photo index={3} className="campaign-gallery__b"><span>02 — MEJOR EN COMPAÑÍA.</span></Photo>
@@ -75,6 +80,15 @@ export default function HomeMedia() {
         <Photo index={2} className="campaign-gallery__d"><span>04 — EL ANTOJO NO AVISA.</span></Photo>
         <p className="campaign-gallery__note">De día. De noche.<br/>Donde te pille el hambre.<br/><b>VIVE SHET. ↗</b></p>
       </div>
+    </section>
+    <section className="campaign-facts" aria-label="El sello de SHET Burger">
+      <p className="campaign-facts__lead" data-reveal>NO VENDEMOS<br/><span>HAMBURGUESAS.</span><br/>VENDEMOS EL ANTOJO.</p>
+      <div className="campaign-facts__list">
+        <article data-reveal><small>01</small><strong>HECHA<br/>AL MOMENTO.</strong><span>Sin atajos.</span></article>
+        <article data-reveal><small>02</small><strong>DOBLE<br/>ACTITUD.</strong><span>Sabor sin límites.</span></article>
+        <article data-reveal><small>03</small><strong>DEL<br/>BARRIO.</strong><span>Nonguén, Concepción.</span></article>
+      </div>
+      <span className="campaign-facts__orbit" aria-hidden="true">SHET<br/>BURGER<i>★</i></span>
     </section>
     <div className={`campaign-marquee${moving ? '' : ' is-paused'}`}>
       <p className="sr-only">SHET BURGER — SABOR SIN LÍMITES — NONGUÉN — CONCEPCIÓN</p>

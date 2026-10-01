@@ -34,6 +34,7 @@ export default function ScrollReveals() {
         const range = document.documentElement.scrollHeight - height;
         const progress = range > 0 ? Math.min(1, Math.max(0, window.scrollY / range)) : 0;
         values.forEach(([el, value]) => el.style.setProperty('--scroll-progress', value.toFixed(4)));
+        main.style.setProperty('--page-scroll', progress.toFixed(4));
         if (progressBar) progressBar.style.transform = `scaleX(${progress})`;
       };
       const queueScroll = () => { if (!scrollFrame) scrollFrame = requestAnimationFrame(drawScroll); };
@@ -85,6 +86,7 @@ export default function ScrollReveals() {
         cancelAnimationFrame(scrollFrame); cancelAnimationFrame(pointerFrame); resetTilt();
         elements.forEach(el => el.classList.remove('motion-ready', 'reveal-pending'));
         main.querySelectorAll('[data-drift]').forEach(el => el.style.removeProperty('--scroll-progress'));
+        main.style.removeProperty('--page-scroll');
         if (progressBar) progressBar.style.removeProperty('transform');
         window.removeEventListener('scroll', queueScroll); window.removeEventListener('resize', queueScroll);
         main.removeEventListener('pointermove', onPointer); main.removeEventListener('pointerleave', resetTilt);

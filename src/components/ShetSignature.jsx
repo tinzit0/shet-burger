@@ -7,7 +7,7 @@ const featuredIds = ['bbq-beast', 'bacon-trip', 'cowboy-smoke', 'clasica-bacon']
 export default function ShetSignature() {
   const featured = featuredIds.map(id => products.find(product => product.id === id)).filter(Boolean);
   return <section className="signature section" id="burgers-insignia" aria-labelledby="signature-title">
-    <div className="section-meta"><span>02 / BURGERS INSIGNIA</span><span>ENCUENTRA LA TUYA</span></div>
+    <div className="section-meta"><span>03 / BURGERS INSIGNIA</span><span>ENCUENTRA LA TUYA</span></div>
     <div className="signature__heading" data-reveal><h2 id="signature-title">CUATRO FORMAS<br/><em>DE CAER.</em></h2><p>Costra por fuera. Jugosa por dentro.<br/>Todas incluyen papas fritas.</p></div>
     <div className="signature__rail">
       {featured.map((product, index) => <article className="signature-card" key={product.id} data-reveal>

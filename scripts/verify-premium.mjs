@@ -44,14 +44,16 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base, { waitUntil: 'domcontentloaded' });
+  assert.equal(await page.locator('.hero video').count(), 0);
+  assert.equal(await page.locator('.photo-journal__item img').evaluateAll(images => images.every(image => image.getBoundingClientRect().height < 500)), true);
   await page.getByRole('button', { name: 'Abrir menú', exact: true }).click();
   assert.equal(await page.locator('main').evaluate(element => element.inert), true);
   await page.keyboard.press('Escape');
   assert.equal(await page.getByRole('button', { name: 'Abrir menú', exact: true }).evaluate(element => element === document.activeElement), true);
 
   await page.goto(`${base}/delivery`, { waitUntil: 'domcontentloaded' });
-  assert.equal(await page.locator('.menu-item').count(), 7);
-  assert.equal(await page.locator('.menu-item-photo img').evaluateAll(images => images.every(image => image.srcset.includes('1024w') && image.currentSrc.includes('/menu/hd/'))), true);
+  assert.equal(await page.locator('.menu-item').count(), 29);
+  assert.equal(await page.locator('.menu-category').first().locator('.menu-item-photo img').evaluateAll(images => images.every(image => image.srcset.includes('1024w') && image.currentSrc.includes('/menu/hd/'))), true);
   await page.locator('.menu-item').first().getByRole('button', { name: 'Doble $11.990', exact: true }).click();
   await page.getByRole('button', { name: 'Agregar BBQ Beast Doble por $11.990', exact: true }).click();
   await page.locator('.cart-drawer').waitFor();

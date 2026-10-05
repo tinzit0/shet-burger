@@ -1,6 +1,4 @@
 .hero { position: relative; min-height: 100svh; overflow: hidden; display: flex; align-items: flex-end; isolation: isolate; background: transparent; }
-.hero__media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 45%; filter: saturate(0.9) contrast(1.08); }
-.hero__media { z-index: -2; }
 .hero__overlay { position: absolute; z-index: -2; inset: 0; background: linear-gradient(90deg, rgb(9 9 11 / 88%) 0%, rgb(9 9 11 / 50%) 53%, rgb(9 9 11 / 20%) 100%), linear-gradient(0deg, rgb(9 9 11 / 72%) 0%, transparent 46%); }
 .hero__content { width: min(74rem, 100%); padding: calc(var(--header-height) + 6rem) var(--gutter) clamp(6rem, 11vh, 9rem); }
 .hero .eyebrow { color: var(--color-pink); }
@@ -14,7 +12,6 @@
 
 @media (max-width: 720px) {
   .hero { min-height: 49rem; }
-  .hero__media { object-position: 54% center; }
   .hero__overlay { background: linear-gradient(0deg, rgb(9 9 11 / 92%) 0%, rgb(9 9 11 / 24%) 70%), linear-gradient(90deg, rgb(9 9 11 / 45%), transparent); }
   .hero__content { padding-bottom: 6.5rem; }
   .hero h1 { font-size: clamp(3.45rem, 16vw, 5.5rem); }

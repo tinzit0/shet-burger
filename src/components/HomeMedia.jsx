@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import video1 from '../../assets/videos shet o fotos/video1.mp4';
 
+const journalPhotos = [
+  { src: '/assets/campaign/mesa-shet.jpg', alt: 'Selección de hamburguesas SHET servidas en platos rosados', caption: 'PARA COMPARTIR', shape: 'wide' },
+  { src: '/assets/campaign/cowboy-smoke.jpg', alt: 'Hamburguesa SHET con aros de cebolla y tocino', caption: 'DE CERCA', shape: 'portrait' },
+  { src: '/assets/campaign/auto-shet.jpg', alt: 'Amigos compartiendo hamburguesas SHET dentro de un auto', caption: 'DONDE TE PILLE', shape: 'portrait' },
+  { src: '/assets/campaign/momento-shet.jpg', alt: 'Clienta disfrutando una hamburguesa SHET', caption: 'EL MOMENTO SHET', shape: 'wide' },
+];
+
 export function CampaignVideo({ src, poster, label, className = '' }) {
   const ref = useRef(null);
   const [failed, setFailed] = useState(false);
@@ -42,13 +49,29 @@ export function BrandPromise() {
   </section>;
 }
 
+export function PhotoJournal() {
+  return <section className="photo-journal section" aria-labelledby="journal-title">
+    <div className="section-meta"><span>02 / SHET EN LA CALLE</span><span>ANTOJO REAL</span></div>
+    <div className="photo-journal__heading" data-reveal>
+      <h2 id="journal-title">SE VE BIEN.<br/><em>SABE MEJOR.</em></h2>
+      <p>En la mesa, en el auto o camino a casa. La caja rosa siempre llega con algo bueno adentro.</p>
+    </div>
+    <div className="photo-journal__grid">
+      {journalPhotos.map((photo, index) => <figure className={`photo-journal__item photo-journal__item--${photo.shape}`} data-reveal key={photo.src}>
+        <img src={photo.src} alt={photo.alt} width="1200" height="1800" loading="lazy" decoding="async"/>
+        <figcaption><span>0{index + 1}</span><span>{photo.caption}</span></figcaption>
+      </figure>)}
+    </div>
+  </section>;
+}
+
 export function CampaignFilm() {
   return <section className="film" id="ambiente" aria-labelledby="film-title">
     <CampaignVideo src={video1} poster="/assets/campaign/hero-poster-960.webp" label="Preparación de una hamburguesa SHET"/>
-    <div className="film__copy" data-reveal><p className="eyebrow">03 / EN MOVIMIENTO</p><h2 id="film-title">HECHO EN<br/><em>NONGUÉN.</em></h2><p>Fuego alto. Dos manos. Cero atajos.</p></div>
+    <div className="film__copy" data-reveal><p className="eyebrow">04 / EN MOVIMIENTO</p><h2 id="film-title">HECHO EN<br/><em>NONGUÉN.</em></h2><p>Fuego alto. Dos manos. Cero atajos.</p></div>
   </section>;
 }
 
 export default function HomeMedia() {
-  return <><BrandPromise/><CampaignFilm/></>;
+  return <><BrandPromise/><PhotoJournal/><CampaignFilm/></>;
 }

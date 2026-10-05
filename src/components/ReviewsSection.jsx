@@ -30,7 +30,7 @@ export default function ReviewsSection() {
   }
   const total = Number(summary?.total || 0);
   return <section className="reviews-section" id="opiniones" ref={section} aria-labelledby="reviews-title">
-    <div className="editorial-meta"><span>05 / SIN FILTROS. CON SABOR.</span><span>TU OPINIÓN CUENTA</span></div>
+    <div className="editorial-meta"><span>06 / SIN FILTROS. CON SABOR.</span><span>TU OPINIÓN CUENTA</span></div>
     <div className="reviews-top"><div data-reveal><h2 id="reviews-title">OPINA<br/>DE SHET.</h2><div className="review-summary" aria-live="polite">
       {loadError ? <p>{loadError} <button type="button" onClick={()=>refresh()}>Reintentar</button></p> : loading && !summary ? <p>Cargando opiniones…</p> : total > 0 ? <><strong>{Number(summary.average).toFixed(1)} <span aria-hidden="true">★</span></strong><p>Promedio sobre 5 · Basado en {total} {total === 1 ? 'opinión' : 'opiniones'}</p></> : <><strong className="no-rating">TU PRIMER<br/>VEREDICTO.</strong><p>{reviewsConfigured ? 'Todavía no hay opiniones publicadas. ¿Te animas?' : 'Las opiniones estarán disponibles pronto.'}</p></>}
     </div></div>

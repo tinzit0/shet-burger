@@ -2,32 +2,42 @@ import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import miradaVideo from '../../assets/mirada.mp4';
 
-export default function Hero({ onOrder }) {
+export default function Hero() {
   const videoRef = useRef(null);
   useEffect(() => {
     const video = videoRef.current, motion = matchMedia('(prefers-reduced-motion: reduce)');
-    let visible = false;
+    let visible = false, activated = false;
     const sync = () => {
-      if (visible && !document.hidden && !motion.matches) video.play().catch(() => {});
+      const canPlay = activated && !motion.matches && !navigator.connection?.saveData;
+      if (canPlay && !video.getAttribute('src')) { video.src = miradaVideo; video.load(); }
+      if (visible && !document.hidden && canPlay) video.play().catch(() => {});
       else video.pause();
+    };
+    const activate = () => { activated = true; sync(); removeActivation(); };
+    const removeActivation = () => {
+      window.removeEventListener('scroll', activate);
+      window.removeEventListener('pointerdown', activate);
+      window.removeEventListener('keydown', activate);
     };
     const observer = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; sync(); });
     observer.observe(video);
+    window.addEventListener('scroll', activate, { passive: true, once: true });
+    window.addEventListener('pointerdown', activate, { once: true });
+    window.addEventListener('keydown', activate, { once: true });
     motion.addEventListener('change', sync);
     video.addEventListener('loadeddata', sync);
     document.addEventListener('visibilitychange', sync);
-    return () => { observer.disconnect(); motion.removeEventListener('change', sync); video.removeEventListener('loadeddata', sync); document.removeEventListener('visibilitychange', sync); video.pause(); };
+    return () => { observer.disconnect(); removeActivation(); motion.removeEventListener('change', sync); video.removeEventListener('loadeddata', sync); document.removeEventListener('visibilitychange', sync); video.pause(); };
   }, []);
-  return <section className="hero-premium hero-premium--centered hero-premium--video" id="top">
-    <video ref={videoRef} className="hero-premium__video" autoPlay muted loop playsInline preload="metadata" aria-hidden="true"><source src={miradaVideo} type="video/mp4"/></video>
-    <div className="hero-premium__grain"/><div className="hero-premium__glow"/>
-    <div className="hero-centered__copy">
-      <p className="hero-premium__eyebrow">HAMBURGUESAS · CONCEPCIÓN</p>
-      <h1>EL SABOR<br/><em>SE ARMA</em><br/>CAPA A CAPA.</h1>
-      <p className="hero-premium__lead">Doble carne a la plancha, cheddar fundido y la joya de la casa. Hecha al momento para comerse sin pensarlo dos veces.</p>
-      <div className="hero-premium__actions"><a className="hero-premium__primary" href="/delivery" data-route>VER MENÚ <ArrowDown/></a><button className="hero-premium__secondary" type="button" onClick={onOrder}>ORDENAR AHORA <ArrowUpRight/></button></div>
+  return <section className="hero" id="top" aria-labelledby="hero-title">
+    <video ref={videoRef} className="hero__media" muted loop playsInline preload="metadata" aria-hidden="true"/>
+    <div className="hero__overlay"/>
+    <div className="hero__content">
+      <p className="eyebrow">FAT SMASH BURGERS · CONCEPCIÓN</p>
+      <h1 id="hero-title">EL SABOR<br/><em>SE ARMA</em><br/>CAPA A CAPA.</h1>
+      <p className="hero__lead">Costra, cheddar fundido y ese desorden perfecto. Hecha al momento en Nonguén.</p>
+      <div className="hero__actions"><a className="button button--primary" href="/delivery" data-route>PEDIR SHET <ArrowUpRight/></a><a className="text-link" href="#promesa">CONOCE LA HISTORIA <ArrowDown/></a></div>
     </div>
-    <div className="hero-centered__detail"><span>HECHA AL MOMENTO</span><i/><span>SIN ATAJOS</span></div>
-    <a className="hero-centered__scroll" href="#experiencia">DESCUBRE SHET <ArrowDown/></a>
+    <div className="hero__meta"><span>HECHA AL MOMENTO</span><i/><span>SIN ATAJOS</span></div>
   </section>;
 }

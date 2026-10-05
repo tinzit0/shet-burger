@@ -37,7 +37,7 @@ Las esperas de base provenían principalmente del `@import` bloqueante de Google
 - Paleta: negro grafito y hueso cálido como base; rosa SHET como color de acción; dorado limitado a rating/foco.
 - Tipografía: Space Grotesk para display y DM Sans para lectura/UI. Se autoalojan en WOFF2 con `font-display: optional`; Georgia se usa solo como gesto editorial puntual.
 - Fotografía: marcos rectos, proporciones consistentes, fondos controlados y menos tilt/marquee. Las burgers usan las restauraciones HD existentes.
-- Movimiento: una familia de reveal vertical sutil. El hero mantiene una fotografía estable, sin cambiar de escena, y el film se carga cerca del viewport y se pausa fuera de pantalla.
+- Movimiento: una familia de reveal vertical sutil. El hero usa exclusivamente el video de la mirada y se pausa fuera de pantalla; el film se carga cerca del viewport.
 
 ## Tokens
 
@@ -75,7 +75,7 @@ No quedan `@import`, tamaños de texto de 10 px o menos ni `!important` en la ca
 - Fotos editoriales WebP con `srcset`, `sizes`, dimensiones, lazy loading y decoding async.
 - Fotos de burgers servidas por `BurgerPhoto` desde `public/assets/menu/hd/*-v2-640.webp` y `*-1024.webp`; los recortes PDF quedan solo como fallback y para productos sin restauración dedicada.
 - Supabase, admin, carrito, cuenta, seguimiento y reseñas cargan en chunks diferidos.
-- Hero fotográfico estable para evitar cambios visuales inesperados; film diferido por proximidad con respeto por ahorro de datos y movimiento reducido.
+- Hero con el video de la mirada como único fondo, sin poster de hamburguesa; pausa fuera de pantalla y respeto por ahorro de datos y movimiento reducido.
 - Diario fotográfico editorial con cuatro escenas reales, encuadres controlados y proporciones consistentes en todos los viewports.
 - Menú completo en flujo vertical: Hamburguesas, Promociones, Fritos, Bebidas y Extras aparecen seguidos, sin botones de filtro.
 - Metadata Open Graph/Twitter, theme color, favicon/apple icon, JSON-LD `Restaurant` y `robots.txt`.

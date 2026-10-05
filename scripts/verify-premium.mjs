@@ -44,7 +44,8 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base, { waitUntil: 'domcontentloaded' });
-  assert.equal(await page.locator('.hero video').count(), 0);
+  assert.equal(await page.locator('.hero video').count(), 1);
+  assert.equal(await page.locator('.initial-hero-media').count(), 0);
   assert.equal(await page.locator('.photo-journal__item img').evaluateAll(images => images.every(image => image.getBoundingClientRect().height < 500)), true);
   await page.getByRole('button', { name: 'Abrir menú', exact: true }).click();
   assert.equal(await page.locator('main').evaluate(element => element.inert), true);

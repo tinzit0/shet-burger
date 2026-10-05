@@ -78,6 +78,7 @@ No quedan `@import`, tamaños de texto de 10 px o menos ni `!important` en la ca
 - Hero con el video de la mirada como único fondo, sin poster de hamburguesa; pausa fuera de pantalla y respeto por ahorro de datos y movimiento reducido.
 - Diario fotográfico editorial con cuatro escenas reales, encuadres controlados y proporciones consistentes en todos los viewports.
 - Menú completo en flujo vertical: Hamburguesas, Promociones, Fritos, Bebidas y Extras aparecen seguidos, sin botones de filtro.
+- Se eliminaron pies de foto, numeraciones y etiquetas editoriales decorativas; los nombres de las burgers insignia se integran sobre la fotografía y el contenido pequeño restante es exclusivamente funcional.
 - Metadata Open Graph/Twitter, theme color, favicon/apple icon, JSON-LD `Restaurant` y `robots.txt`.
 - Imagen OG real de 1200×630 en `public/assets/og-shet.png`.
 - Los fallbacks SPA existentes de Vercel y Cloudflare se conservaron.

@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import miradaVideo from '../../assets/mirada.mp4';
 
@@ -40,11 +40,9 @@ export default function Hero() {
     <video ref={videoRef} className="hero__media" src={miradaVideo} muted loop playsInline preload="metadata" aria-hidden="true"/>
     <div className="hero__overlay"/>
     <div className="hero__content">
-      <p className="eyebrow">FAT SMASH BURGERS · CONCEPCIÓN</p>
       <h1 id="hero-title">EL SABOR<br/><em>SE ARMA</em><br/>CAPA A CAPA.</h1>
       <p className="hero__lead">Costra, cheddar fundido y ese desorden perfecto. Hecha al momento en Nonguén.</p>
-      <div className="hero__actions"><a className="button button--primary" href="/delivery" data-route>PEDIR SHET <ArrowUpRight/></a><a className="text-link" href="#promesa">CONOCE LA HISTORIA <ArrowDown/></a></div>
+      <div className="hero__actions"><a className="button button--primary" href="/delivery" data-route>PEDIR SHET <ArrowUpRight/></a></div>
     </div>
-    <div className="hero__meta"><span>HECHA AL MOMENTO</span><i/><span>SIN ATAJOS</span></div>
   </section>;
 }

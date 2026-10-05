@@ -10,7 +10,7 @@ export default function ScrollReveals() {
       stop();
       if (motion.matches) return;
       const elements = new Set(), visibleDrift = new Set();
-      const selector = '[data-reveal], .menu-item, .social-gallery > a, .review-editorial > article, .editorial-meta, .manifesto-bottom';
+      const selector = '[data-reveal], .menu-item, .review-editorial > article';
       let scrollFrame = 0, pointerFrame = 0, tilted = null, point = null;
       const progressBar = document.querySelector('.reading-progress');
       const observer = new IntersectionObserver(entries => entries.forEach(entry => {

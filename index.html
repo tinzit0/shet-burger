@@ -1,1 +1,54 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><meta name="theme-color" content="#090a0c"/><meta name="description" content="SHET BURGER — Fat smash burgers en Concepción. Retiro y delivery."/><meta property="og:title" content="SHET BURGER — Muerde la tentación"/><meta property="og:description" content="Fat smash burgers. Retiro y delivery en Concepción."/><meta property="og:image" content="/assets/hero.png"/><link rel="icon" href="/assets/logo shet burger.png"/><title>SHET BURGER — Fat Smash Burgers</title></head><body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09090b" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="SHET BURGER: fat smash burgers hechas al momento en Nonguén, Concepción. Pide delivery o retira en Río Loa 130." />
+    <meta property="og:type" content="restaurant" />
+    <meta property="og:locale" content="es_CL" />
+    <meta property="og:title" content="SHET BURGER — Fat smash burgers en Concepción" />
+    <meta property="og:description" content="Costra, cheddar fundido y cero atajos. Delivery y retiro en Nonguén." />
+    <meta property="og:image" content="/assets/og-shet.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SHET BURGER — Fat smash burgers" />
+    <meta name="twitter:description" content="Hechas al momento en Nonguén, Concepción." />
+    <meta name="twitter:image" content="/assets/og-shet.png" />
+    <link rel="preload" as="image" href="/assets/campaign/hero-poster-480.webp" type="image/webp" media="(max-width: 720px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="/assets/campaign/hero-poster-960.webp" type="image/webp" media="(min-width: 721px)" fetchpriority="high" />
+    <link rel="icon" href="/assets/logo shet burger.png" />
+    <link rel="apple-touch-icon" href="/assets/logo shet burger.png" />
+    <title>SHET BURGER — Fat Smash Burgers</title>
+    <style>
+      .initial-hero-media{position:absolute;z-index:0;inset:0 0 auto;width:100%;height:100svh;overflow:hidden;background:#1a0d13}.initial-hero-media img{width:100%;height:100%;object-fit:cover;object-position:center 45%;filter:saturate(.9) contrast(1.08)}#root{position:relative;z-index:1}@media(max-width:720px){.initial-hero-media{height:49rem}.initial-hero-media img{object-position:54% center}}
+    </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "name": "SHET BURGER",
+        "description": "Fat smash burgers hechas al momento en Nonguén, Concepción.",
+        "servesCuisine": "Hamburguesas",
+        "priceRange": "$$",
+        "image": "/assets/og-shet.png",
+        "menu": "/delivery",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Río Loa 130",
+          "addressLocality": "Concepción",
+          "addressRegion": "Biobío",
+          "addressCountry": "CL"
+        },
+        "sameAs": ["https://www.instagram.com/shetburger/"]
+      }
+    </script>
+  </head>
+  <body>
+    <div class="initial-hero-media" aria-hidden="true"><picture><source media="(max-width: 720px)" srcset="/assets/campaign/hero-poster-480.webp" /><img src="/assets/campaign/hero-poster-960.webp" width="960" height="1827" fetchpriority="high" alt="" /></picture></div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

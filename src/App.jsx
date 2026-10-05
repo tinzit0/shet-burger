@@ -1,20 +1,22 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
 import DeliveryPage from './components/DeliveryPage';
 import { usePublicRoute, navigate } from './lib/navigation';
 import ScrollReveals from './components/ScrollReveals';
-import CartDrawer from './components/CartDrawer';
-import AdminPanel from './components/AdminPanel';
-import AdminAnalytics from './components/AdminAnalytics';
-import OrderTracker from './components/OrderTracker';
-import CustomerAccount from './components/CustomerAccount';
-import CustomerAuth from './components/CustomerAuth';
 import { products } from './data';
-import { deleteStoredOrder, loadCustomerOrders, loadOrders, loadPublicOrder, normalizeOrder, saveOrder, subscribeToOrders, updateStoredOrder } from './lib/orders';
-import { isCurrentUserAdmin, signInWithGoogle, signOutCustomer, supabase } from './lib/supabase';
-import { loadStoreState, subscribeToStore, updateProductAvailability, updateStoreOpen } from './lib/store';
 import { calculateOrderTotal, formatDeliveryAddress, getDeliveryZone } from './lib/delivery';
+
+const CartDrawer = lazy(() => import('./components/CartDrawer'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const AdminAnalytics = lazy(() => import('./components/AdminAnalytics'));
+const OrderTracker = lazy(() => import('./components/OrderTracker'));
+const CustomerAccount = lazy(() => import('./components/CustomerAccount'));
+const CustomerAuth = lazy(() => import('./components/CustomerAuth'));
+const AdminLoading = () => <main className="admin-login"><div className="admin-login__card"><p>ÁREA PRIVADA</p><h1>Cargando<br/><em>SHET.</em></h1></div></main>;
+const ordersApi = () => import('./lib/orders');
+const storeApi = () => import('./lib/store');
+const supabaseApi = () => import('./lib/supabase');
 
 const fileData=file=>new Promise(resolve=>{if(!file)return resolve(null);const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(file)});
 const readStoredJSON=(key,fallback)=>{try{const value=localStorage.getItem(key);return value?JSON.parse(value):fallback}catch{localStorage.removeItem(key);return fallback}};
@@ -27,61 +29,66 @@ export default function App(){
  useEffect(()=>{localStorage.setItem('shet-demo-stock',JSON.stringify(stock))},[stock]);
  useEffect(()=>{localStorage.setItem('shet-store-open',String(storeOpen))},[storeOpen]);
  useEffect(()=>{
-  if(!supabase){setAuthReady(true);return}
-  supabase.auth.getSession().then(({data})=>{setUser(data.session?.user||null);setAuthReady(true);if(data.session&&localStorage.getItem('shet-open-account-after-auth')==='true'){localStorage.removeItem('shet-open-account-after-auth');setAccountOpen(true)}}).catch(()=>setAuthReady(true));
-  const{data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{setUser(session?.user||null);setAuthReady(true)});
-  return()=>subscription.unsubscribe();
+  let active=true,subscription;
+  supabaseApi().then(({supabase})=>{
+   if(!active)return;
+   if(!supabase){setAuthReady(true);return}
+   supabase.auth.getSession().then(({data})=>{if(!active)return;setUser(data.session?.user||null);setAuthReady(true);if(data.session&&localStorage.getItem('shet-open-account-after-auth')==='true'){localStorage.removeItem('shet-open-account-after-auth');setAccountOpen(true)}}).catch(()=>active&&setAuthReady(true));
+   subscription=supabase.auth.onAuthStateChange((_event,session)=>{if(active){setUser(session?.user||null);setAuthReady(true)}}).data.subscription;
+  }).catch(()=>active&&setAuthReady(true));
+  return()=>{active=false;subscription?.unsubscribe()};
  },[]);
  useEffect(()=>{
   if(!path.startsWith('/admin')||!authReady){return}
   if(!user){setAdminAllowed(demoAdmin);return}
   setAdminAllowed(null);
-  isCurrentUserAdmin().then(setAdminAllowed);
+  supabaseApi().then(({isCurrentUserAdmin})=>isCurrentUserAdmin()).then(setAdminAllowed);
  },[user,authReady,demoAdmin,path]);
  useEffect(()=>{
   let active=true;
-  const refresh=async()=>{const result=await loadStoreState(products.map(product=>product.id));if(active&&!result.error){setStoreOpen(result.storeOpen);setStock(result.stock)}};
-  refresh();const unsubscribe=subscribeToStore(refresh);
+  let unsubscribe=()=>{};
+  const refresh=async()=>{const{loadStoreState}=await storeApi();const result=await loadStoreState(products.map(product=>product.id));if(active&&!result.error){setStoreOpen(result.storeOpen);setStock(result.stock)}};
+  refresh();storeApi().then(({subscribeToStore})=>{if(active)unsubscribe=subscribeToStore(refresh)});
   return()=>{active=false;unsubscribe()};
  },[]);
  useEffect(()=>{
   if(!user){setCustomerOrders([]);return}
   let active=true;
-  const refresh=async()=>{setCustomerLoading(true);const{data}=await loadCustomerOrders(user.id);if(active&&data)setCustomerOrders(data);if(active)setCustomerLoading(false)};
+  const refresh=async()=>{setCustomerLoading(true);const{loadCustomerOrders}=await ordersApi();const{data}=await loadCustomerOrders(user.id);if(active&&data)setCustomerOrders(data);if(active)setCustomerLoading(false)};
   refresh();
-  const unsubscribe=subscribeToOrders(refresh),timer=window.setInterval(refresh,8000);
+  let unsubscribe=()=>{};ordersApi().then(({subscribeToOrders})=>{if(active)unsubscribe=subscribeToOrders(refresh)});const timer=window.setInterval(refresh,8000);
   return()=>{active=false;unsubscribe();window.clearInterval(timer)};
  },[user]);
  useEffect(()=>{
   if(user||path.startsWith('/admin')||!latestOrder)return;
   let active=true;
-  const verify=async()=>{const result=await loadPublicOrder(latestOrder.order_number);if(!active||result.error)return;if(!result.data){setOrders(items=>items.filter(order=>order.id!==latestOrder.id&&order.order_number!==latestOrder.order_number));setTrackOpen(false);return}setOrders(items=>items.map(order=>order.order_number===latestOrder.order_number?result.data:order))};
+  const verify=async()=>{const{loadPublicOrder}=await ordersApi();const result=await loadPublicOrder(latestOrder.order_number);if(!active||result.error)return;if(!result.data){setOrders(items=>items.filter(order=>order.id!==latestOrder.id&&order.order_number!==latestOrder.order_number));setTrackOpen(false);return}setOrders(items=>items.map(order=>order.order_number===latestOrder.order_number?result.data:order))};
   verify();const timer=window.setInterval(verify,trackOpen?3000:8000);
   return()=>{active=false;window.clearInterval(timer)};
  },[user,latestOrder?.id,latestOrder?.order_number,trackOpen,path]);
  useEffect(()=>{
   if(!path.startsWith('/admin')||(!adminAllowed&&!demoAdmin))return;
   let active=true;
-  const refresh=async()=>{const{data}=await loadOrders();if(active&&data)setOrders(data)};
+  const refresh=async()=>{const{loadOrders}=await ordersApi();const{data}=await loadOrders();if(active&&data)setOrders(data)};
   refresh();
-  const unsubscribe=subscribeToOrders(refresh);
+  let unsubscribe=()=>{};ordersApi().then(({subscribeToOrders})=>{if(active)unsubscribe=subscribeToOrders(refresh)});
   const refreshTimer=window.setInterval(refresh,8000);
   const onFocus=()=>refresh();
   window.addEventListener('focus',onFocus);
   return()=>{active=false;unsubscribe();window.clearInterval(refreshTimer);window.removeEventListener('focus',onFocus)};
  },[adminAllowed,demoAdmin,path]);
- const statusUpdate=async(id,status,stage)=>{const previous=orders;setOrders(items=>items.map(order=>order.id===id?{...order,status,stage}:order));const{error}=await updateStoredOrder(id,status,stage);if(error){setOrders(previous);window.alert(`No se pudo actualizar el pedido: ${error.message}`);return false}return true};
- const deleteOrder=async id=>{const previous=orders,previousCustomer=customerOrders,isSame=order=>order.id!==id&&order.order_number!==id;setOrders(items=>items.filter(isSame));setCustomerOrders(items=>items.filter(isSame));if(latestOrder&&(latestOrder.id===id||latestOrder.order_number===id))setTrackOpen(false);const{error}=await deleteStoredOrder(id);if(error){setOrders(previous);setCustomerOrders(previousCustomer);window.alert(`No se pudo eliminar el pedido: ${error.message}`);return false}return true};
- const toggleStore=async()=>{const next=!storeOpen;setStoreOpen(next);localStorage.setItem('shet-store-open',String(next));const{error}=await updateStoreOpen(next);if(error){setStoreOpen(!next);window.alert(`No se pudo cambiar el estado de la tienda: ${error.message}`)}};
- const toggleStock=async id=>{const next=stock[id]===false;setStock(items=>({...items,[id]:next}));const{error}=await updateProductAvailability(id,next);if(error){setStock(items=>({...items,[id]:!next}));window.alert(`No se pudo cambiar la disponibilidad: ${error.message}`)}};
+ const statusUpdate=async(id,status,stage)=>{const previous=orders;setOrders(items=>items.map(order=>order.id===id?{...order,status,stage}:order));const{updateStoredOrder}=await ordersApi();const{error}=await updateStoredOrder(id,status,stage);if(error){setOrders(previous);window.alert(`No se pudo actualizar el pedido: ${error.message}`);return false}return true};
+ const deleteOrder=async id=>{const previous=orders,previousCustomer=customerOrders,isSame=order=>order.id!==id&&order.order_number!==id;setOrders(items=>items.filter(isSame));setCustomerOrders(items=>items.filter(isSame));if(latestOrder&&(latestOrder.id===id||latestOrder.order_number===id))setTrackOpen(false);const{deleteStoredOrder}=await ordersApi();const{error}=await deleteStoredOrder(id);if(error){setOrders(previous);setCustomerOrders(previousCustomer);window.alert(`No se pudo eliminar el pedido: ${error.message}`);return false}return true};
+ const toggleStore=async()=>{const next=!storeOpen;setStoreOpen(next);localStorage.setItem('shet-store-open',String(next));const{updateStoreOpen}=await storeApi();const{error}=await updateStoreOpen(next);if(error){setStoreOpen(!next);window.alert(`No se pudo cambiar el estado de la tienda: ${error.message}`)}};
+ const toggleStock=async id=>{const next=stock[id]===false;setStock(items=>({...items,[id]:next}));const{updateProductAvailability}=await storeApi();const{error}=await updateProductAvailability(id,next);if(error){setStock(items=>({...items,[id]:!next}));window.alert(`No se pudo cambiar la disponibilidad: ${error.message}`)}};
  const openAccount=()=>{if(user){setAccountOpen(true);return}setAuthOpen(true)};
- const closeCustomerSession=async()=>{await signOutCustomer();setAccountOpen(false);setCustomerOrders([])};
+ const closeCustomerSession=async()=>{const{signOutCustomer}=await supabaseApi();await signOutCustomer();setAccountOpen(false);setCustomerOrders([])};
  const demoLogin=(email,password)=>{if(email==='shet.burger@gmail.com'&&password==='shet2026'){localStorage.setItem('shet-admin-auth','true');setDemoAdmin(true);return {ok:true}}return {error:'Correo o contraseña incorrectos.'}};
- const logoutAdmin=async()=>{localStorage.removeItem('shet-admin-auth');setDemoAdmin(false);await signOutCustomer()};
+ const logoutAdmin=async()=>{localStorage.removeItem('shet-admin-auth');setDemoAdmin(false);const{signOutCustomer}=await supabaseApi();await signOutCustomer()};
  const adminProps={products,stock,onToggleStock:toggleStock,orders,onUpdateOrder:statusUpdate,onDeleteOrder:deleteOrder,storeOpen,onToggleStore:toggleStore,user,authReady:authReady&&(!user||adminAllowed!==null),adminAllowed,onSignOut:logoutAdmin,demoAdmin,onDemoLogin:demoLogin};
- if(path==='/admin/analytics'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <AdminPanel {...adminProps} onLogin={()=>signInWithGoogle('/admin/analytics')}/>;
- if(path==='/admin/analytics')return <AdminAnalytics orders={orders}/>;
- if(path==='/admin')return <AdminPanel {...adminProps} onLogin={()=>signInWithGoogle('/admin')}/>;
+ if(path==='/admin/analytics'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin/analytics'))}/></Suspense>;
+ if(path==='/admin/analytics')return <Suspense fallback={<AdminLoading/>}><AdminAnalytics orders={orders}/></Suspense>;
+ if(path==='/admin')return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin'))}/></Suspense>;
  const add=(product,variant)=>{if(!storeOpen||stock[product.id]===false)return;const selected={label:variant[0],price:Number(variant[1].replace(/\D/g,''))},key=`${product.id}-${selected.label}`;setCart(items=>{const found=items.find(item=>item.key===key);return found?items.map(item=>item.key===key?{...item,quantity:item.quantity+1}:item):[...items,{key,product,variant:selected,quantity:1}]});setOpen(true)};
  const change=(key,quantity)=>setCart(items=>quantity<=0?items.filter(item=>item.key!==key):items.map(item=>item.key===key?{...item,quantity}:item));
  const confirm=async details=>{
@@ -99,7 +106,7 @@ export default function App(){
   const total=calculateOrderTotal(subtotal,details.mode,details.form.zone);
   const address=details.mode==='delivery'?formatDeliveryAddress(details.form.zone,details.form.address):'';
   const preview=await fileData(details.receipt),order={order_number:`SHET-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0,4).toUpperCase()}`,user_id:user?.id||null,items:cart.map(item=>({product:item.product,quantity:item.quantity,price:item.variant.price,variant:item.variant.label})),total,fulfillment:details.mode,customer_name:details.form.name.trim(),customer_phone:details.form.phone,address,status:'Pedido recibido',stage:0,receipt_name:details.receipt?.name||'',receipt_preview:preview,created_at:new Date().toISOString()};
-  const result=await saveOrder(order,details.receipt);
+  const{saveOrder,normalizeOrder}=await ordersApi();const result=await saveOrder(order,details.receipt);
   if(result.error&&result.error.message!=='Supabase no configurado')throw result.error;
   const saved=result.data?normalizeOrder(result.data):normalizeOrder({...order,id:order.order_number,receipt_path:null});
   setOrders(items=>[saved,...items.filter(item=>item.id!==saved.id)]);
@@ -107,5 +114,5 @@ export default function App(){
   setCart([]);
  };
  const count=cart.reduce((sum,item)=>sum+item.quantity,0);
- return <><Header path={path} cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><a className="skip-link" href="#main-content">Ir al contenido</a><main id="main-content" tabIndex={-1} className={path==='/delivery'?'delivery-page':'home-page'}>{path==='/delivery'?<DeliveryPage onAdd={add} stock={stock} storeOpen={storeOpen}/>:<HomePage/>}</main><ScrollReveals key={path}/>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm} onTrack={()=>setTrackOpen(true)} products={products} stock={stock} onAdd={add} onExplore={()=>{setOpen(false);navigate('/delivery')}}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</>;
+ return <><Header path={path} cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><a className="skip-link" href="#main-content">Ir al contenido</a><main id="main-content" tabIndex={-1} className={path==='/delivery'?'delivery-page':'home-page'}>{path==='/delivery'?<DeliveryPage onAdd={add} stock={stock} storeOpen={storeOpen}/>:<HomePage/>}</main><ScrollReveals key={path}/><Suspense fallback={<div className="overlay-loading" role="status">Cargando…</div>}>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm} onTrack={()=>setTrackOpen(true)} products={products} stock={stock} onAdd={add} onExplore={()=>{setOpen(false);navigate('/delivery')}}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</Suspense></>;
 }

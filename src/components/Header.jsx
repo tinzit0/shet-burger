@@ -48,10 +48,10 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, us
       <a href="/delivery" data-route onClick={close} aria-current={path === '/delivery' ? 'page' : undefined}>PEDIR</a>
       <a href={directionsUrl} target="_blank" rel="noreferrer" onClick={close}>PUNTO DE RETIRO ↗</a>
       <button className="brand-header__mobile-account" type="button" onClick={()=>{close();onAccount()}}><UserRound/> MIS PEDIDOS</button>
-      {latestOrder&&<button className="brand-header__mobile-track" type="button" onClick={()=>{close();onTrack()}}>Ver compra <ShoppingBag/></button>}
-      <button className="brand-header__mobile-order" type="button" onClick={()=>{close();onCart()}}>CARRITO ({cartCount}) <ArrowUpRight /></button>
+      {latestOrder&&<button className="brand-header__mobile-track" type="button" onClick={()=>{close();onTrack()}}>SEGUIR PEDIDO <ShoppingBag/></button>}
+      <button className="brand-header__mobile-order" type="button" onClick={()=>{close();onCart()}}>PEDIR SHET ({cartCount}) <ArrowUpRight /></button>
     </nav>
-    <div className="brand-header__utilities"><button className="brand-header__account" type="button" onClick={onAccount}><UserRound/> MIS PEDIDOS</button>{latestOrder && <button className="brand-header__track" type="button" onClick={onTrack}>VER COMPRA</button>}<button className="brand-header__order" type="button" onClick={onCart}>CARRITO <ShoppingBag size={15}/><b>{cartCount}</b></button></div>
+    <div className="brand-header__utilities"><button className="brand-header__account" type="button" onClick={onAccount}><UserRound/> MIS PEDIDOS</button>{latestOrder && <button className="brand-header__track" type="button" onClick={onTrack}>SEGUIR PEDIDO</button>}<button className="brand-header__order" type="button" onClick={onCart}>PEDIR <ShoppingBag size={16}/><b aria-label={`${cartCount} productos`}>{cartCount}</b></button></div>
     <button ref={toggleRef} className="brand-header__toggle" type="button" onClick={() => setOpen(value => !value)} aria-label={open ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={open} aria-controls="main-navigation"><span>{open ? 'CERRAR' : 'MENÚ'}</span>{open ? <X /> : <Menu />}</button>
   </header>;
 }

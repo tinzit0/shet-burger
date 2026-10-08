@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Menu, ShoppingBag, UserRound, X } from 'lucide-react';
 import { directionsUrl } from '../config';
+import { navigate } from '../lib/navigation';
 
 export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, user, onAccount, path = '/' }) {
   const [open, setOpen] = useState(false);
@@ -28,7 +29,7 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, us
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
-    const resize = () => { if (window.innerWidth > 900) setOpen(false); };
+    const resize = () => { if (window.innerWidth > 980) setOpen(false); };
     document.addEventListener('keydown', keyboard); window.addEventListener('resize', resize);
     return () => { document.body.classList.remove('nav-open'); outside.forEach(el => { el.inert = false; }); document.removeEventListener('keydown', keyboard); window.removeEventListener('resize', resize); };
   }, [open]);
@@ -37,6 +38,16 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, us
     setOpen(false);
     const hash = event?.currentTarget?.hash;
     if (hash) requestAnimationFrame(() => { const target = document.querySelector(hash); if (target) { target.tabIndex = -1; target.focus({ preventScroll: true }); } });
+  };
+  const startOrder = () => {
+    close();
+    if (cartCount > 0) { onCart(); return; }
+    if (path !== '/delivery') { navigate('/delivery'); return; }
+    requestAnimationFrame(() => {
+      const menu = document.getElementById('menu');
+      menu?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+      if (menu) { menu.tabIndex = -1; menu.focus({ preventScroll: true }); }
+    });
   };
   return <header ref={headerRef} className={`brand-header${scrolled ? ' is-scrolled' : ''}`}>
     <a className="brand-header__logo" href="/" data-route onClick={close} aria-label="SHET BURGER — inicio">
@@ -49,9 +60,9 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, us
       <a href={directionsUrl} target="_blank" rel="noreferrer" onClick={close}>PUNTO DE RETIRO ↗</a>
       <button className="brand-header__mobile-account" type="button" onClick={()=>{close();onAccount()}}><UserRound/> MIS PEDIDOS</button>
       {latestOrder&&<button className="brand-header__mobile-track" type="button" onClick={()=>{close();onTrack()}}>SEGUIR PEDIDO <ShoppingBag/></button>}
-      <button className="brand-header__mobile-order" type="button" onClick={()=>{close();onCart()}}>PEDIR SHET ({cartCount}) <ArrowUpRight /></button>
+      <button className="brand-header__mobile-order" type="button" onClick={startOrder}>{cartCount ? `VER MI PEDIDO (${cartCount})` : 'PEDIR AHORA'} <ArrowUpRight /></button>
     </nav>
-    <div className="brand-header__utilities"><button className="brand-header__account" type="button" onClick={onAccount}><UserRound/> MIS PEDIDOS</button>{latestOrder && <button className="brand-header__track" type="button" onClick={onTrack}>SEGUIR PEDIDO</button>}<button className="brand-header__order" type="button" onClick={onCart}>PEDIR <ShoppingBag size={16}/><b aria-label={`${cartCount} productos`}>{cartCount}</b></button></div>
+    <div className="brand-header__utilities"><button className="brand-header__account" type="button" onClick={onAccount}><UserRound/> MIS PEDIDOS</button>{latestOrder && <button className="brand-header__track" type="button" onClick={onTrack}>SEGUIR PEDIDO</button>}<button className="brand-header__order" type="button" onClick={startOrder} aria-label={cartCount ? `Ver mi pedido, ${cartCount} ${cartCount === 1 ? 'producto' : 'productos'}` : 'Pedir ahora'}><span>{cartCount ? 'MI PEDIDO' : 'PEDIR AHORA'}</span>{cartCount ? <><ShoppingBag size={16} aria-hidden="true"/><b aria-hidden="true">{cartCount}</b></> : <ArrowUpRight size={18} aria-hidden="true"/>}</button></div>
     <button ref={toggleRef} className="brand-header__toggle" type="button" onClick={() => setOpen(value => !value)} aria-label={open ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={open} aria-controls="main-navigation"><span>{open ? 'CERRAR' : 'MENÚ'}</span>{open ? <X /> : <Menu />}</button>
   </header>;
 }

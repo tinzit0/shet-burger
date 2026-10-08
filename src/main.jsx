@@ -6,6 +6,7 @@ import './design/base.css';
 import './design/header.css';
 import './design/hero.css';
 import './design/home.css';
+import './design/delivery.css';
 import './design/menu.css';
 import './design/reviews.css';
 import './design/footer.css';

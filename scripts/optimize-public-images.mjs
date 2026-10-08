@@ -5,6 +5,8 @@ const jobs = [
   { source: 'public/assets/campaign/video-01-poster.jpg', outputs: [[480, 'public/assets/campaign/hero-poster-480.webp'], [640, 'public/assets/campaign/hero-poster-640.webp'], [960, 'public/assets/campaign/hero-poster-960.webp']] },
   { source: 'assets/videos shet o fotos/foto1.jpg', outputs: [[640, 'public/assets/campaign/home-foto-1-640.webp'], [1024, 'public/assets/campaign/home-foto-1-1024.webp']] },
   { source: 'assets/videos shet o fotos/foto3.jpg', outputs: [[640, 'public/assets/campaign/home-foto-3-640.webp'], [1024, 'public/assets/campaign/home-foto-3-1024.webp']] },
+  { source: 'assets/videos shet o fotos/foto11.jpeg', outputs: [[1600, 'public/assets/campaign/shet-pattern-1600.webp']] },
+  { source: 'assets/videos shet o fotos/foto13.jpeg', outputs: [[1200, 'public/assets/campaign/shet-outside-1200.webp']] },
 ];
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true });

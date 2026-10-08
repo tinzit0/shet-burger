@@ -2,7 +2,7 @@
   font-family: "DM Sans";
   font-style: normal;
   font-weight: 400 700;
-  font-display: optional;
+  font-display: swap;
   src: url("/assets/fonts/dm-sans-latin.woff2") format("woff2");
 }
 
@@ -10,7 +10,7 @@
   font-family: "Space Grotesk";
   font-style: normal;
   font-weight: 500 700;
-  font-display: optional;
+  font-display: swap;
   src: url("/assets/fonts/space-grotesk-latin.woff2") format("woff2");
 }
 
@@ -40,7 +40,7 @@
   --body: var(--font-body);
   --text-xs: 0.75rem;
   --text-sm: clamp(0.875rem, 0.84rem + 0.15vw, 0.95rem);
-  --text-base: clamp(0.95rem, 0.91rem + 0.2vw, 1.075rem);
+  --text-base: clamp(1rem, 0.96rem + 0.2vw, 1.075rem);
   --text-lg: clamp(1.125rem, 1rem + 0.55vw, 1.5rem);
   --text-xl: clamp(1.75rem, 1.3rem + 2vw, 3.25rem);
   --text-2xl: clamp(3rem, 1.7rem + 5.5vw, 7.5rem);

@@ -36,6 +36,6 @@ h1, h2, h3, p { margin-top: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  [class], [class]::before, [class]::after { animation: none; scroll-behavior: auto; transition-duration: 0.01ms; }
+  html body [class], html body [class]::before, html body [class]::after { animation: none; scroll-behavior: auto; transition-duration: 0.01ms; }
   .reveal-pending { opacity: 1; transform: none; }
 }

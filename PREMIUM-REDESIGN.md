@@ -1,5 +1,62 @@
 # SHET BURGER — Premium Redesign
 
+## SHET Mood con más contenido — 8 de octubre de 2026
+
+- El usuario señaló demasiado espacio blanco entre `SHET Mood` y `Nuestro lugar en el mundo / De Nonguén, con actitud`. La cabecera anterior separaba dos bloques pequeños en columnas muy amplias.
+- La cabecera ahora reúne título, fotografía y origen en una franja rosa suave de tres columnas. Se agregó «Tu gente, una caja rosa y un buen motivo para juntarse», la fotografía existente `burger-playlist.jpg` y el pie «El antojo va contigo». La imagen se muestra completa, sin recortes.
+- El bloque de Nonguén incorpora la dirección desde `business.pickupAddress` y un enlace real `Cómo llegar` basado en `directionsUrl`. No se fijaron direcciones nuevas ni se inventaron horarios.
+- Se redujo el espacio superior y se adaptó la composición a dos columnas en tablet y una en teléfono. Las cuatro fotografías cuadradas de la galería se conservaron completas. La portada a pantalla completa y los videos no se modificaron.
+- `node scripts/verify-mood-layout.mjs`: aprobado en nueve anchos de 320 a 1920 px, sin desbordes, superposiciones ni textos cortados; cinco fotografías completas y enlace accesible por teclado. Capturas en `artifacts/mood-filled/`. `npm.cmd run check`: 8 pruebas y build aprobados. Sin despliegue.
+
+## Video a pantalla completa — preferencia vigente, 7 de octubre de 2026
+
+- El usuario pidió reemplazar la composición dividida por un video que llene toda la pantalla, con el título al costado en computador y arriba de los ojos en teléfono. Esta decisión sustituye el encuadre vertical enmarcado y el título móvil inferior de la revisión anterior.
+- `Hero.jsx` y `hero.css`: fondo de video de ancho completo y altura del viewport, sin marco hueso, filtros ni degradados oscuros. Se usa `object-fit: cover`, que conserva la proporción del archivo vertical y recorta sus bordes según la pantalla; el original no se deforma ni se modifica.
+- Escritorio: título y acciones a la izquierda del ojo. Teléfono vertical: título arriba de la mirada y acciones en la parte inferior. Las pantallas bajas o apaisadas tienen ajustes propios para que los controles sigan visibles. La pausa queda en una capa independiente, accesible por toque y teclado.
+- `scripts/hero-composition.mjs` proyecta la zona del ojo desde el video original para comprobar que el título no la invada. Se verificaron nueve anchos entre 320 y 1920 px, móviles bajos y orientación horizontal, además de pausa real, navegación, carrito, movimiento reducido, 8 pruebas unitarias y build.
+- Capturas de esta revisión: `artifacts/fullscreen-eye-media/` y `artifacts/fullscreen-eye-responsive/`. No se tocaron precios, datos externos ni las otras secciones de la página. Sin despliegue.
+
+## Iteración anterior: portada editorial — 7 de octubre de 2026
+
+- Preferencia en esta iteración: mostrar el video completo junto con el título, sin tapar el ojo ni añadir hamburguesas, sellos o capas oscuras sobre él. El archivo `mirada.mp4` es vertical, de 720 × 1280; el recorte anterior provenía de `object-fit: cover` dentro de una franja horizontal.
+- La portada conserva la proporción nativa 9:16 con `object-fit: contain`. En escritorio el título acompaña al video en una composición de dos columnas; en móvil queda sobre la zona inferior de la mejilla, después del 70 % del encuadre. El control de reproducción está fuera de la imagen. El título y el video pertenecen a una única portada.
+- Acabado editorial: Space Grotesk con un acento en Georgia cursiva, fondo hueso, rosa suave, separadores finos y espacios más ordenados. SHET Mood y Universo SHET comparten esta dirección; se preservan las fotografías completas, los contenidos y los enlaces reales.
+- Corrección de fuentes: `font-display: optional` dejaba visible Arial Narrow incluso después de descargar Space Grotesk, confirmado con las fuentes realmente renderizadas en Chrome. Se usan `swap` y precarga de las dos fuentes locales para mostrar la tipografía elegida.
+- Se evitó que el logo se comprima en pantallas de 320 px, manteniendo visibles las acciones del encabezado.
+- Verificación: 8 pruebas unitarias y build aprobados; pruebas de diseño y pedidos de 320 a 1920 px, pausa/reproducción por toque, mouse y teclado, movimiento reducido, fotografías completas y geometría del video sin recortes. Capturas: `artifacts/premium-eye-media/` y `artifacts/premium-eye-responsive/`.
+- No se cambiaron precios, stock, pagos ni datos externos. No se realizó un despliegue. Esta sección y las siguientes registran iteraciones anteriores.
+
+## Ajuste de portada, fotografías y videos — octubre 2026
+
+- Preferencia confirmada: el ojo debe verse sin imágenes, sellos ni oscurecimientos encima. Se eliminó el degradado negro y el bloque inferior ahora usa el fondo hueso del sitio. También se retiró la frase «Costra crujiente, cheddar fundido y ese desorden perfecto. El antojo tiene nombre».
+- `SHET Mood` presenta cuatro marcos cuadrados iguales. Las fotografías se muestran completas con `object-fit: contain`, sin zoom ni desplazamiento sobre la imagen; las etiquetas quedan debajo. `La mesa` pasó a `Buena compañía`.
+- `Universo SHET` usa `Actitud SHET` en lugar de `02 · El código`, incorpora detalles gráficos de marca y el bloque `El plan lo pones tú`, con enlaces reales para delivery, compartir y retiro.
+- Causa de la pausa inaccesible: el botón del film estaba dentro de una capa con `z-index: -2`, cubierta por `.film__copy`. El control ahora es un elemento hermano por encima de las capas visuales, con icono y texto visibles también en móvil.
+- `src/lib/useVideoPlayback.js` coordina ambos videos. La pausa manual se conserva al salir y volver al viewport; los cambios de visibilidad no reinician los efectos ni sobrescriben la última elección con rechazos de `play()`. Se respeta el movimiento reducido y el ahorro de datos, con reproducción manual disponible.
+- QA: `node scripts/verify-home-media.mjs` prueba clic, toque, teclado, tiempo de reproducción detenido, pausa persistente y movimiento reducido. Capturas en `artifacts/home-media-refresh/`. `verify-premium.mjs` aprobó de 320 a 1920 px; capturas actualizadas en `artifacts/home-media-responsive/`.
+
+## Inicio y pedidos con más vida — octubre 2026
+
+- Inicio: por preferencia del usuario, el ojo queda despejado en una franja de video propia. Se retiraron la hamburguesa, el sello de papas incluidas, el halo y los textos decorativos superpuestos. `Fat Smash Burgers`, el título y las acciones quedan debajo del video, con encuadre adaptado a móvil y escritorio y control para pausar/reproducir.
+- `Pedir ahora` vuelve a tener contraste y permanece visible en la cabecera móvil. La causa era la mayor especificidad de `.brand-header__utilities button`, que imponía un fondo transparente, y la ocultación de toda la zona de utilidades hasta 980 px.
+- Con el carrito vacío, el botón abre `/delivery` o baja al menú si ya se está en esa página. Con productos, muestra `Mi pedido` y abre el carrito.
+- Pedidos: nueva portada fotográfica, precios obtenidos del catálogo, accesos a las cinco categorías y tarjetas con fotos grandes, variantes y acciones de ancho completo. Los accesos desplazan la página; no filtran ni ocultan productos.
+- Los estilos de pedidos se agrupan en `src/design/delivery.css`. Se reutilizan las imágenes locales; no se agregan dependencias ni se modifican precios, stock, pagos o la integración con Supabase.
+- Se corrigió la prioridad del estilo de movimiento reducido para que las hojas cargadas después no reactiven las animaciones.
+- Verificación: `npm.cmd run check` y `scripts/verify-premium.mjs`, con capturas en `artifacts/life-refresh/`. La revisión cubre de 320 a 1920 px, contraste/visibilidad del botón, navegación, variantes, carrito, video, movimiento reducido, agotados y tienda cerrada. Las respuestas de disponibilidad se simulan solo dentro del navegador de prueba.
+- No se ha realizado un despliegue. Los resultados Lighthouse más abajo corresponden al rediseño anterior.
+
+## Actualización del inicio — ritmo editorial
+
+- La portada del ojo y la navegación se conservaron como elementos centrales de marca.
+- Se agregó una franja de acciones inmediata para pedir o recorrer las burgers insignia.
+- La promesa y el diario fotográfico se unificaron en el collage editorial `SHET MOOD`, con escalas y encuadres más expresivos.
+- Una franja gráfica de alto contraste y el bloque `Universo SHET` incorporan movimiento, cultura de marca e Instagram sin alterar el flujo de compra.
+- Se retiró `Cuatro formas de caer` del inicio; las hamburguesas siguen disponibles en la página de pedidos.
+- Los títulos dentro de tarjetas ahora escalan según el ancho real de cada caja, evitando cortes y desbordes en móvil y tablet.
+- Las nuevas fotografías se sirven en WebP optimizado; el patrón pesa 233 KB y la escena exterior 175 KB.
+- El menú, carrito, pedidos, cuenta, seguimiento y administración mantienen su comportamiento anterior.
+
 ## Resultado
 
 El sitio público fue reconstruido como una experiencia editorial gastronómica con una narrativa más corta y clara: **Hero → Promesa → Burgers insignia → Film/Ambiente → Prueba social → Ubicación/Delivery → Cierre**. La lógica de catálogo, precios, carrito, despacho, pedidos, seguimiento, autenticación, stock y administración se conserva.

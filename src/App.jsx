@@ -2,14 +2,16 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
 import DeliveryPage from './components/DeliveryPage';
+import WhatsAppButton from './components/WhatsAppButton';
 import { usePublicRoute, navigate } from './lib/navigation';
 import ScrollReveals from './components/ScrollReveals';
-import { products } from './data';
+import { products as defaultProducts, defaultSiteContent } from './data';
 import { calculateOrderTotal, formatDeliveryAddress, getDeliveryZone } from './lib/delivery';
 
 const CartDrawer = lazy(() => import('./components/CartDrawer'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const AdminAnalytics = lazy(() => import('./components/AdminAnalytics'));
+const AdminContentEditor = lazy(() => import('./components/AdminContentEditor'));
 const OrderTracker = lazy(() => import('./components/OrderTracker'));
 const CustomerAccount = lazy(() => import('./components/CustomerAccount'));
 const CustomerAuth = lazy(() => import('./components/CustomerAuth'));
@@ -17,17 +19,27 @@ const AdminLoading = () => <main className="admin-login"><div className="admin-l
 const ordersApi = () => import('./lib/orders');
 const storeApi = () => import('./lib/store');
 const supabaseApi = () => import('./lib/supabase');
+const contentApi = () => import('./lib/content');
 
 const fileData=file=>new Promise(resolve=>{if(!file)return resolve(null);const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(file)});
 const readStoredJSON=(key,fallback)=>{try{const value=localStorage.getItem(key);return value?JSON.parse(value):fallback}catch{localStorage.removeItem(key);return fallback}};
 
 export default function App(){
  const path = usePublicRoute();
- const[cart,setCart]=useState([]),[open,setOpen]=useState(false),[trackOpen,setTrackOpen]=useState(false),[authOpen,setAuthOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[user,setUser]=useState(null),[authReady,setAuthReady]=useState(false),[demoAdmin,setDemoAdmin]=useState(()=>localStorage.getItem('shet-admin-auth')==='true'),[adminAllowed,setAdminAllowed]=useState(null),[customerOrders,setCustomerOrders]=useState([]),[customerLoading,setCustomerLoading]=useState(false),[storeOpen,setStoreOpen]=useState(()=>localStorage.getItem('shet-store-open')!=='false'),[orders,setOrders]=useState(()=>{const saved=readStoredJSON('shet-demo-orders',[]);return Array.isArray(saved)?saved:[]}),[stock,setStock]=useState(()=>{const base=Object.fromEntries(products.map(product=>[product.id,true]));const saved=readStoredJSON('shet-demo-stock',{});return saved&&typeof saved==='object'&&!Array.isArray(saved)?{...base,...saved}:base});
+ const[cart,setCart]=useState([]),[open,setOpen]=useState(false),[trackOpen,setTrackOpen]=useState(false),[authOpen,setAuthOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[user,setUser]=useState(null),[authReady,setAuthReady]=useState(false),[demoAdmin,setDemoAdmin]=useState(()=>localStorage.getItem('shet-admin-auth')==='true'),[adminAllowed,setAdminAllowed]=useState(null),[customerOrders,setCustomerOrders]=useState([]),[customerLoading,setCustomerLoading]=useState(false),[storeOpen,setStoreOpen]=useState(()=>localStorage.getItem('shet-store-open')!=='false'),[orders,setOrders]=useState(()=>{const saved=readStoredJSON('shet-demo-orders',[]);return Array.isArray(saved)?saved:[]}),[stock,setStock]=useState(()=>{const base=Object.fromEntries(defaultProducts.map(product=>[product.id,true]));const saved=readStoredJSON('shet-demo-stock',{});return saved&&typeof saved==='object'&&!Array.isArray(saved)?{...base,...saved}:base});
+ const[products,setProducts]=useState(()=>{const saved=readStoredJSON('shet-managed-products',defaultProducts);return Array.isArray(saved)&&saved.length?saved:defaultProducts});
+ const[siteContent,setSiteContent]=useState(()=>({...defaultSiteContent,...readStoredJSON('shet-site-content',{})}));
  const latestOrder=user?(customerOrders[0]||null):(orders[0]||null);
  useEffect(()=>{localStorage.setItem('shet-demo-orders',JSON.stringify(orders))},[orders]);
  useEffect(()=>{localStorage.setItem('shet-demo-stock',JSON.stringify(stock))},[stock]);
  useEffect(()=>{localStorage.setItem('shet-store-open',String(storeOpen))},[storeOpen]);
+ useEffect(()=>{localStorage.setItem('shet-managed-products',JSON.stringify(products))},[products]);
+ useEffect(()=>{localStorage.setItem('shet-site-content',JSON.stringify(siteContent))},[siteContent]);
+ useEffect(()=>{
+  let active=true;
+  contentApi().then(({loadManagedContent})=>loadManagedContent(products,siteContent)).then(result=>{if(!active)return;if(result.products?.length)setProducts(result.products);if(result.content)setSiteContent(result.content)}).catch(()=>{});
+  return()=>{active=false};
+ },[]);
  useEffect(()=>{
   let active=true,subscription;
   supabaseApi().then(({supabase})=>{
@@ -50,7 +62,7 @@ export default function App(){
   const refresh=async()=>{const{loadStoreState}=await storeApi();const result=await loadStoreState(products.map(product=>product.id));if(active&&!result.error){setStoreOpen(result.storeOpen);setStock(result.stock)}};
   refresh();storeApi().then(({subscribeToStore})=>{if(active)unsubscribe=subscribeToStore(refresh)});
   return()=>{active=false;unsubscribe()};
- },[]);
+ },[products]);
  useEffect(()=>{
   if(!user){setCustomerOrders([]);return}
   let active=true;
@@ -85,10 +97,15 @@ export default function App(){
  const closeCustomerSession=async()=>{const{signOutCustomer}=await supabaseApi();await signOutCustomer();setAccountOpen(false);setCustomerOrders([])};
  const demoLogin=(email,password)=>{if(email==='shet.burger@gmail.com'&&password==='shet2026'){localStorage.setItem('shet-admin-auth','true');setDemoAdmin(true);return {ok:true}}return {error:'Correo o contraseña incorrectos.'}};
  const logoutAdmin=async()=>{localStorage.removeItem('shet-admin-auth');setDemoAdmin(false);const{signOutCustomer}=await supabaseApi();await signOutCustomer()};
+ const saveProduct=async product=>{const next=products.some(item=>item.id===product.id)?products.map(item=>item.id===product.id?product:item):[...products,product];setProducts(next);setStock(items=>({...items,[product.id]:items[product.id]??true}));const{saveManagedCatalog}=await contentApi();await saveManagedCatalog(next);return true};
+ const removeProduct=async id=>{if(products.length<=1)return false;const next=products.filter(product=>product.id!==id);setProducts(next);setCart(items=>items.filter(item=>item.product.id!==id));const{removeManagedProduct}=await contentApi();await removeManagedProduct(id);return true};
+ const saveContent=async content=>{const next={...defaultSiteContent,...content};setSiteContent(next);const{saveManagedContent}=await contentApi();await saveManagedContent(next);return true};
  const adminProps={products,stock,onToggleStock:toggleStock,orders,onUpdateOrder:statusUpdate,onDeleteOrder:deleteOrder,storeOpen,onToggleStore:toggleStore,user,authReady:authReady&&(!user||adminAllowed!==null),adminAllowed,onSignOut:logoutAdmin,demoAdmin,onDemoLogin:demoLogin};
+ if(path==='/admin/content'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin/content'))}/></Suspense>;
+ if(path==='/admin/content')return <Suspense fallback={<AdminLoading/>}><AdminContentEditor products={products} siteContent={siteContent} onSaveProduct={saveProduct} onDeleteProduct={removeProduct} onSaveContent={saveContent}/></Suspense>;
  if(path==='/admin/analytics'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin/analytics'))}/></Suspense>;
  if(path==='/admin/analytics')return <Suspense fallback={<AdminLoading/>}><AdminAnalytics orders={orders}/></Suspense>;
- if(path==='/admin')return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin'))}/></Suspense>;
+ if(path==='/admin')return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin'))}/><a className="admin-content-fab" href="/admin/content">EDITAR SITIO</a></Suspense>;
  const add=(product,variant,customization={})=>{if(!storeOpen||stock[product.id]===false)return;const selected={label:variant[0],price:Number(variant[1].replace(/\D/g,''))},normalizedCustomization={note:(customization.note||'').trim(),burgerChoices:Array.isArray(customization.burgerChoices)?customization.burgerChoices:[]},key=`${product.id}-${selected.label}-${JSON.stringify(normalizedCustomization)}`;setCart(items=>{const found=items.find(item=>item.key===key);return found?items.map(item=>item.key===key?{...item,quantity:item.quantity+1}:item):[...items,{key,product,variant:selected,customization:normalizedCustomization,quantity:1}]});setOpen(true)};
  const change=(key,quantity)=>setCart(items=>quantity<=0?items.filter(item=>item.key!==key):items.map(item=>item.key===key?{...item,quantity}:item));
  const confirm=async details=>{
@@ -114,5 +131,5 @@ export default function App(){
   setCart([]);
  };
  const count=cart.reduce((sum,item)=>sum+item.quantity,0);
- return <><Header path={path} cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><a className="skip-link" href="#main-content">Ir al contenido</a><main id="main-content" tabIndex={-1} className={path==='/delivery'?'delivery-page':'home-page'}>{path==='/delivery'?<DeliveryPage onAdd={add} stock={stock} storeOpen={storeOpen}/>:<HomePage onAdd={add} stock={stock} storeOpen={storeOpen}/>}</main><ScrollReveals key={path}/><Suspense fallback={<div className="overlay-loading" role="status">Cargando…</div>}>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm} onTrack={()=>setTrackOpen(true)} products={products} stock={stock} onAdd={add} onExplore={()=>{setOpen(false);navigate('/delivery')}}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</Suspense></>;
+ return <><Header path={path} cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><a className="skip-link" href="#main-content">Ir al contenido</a><main id="main-content" tabIndex={-1} className={path==='/delivery'?'delivery-page':'home-page'}>{path==='/delivery'?<DeliveryPage onAdd={add} stock={stock} storeOpen={storeOpen} products={products} content={siteContent}/>:<HomePage content={siteContent}/>}</main><WhatsAppButton/><ScrollReveals key={path}/><Suspense fallback={<div className="overlay-loading" role="status">Cargando…</div>}>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm} onTrack={()=>setTrackOpen(true)} products={products} stock={stock} onAdd={add} onExplore={()=>{setOpen(false);navigate('/delivery')}}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</Suspense></>;
 }

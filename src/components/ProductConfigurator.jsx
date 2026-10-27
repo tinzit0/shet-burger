@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, MessageSquareText, X } from 'lucide-react';
-import { products } from '../data';
 import BurgerPhoto from './BurgerPhoto';
 
-export default function ProductConfigurator({ product, initialVariant, stock, storeOpen, onCancel, onConfirm }) {
+export default function ProductConfigurator({ product, products, initialVariant, stock, storeOpen, onCancel, onConfirm }) {
   const availableBurgers = useMemo(
     () => products.filter(item => item.category === 'burgers' && stock[item.id] !== false),
     [stock],

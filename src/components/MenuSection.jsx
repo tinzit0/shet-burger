@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { ArrowUpRight, Plus, Sparkles } from 'lucide-react';
-import { categories, products } from '../data';
+import { categories } from '../data';
 import BurgerPhoto from './BurgerPhoto';
 import ProductConfigurator from './ProductConfigurator';
 
-export default function MenuSection({ onAdd, stock = {}, storeOpen = true }) {
+export default function MenuSection({ onAdd, stock = {}, storeOpen = true, products = [], content }) {
   const [variants, setVariants] = useState({});
   const [configuring, setConfiguring] = useState(null);
 
@@ -23,7 +23,7 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true }) {
     </nav>
     <section className="menu-section editorial-menu" id="menu" aria-labelledby="menu-title">
     {!storeOpen && <div className="store-closed-banner">PEDIDOS CERRADOS <span>Las compras están temporalmente deshabilitadas.</span></div>}
-    <div className="editorial-menu-heading"><div><span className="menu-eyebrow">DE NUESTRA PLANCHA A TU MESA</span><h2 id="menu-title" data-reveal>ELIGE TU<br/><span>ANTOJO.</span></h2></div><p><Sparkles aria-hidden="true"/><span>Todas las hamburguesas<br/><strong>incluyen papas fritas.</strong></span></p></div>
+    <div className="editorial-menu-heading"><div><span className="menu-eyebrow">{content.menuEyebrow}</span><h2 id="menu-title" data-reveal>{content.menuTitle}<br/><span>{content.menuAccent}</span></h2></div><p><Sparkles aria-hidden="true"/><span>{content.menuNote}</span></p></div>
     <div className="menu-catalog">
       {categories.map(category => {
         const categoryProducts = products.filter(product => product.category === category.id);
@@ -48,6 +48,7 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true }) {
   </section>
   {configuring && <ProductConfigurator
     product={configuring.product}
+    products={products}
     initialVariant={configuring.variant}
     stock={stock}
     storeOpen={storeOpen}

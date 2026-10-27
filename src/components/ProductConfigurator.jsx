@@ -5,8 +5,9 @@ import BurgerPhoto from './BurgerPhoto';
 export default function ProductConfigurator({ product, products, initialVariant, stock, storeOpen, onCancel, onConfirm }) {
   const availableBurgers = useMemo(
     () => products.filter(item => item.category === 'burgers' && stock[item.id] !== false),
-    [stock],
+    [products, stock],
   );
+  const productAvailable = stock[product.id] !== false;
   const [variant, setVariant] = useState(initialVariant || product.prices[0]);
   const [note, setNote] = useState('');
   const [burgerChoices, setBurgerChoices] = useState(() =>
@@ -24,11 +25,16 @@ export default function ProductConfigurator({ product, products, initialVariant,
     };
   }, [onCancel]);
 
+  useEffect(() => {
+    setBurgerChoices(items => items.map(id => availableBurgers.some(burger => burger.id === id) ? id : (availableBurgers[0]?.id || '')));
+  }, [availableBurgers]);
+
   const updateChoice = (index, value) => setBurgerChoices(items => items.map((item, itemIndex) => itemIndex === index ? value : item));
   const submit = event => {
     event.preventDefault();
+    if (!storeOpen || !productAvailable || (product.burgerChoiceCount > 0 && !availableBurgers.length)) return;
     const chosenNames = burgerChoices.map(id => availableBurgers.find(item => item.id === id)?.name).filter(Boolean);
-    onConfirm(product, variant, { note: note.trim(), burgerChoices: chosenNames });
+    onConfirm(product, variant, { note: note.trim(), burgerChoices: chosenNames, burgerChoiceIds: burgerChoices.filter(Boolean) });
   };
 
   return <div className="product-configurator" role="dialog" aria-modal="true" aria-labelledby="product-configurator-title">
@@ -49,8 +55,10 @@ export default function ProductConfigurator({ product, products, initialVariant,
           {burgerChoices.map((choice, index) => <label key={index}>Hamburguesa {index + 1}<select required value={choice} onChange={event => updateChoice(index, event.target.value)}>{availableBurgers.map(burger => <option key={burger.id} value={burger.id}>{burger.name}</option>)}</select></label>)}
           {!availableBurgers.length && <p className="product-configurator__warning">No hay hamburguesas disponibles para completar esta promoción.</p>}
         </fieldset>}
+        {!storeOpen && <p className="product-configurator__warning">La tienda está cerrada. Podrás elegir este producto cuando volvamos a abrir.</p>}
+        {storeOpen && !productAvailable && <p className="product-configurator__warning">Este producto está agotado por el momento.</p>}
         <label className="product-configurator__note"><span><MessageSquareText/> Instrucciones especiales <small>Opcional</small></span><textarea maxLength="240" rows="3" value={note} onChange={event => setNote(event.target.value)} placeholder="Ej: sin pepinillos, sin cebolla o salsa aparte"/><small>{note.length}/240</small></label>
-        <button className="product-configurator__submit" type="submit" disabled={!storeOpen || (product.burgerChoiceCount > 0 && !availableBurgers.length)}><span>AGREGAR AL PEDIDO</span><b>{variant[1]}</b><Check/></button>
+        <button className="product-configurator__submit" type="submit" disabled={!storeOpen || !productAvailable || (product.burgerChoiceCount > 0 && !availableBurgers.length)}><span>{!storeOpen ? 'TIENDA CERRADA' : !productAvailable ? 'PRODUCTO AGOTADO' : 'AGREGAR AL PEDIDO'}</span><b>{variant[1]}</b><Check/></button>
       </div>
     </form>
   </div>;

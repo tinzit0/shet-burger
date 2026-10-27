@@ -17,11 +17,12 @@ const mobileHeroImages = {
   vicio: '/assets/campaign/cowboy-smoke.jpg',
 };
 
-export default function MenuCover({ storeOpen, products }) {
+export default function MenuCover({ storeOpen, stock = {}, products }) {
   const preferredSlides = slideIds.map(id => products.find(product => product.id === id)).filter(Boolean);
   const slides = preferredSlides.length ? preferredSlides : products.filter(product => product.image).slice(0, 5);
   const [active, setActive] = useState(0);
   const current = slides[active % slides.length];
+  const currentAvailable = storeOpen && stock[current.id] !== false;
   const copy = slideCopy[current.id] || { eyebrow: current.category === 'promos' ? 'PROMOCIÓN SHET' : 'FAT SMASH BURGER', headline: `${current.name}\nSHET.`, note: current.description };
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function MenuCover({ storeOpen, products }) {
         <h1>{copy.headline.split('\n').map((line, index) => <span key={line}>{line}{index === 0 && <br/>}</span>)}</h1>
         <p>{copy.note}</p>
         <div className="menu-cover__actions">
-          <a className="menu-cover__primary" href={`#product-${current.id}`}><span>{current.category === 'promos' ? 'ELEGIR ESTA PROMO' : 'VER ESTA BURGER'}</span><strong>{current.prices[0][1]}</strong><ArrowUpRight/></a>
+          <a className={`menu-cover__primary${currentAvailable ? '' : ' is-unavailable'}`} href={`#product-${current.id}`} aria-disabled={!currentAvailable}><span>{!storeOpen ? 'TIENDA CERRADA' : stock[current.id] === false ? 'AGOTADO' : current.category === 'promos' ? 'ELEGIR ESTA PROMO' : 'VER ESTA BURGER'}</span><strong>{current.prices[0][1]}</strong><ArrowUpRight/></a>
           <a className="menu-cover__secondary" href="#menu">VER TODO EL MENÚ <ArrowDown/></a>
         </div>
       </div>

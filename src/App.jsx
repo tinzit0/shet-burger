@@ -29,6 +29,7 @@ export default function App(){
  const[cart,setCart]=useState([]),[open,setOpen]=useState(false),[trackOpen,setTrackOpen]=useState(false),[authOpen,setAuthOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[user,setUser]=useState(null),[authReady,setAuthReady]=useState(false),[demoAdmin,setDemoAdmin]=useState(()=>localStorage.getItem('shet-admin-auth')==='true'),[adminAllowed,setAdminAllowed]=useState(null),[customerOrders,setCustomerOrders]=useState([]),[customerLoading,setCustomerLoading]=useState(false),[shopNotice,setShopNotice]=useState(''),[storeOpen,setStoreOpen]=useState(()=>localStorage.getItem('shet-store-open')!=='false'),[orders,setOrders]=useState(()=>{const saved=readStoredJSON('shet-demo-orders',[]);return Array.isArray(saved)?saved:[]}),[stock,setStock]=useState(()=>{const base=Object.fromEntries(defaultProducts.map(product=>[product.id,true]));const saved=readStoredJSON('shet-demo-stock',{});return saved&&typeof saved==='object'&&!Array.isArray(saved)?{...base,...saved}:base});
  const[products,setProducts]=useState(()=>{const saved=readStoredJSON('shet-managed-products',defaultProducts);return Array.isArray(saved)&&saved.length?saved:defaultProducts});
  const[siteContent,setSiteContent]=useState(()=>({...defaultSiteContent,...readStoredJSON('shet-site-content',{})}));
+ const[storeSyncState,setStoreSyncState]=useState(()=>localStorage.getItem('shet-admin-auth')==='true'?'local':'connecting');
  const latestOrder=user?(customerOrders[0]||null):(orders[0]||null);
  useEffect(()=>{localStorage.setItem('shet-demo-orders',JSON.stringify(orders))},[orders]);
  useEffect(()=>{localStorage.setItem('shet-demo-stock',JSON.stringify(stock))},[stock]);
@@ -36,6 +37,7 @@ export default function App(){
  useEffect(()=>{localStorage.setItem('shet-managed-products',JSON.stringify(products))},[products]);
  useEffect(()=>{localStorage.setItem('shet-site-content',JSON.stringify(siteContent))},[siteContent]);
  useEffect(()=>{if(!shopNotice)return undefined;const timer=window.setTimeout(()=>setShopNotice(''),4500);return()=>window.clearTimeout(timer)},[shopNotice]);
+ useEffect(()=>{const syncLocal=event=>{if(event.storageArea!==localStorage)return;if(event.key==='shet-store-open'&&event.newValue!==null)setStoreOpen(event.newValue!=='false');if(event.key==='shet-demo-stock'&&event.newValue){const value=readStoredJSON('shet-demo-stock',{});if(value&&typeof value==='object'&&!Array.isArray(value))setStock(items=>({...items,...value}))}};window.addEventListener('storage',syncLocal);return()=>window.removeEventListener('storage',syncLocal)},[]);
  useEffect(()=>{
   let active=true;
   contentApi().then(({loadManagedContent})=>loadManagedContent(products,siteContent)).then(result=>{if(!active)return;if(result.products?.length)setProducts(result.products);if(result.content)setSiteContent(result.content)}).catch(()=>{});
@@ -58,12 +60,16 @@ export default function App(){
   supabaseApi().then(({isCurrentUserAdmin})=>isCurrentUserAdmin()).then(setAdminAllowed);
  },[user,authReady,demoAdmin,path]);
  useEffect(()=>{
-  if(demoAdmin)return undefined;
+  if(demoAdmin){setStoreSyncState('local');return undefined}
+  setStoreSyncState('connecting');
   let active=true;
   let unsubscribe=()=>{};
-  const refresh=async()=>{const{loadStoreState}=await storeApi();const result=await loadStoreState(products.map(product=>product.id));if(active&&!result.error){setStoreOpen(result.storeOpen);setStock(result.stock)}};
-  refresh();storeApi().then(({subscribeToStore})=>{if(active)unsubscribe=subscribeToStore(refresh)});
-  return()=>{active=false;unsubscribe()};
+  const refresh=async()=>{const{loadStoreState}=await storeApi();const result=await loadStoreState(products.map(product=>product.id));if(!active)return;if(result.error){setStoreSyncState(state=>state==='live'?'live':'degraded');return}setStoreOpen(result.storeOpen);setStock(result.stock)};
+  const applyRealtime=payload=>{if(!active)return;const row=payload.new||payload.record;if(payload.table==='store_settings'&&typeof row?.is_open==='boolean'){setStoreOpen(row.is_open);return}if(payload.table==='product_availability'&&row?.product_id){setStock(items=>({...items,[row.product_id]:row.available!==false}));return}refresh()};
+  const onStatus=status=>{if(!active)return;if(status==='SUBSCRIBED')setStoreSyncState('live');else if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status))setStoreSyncState('degraded')};
+  refresh();storeApi().then(({subscribeToStore})=>{if(active)unsubscribe=subscribeToStore(applyRealtime,onStatus)});
+  const timer=window.setInterval(refresh,10000),onFocus=()=>refresh();window.addEventListener('focus',onFocus);
+  return()=>{active=false;unsubscribe();window.clearInterval(timer);window.removeEventListener('focus',onFocus)};
  },[products,demoAdmin]);
  useEffect(()=>{
   if(!user){setCustomerOrders([]);return}
@@ -97,18 +103,20 @@ export default function App(){
  const toggleStock=async id=>{const next=stock[id]===false;const nextStock={...stock,[id]:next};setStock(nextStock);localStorage.setItem('shet-demo-stock',JSON.stringify(nextStock));if(demoAdmin)return {ok:true,local:true};const{updateProductAvailability}=await storeApi();const{error}=await updateProductAvailability(id,next);if(error){const previous={...nextStock,[id]:!next};setStock(previous);localStorage.setItem('shet-demo-stock',JSON.stringify(previous));window.alert(`No se pudo cambiar la disponibilidad: ${error.message}`);return false}return {ok:true,synced:true}};
  const openAccount=()=>{if(user){setAccountOpen(true);return}setAuthOpen(true)};
  const closeCustomerSession=async()=>{const{signOutCustomer}=await supabaseApi();await signOutCustomer();setAccountOpen(false);setCustomerOrders([])};
- const demoLogin=(email,password)=>{if(email==='shet.burger@gmail.com'&&password==='shet2026'){localStorage.setItem('shet-admin-auth','true');setDemoAdmin(true);return {ok:true}}return {error:'Correo o contraseña incorrectos.'}};
+ const demoLogin=async(email,password)=>{const{signInAdminWithPassword}=await supabaseApi();const remote=await signInAdminWithPassword(email,password);if(!remote.error){localStorage.removeItem('shet-admin-auth');setDemoAdmin(false);return {ok:true,synced:true}}if(email==='shet.burger@gmail.com'&&password==='shet2026'){localStorage.setItem('shet-admin-auth','true');setDemoAdmin(true);return {ok:true,local:true,warning:'Modo local: para sincronizar todos los dispositivos conecta la cuenta Google administradora.'}}return {error:'Correo o contraseña incorrectos.'}};
  const logoutAdmin=async()=>{localStorage.removeItem('shet-admin-auth');setDemoAdmin(false);const{signOutCustomer}=await supabaseApi();await signOutCustomer()};
  const saveProduct=async product=>{const next=products.some(item=>item.id===product.id)?products.map(item=>item.id===product.id?product:item):[...products,product];setProducts(next);setStock(items=>({...items,[product.id]:items[product.id]??true}));const{saveManagedCatalog}=await contentApi();const result=await saveManagedCatalog(next);return {ok:true,synced:!result.error,error:result.error||null}};
  const removeProduct=async id=>{if(products.length<=1)return false;const next=products.filter(product=>product.id!==id);setProducts(next);setCart(items=>items.filter(item=>item.product.id!==id));const{removeManagedProduct}=await contentApi();const result=await removeManagedProduct(id);return {ok:true,synced:!result.error,error:result.error||null}};
  const saveContent=async content=>{const next={...defaultSiteContent,...content};setSiteContent(next);const{saveManagedContent}=await contentApi();const result=await saveManagedContent(next);return {ok:true,synced:!result.error,error:result.error||null}};
  const uploadProductImage=async(file,productId)=>{const{uploadManagedImage}=await contentApi();return uploadManagedImage(file,productId)};
- const adminProps={products,stock,onToggleStock:toggleStock,orders,onUpdateOrder:statusUpdate,onDeleteOrder:deleteOrder,storeOpen,onToggleStore:toggleStore,user,authReady:authReady&&(!user||adminAllowed!==null),adminAllowed,onSignOut:logoutAdmin,demoAdmin,onDemoLogin:demoLogin};
- if(path==='/admin/content'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin/content'))}/></Suspense>;
+ const connectAdmin=async redirectPath=>{localStorage.removeItem('shet-admin-auth');setDemoAdmin(false);const{signInWithGoogle}=await supabaseApi();return signInWithGoogle(redirectPath)};
+ const adminProps={products,stock,onToggleStock:toggleStock,orders,onUpdateOrder:statusUpdate,onDeleteOrder:deleteOrder,storeOpen,onToggleStore:toggleStore,storeSyncState,user,authReady:authReady&&(!user||adminAllowed!==null),adminAllowed,onSignOut:logoutAdmin,demoAdmin,onDemoLogin:demoLogin};
+ if(path==='/admin/content'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>connectAdmin('/admin/content')}/></Suspense>;
  if(path==='/admin/content')return <Suspense fallback={<AdminLoading/>}><AdminContentEditor products={products} siteContent={siteContent} onSaveProduct={saveProduct} onDeleteProduct={removeProduct} onSaveContent={saveContent} onUploadImage={uploadProductImage}/></Suspense>;
- if(path==='/admin/analytics'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin/analytics'))}/></Suspense>;
+ if(path==='/admin/analytics'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>connectAdmin('/admin/analytics')}/></Suspense>;
  if(path==='/admin/analytics')return <Suspense fallback={<AdminLoading/>}><AdminAnalytics orders={orders}/></Suspense>;
- if(path==='/admin')return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>supabaseApi().then(({signInWithGoogle})=>signInWithGoogle('/admin'))}/><a className="admin-content-fab" href="/admin/content">EDITAR SITIO</a></Suspense>;
+ if(path==='/admin'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>connectAdmin('/admin')}/></Suspense>;
+ if(path==='/admin')return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>connectAdmin('/admin')}/><a className="admin-content-fab" href="/admin/content">EDITAR SITIO</a></Suspense>;
  const add=(product,variant,customization={})=>{if(!storeOpen){setShopNotice('TIENDA CERRADA · Los pedidos están temporalmente deshabilitados.');return false}if(stock[product.id]===false){setShopNotice(`${product.name.toUpperCase()} ESTÁ AGOTADO · Elige otra opción disponible.`);return false}const selected={label:variant[0],price:Number(variant[1].replace(/\D/g,''))},normalizedCustomization={note:(customization.note||'').trim(),burgerChoices:Array.isArray(customization.burgerChoices)?customization.burgerChoices:[],burgerChoiceIds:Array.isArray(customization.burgerChoiceIds)?customization.burgerChoiceIds:[]},key=`${product.id}-${selected.label}-${JSON.stringify(normalizedCustomization)}`;setCart(items=>{const found=items.find(item=>item.key===key);return found?items.map(item=>item.key===key?{...item,quantity:item.quantity+1}:item):[...items,{key,product,variant:selected,customization:normalizedCustomization,quantity:1}]});setOpen(true);return true};
  const change=(key,quantity)=>{const current=cart.find(item=>item.key===key);if(current&&quantity>current.quantity){if(!storeOpen){setShopNotice('TIENDA CERRADA · No puedes aumentar productos mientras los pedidos están cerrados.');return}if(stock[current.product.id]===false){setShopNotice(`${current.product.name.toUpperCase()} ESTÁ AGOTADO.`);return}}setCart(items=>quantity<=0?items.filter(item=>item.key!==key):items.map(item=>item.key===key?{...item,quantity}:item))};
  const confirm=async details=>{

@@ -47,6 +47,8 @@ create table if not exists public.product_availability (
   available boolean not null default true,
   updated_at timestamptz not null default now()
 );
+alter table public.product_availability replica identity full;
+alter table public.store_settings replica identity full;
 alter table public.product_availability enable row level security;
 
 drop policy if exists "everyone can read availability" on public.product_availability;

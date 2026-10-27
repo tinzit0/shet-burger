@@ -16,6 +16,11 @@ export async function signInWithGoogle(redirectPath = '/') {
   });
 }
 
+export async function signInAdminWithPassword(email, password) {
+  if (!supabase) return { error: new Error('Supabase no configurado') };
+  return supabase.auth.signInWithPassword({ email, password });
+}
+
 export async function isCurrentUserAdmin() {
   if (!supabase) return false;
   const { data, error } = await supabase.rpc('is_admin');

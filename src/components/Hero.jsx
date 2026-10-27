@@ -14,15 +14,15 @@ export default function Hero() {
     <div className="hero__layout">
       <div className="hero__copy">
         <div className="hero__heading">
-          <span className="hero__eyebrow">FAT SMASH BURGERS · CONCEPCIÓN</span>
-          <h1 id="hero-title"><span>EL SABOR</span><em>se arma</em><span>CAPA A CAPA.</span></h1>
+          <span className="hero__eyebrow">FAT SMASH BURGERS · NONGUÉN</span>
+          <h1 id="hero-title"><span>SMASH</span><em>de verdad.</em></h1>
         </div>
         <div className="hero__content">
           <div className="hero__actions">
             <a className="button button--primary" href="/delivery" data-route>PEDIR AHORA <ArrowUpRight aria-hidden="true"/></a>
             <a className="hero__story" href="#promesa">CONOCE EL MOOD <ArrowDown aria-hidden="true"/></a>
           </div>
-          <p className="hero__detail">Hecha al momento. Con actitud de Nonguén.</p>
+          <p className="hero__detail">Plancha fuerte. Pan de papa. Hechas al momento.</p>
         </div>
       </div>
     </div>

@@ -31,7 +31,7 @@ export default function CustomerAccount({ user, orders, loading, onClose, onSign
           const currentStage = getOrderStage(order);
           return <article className="account-order" key={order.id}>
             <div className="account-order__top"><div><small>PEDIDO</small><strong>#{order.order_number || order.id}</strong></div><div><b>{money(order.total)}</b><span>{new Date(order.created_at || Date.now()).toLocaleDateString('es-CL')}</span></div></div>
-            <div className="account-order__items">{order.items?.map((item,index)=><p key={`${order.id}-${index}`}><span>{item.quantity} × {item.product?.name || item.name || 'Producto'}{item.variant ? ` · ${item.variant}` : ''}</span><b>{money(Number(item.price || 0) * Number(item.quantity || 1))}</b></p>)}</div>
+            <div className="account-order__items">{order.items?.map((item,index)=><div className="account-order__item" key={`${order.id}-${index}`}><p><span>{item.quantity} × {item.product?.name || item.name || 'Producto'}{item.variant ? ` · ${item.variant}` : ''}</span><b>{money(Number(item.price || 0) * Number(item.quantity || 1))}</b></p>{item.burger_choices?.length>0&&<small>Hamburguesas: {item.burger_choices.join(', ')}</small>}{item.note&&<small>Nota: {item.note}</small>}</div>)}</div>
             <div className="account-progress">{stages.map(([label,Icon],index)=><div className={`${index<currentStage?'is-done ':''}${index===currentStage?'is-current':''}`.trim()} key={label}><span><Icon/></span><small>{label}</small>{index===currentStage&&<b>AHORA</b>}</div>)}</div>
             <div className="account-order__status"><Truck/><span>{order.fulfillment==='delivery'?'A domicilio':'Retiro en el carrito'}</span><b>{order.status}</b></div>
           </article>;

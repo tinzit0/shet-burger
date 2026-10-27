@@ -2,9 +2,19 @@ import { useState } from 'react';
 import { ArrowUpRight, Plus, Sparkles } from 'lucide-react';
 import { categories, products } from '../data';
 import BurgerPhoto from './BurgerPhoto';
+import ProductConfigurator from './ProductConfigurator';
 
 export default function MenuSection({ onAdd, stock = {}, storeOpen = true }) {
   const [variants, setVariants] = useState({});
+  const [configuring, setConfiguring] = useState(null);
+
+  const addProduct = (product, variant) => {
+    if (product.category === 'burgers' || product.category === 'promos') {
+      setConfiguring({ product, variant });
+      return;
+    }
+    onAdd(product, variant);
+  };
 
   return <>
     <nav className="menu-jump" aria-label="Categorías del menú">
@@ -17,7 +27,7 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true }) {
     <div className="menu-catalog">
       {categories.map(category => {
         const categoryProducts = products.filter(product => product.category === category.id);
-        return <section className="menu-category" aria-labelledby={`menu-category-${category.id}`} key={category.id}>
+        return <section className={`menu-category menu-category--${category.id}`} aria-labelledby={`menu-category-${category.id}`} key={category.id}>
           <header className="menu-category__heading">
             <h3 id={`menu-category-${category.id}`}>{category.label}</h3><span>{String(categoryProducts.length).padStart(2, '0')} OPCIONES</span>
           </header>
@@ -25,15 +35,27 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true }) {
             {categoryProducts.map(product => {
               const sold = stock[product.id] === false || !storeOpen;
               const selected = variants[product.id] || product.prices[0];
-              return <article className={`menu-item${product.image ? '' : ' menu-item--text'}${sold ? ' is-sold-out' : ''}`} key={product.id} data-product-id={product.id}>
+              return <article className={`menu-item${product.image ? '' : ' menu-item--text'}${sold ? ' is-sold-out' : ''}`} id={`product-${product.id}`} key={product.id} data-product-id={product.id}>
                 {product.image && <div className="menu-item-photo" data-tilt><BurgerPhoto product={product} sizes="(max-width: 620px) 90vw, (max-width: 1179px) 44vw, 29vw"/>{sold ? <span className="menu-item-photo__unavailable">{storeOpen ? 'AGOTADO' : 'PEDIDOS CERRADOS'}</span> : product.featured && <span className="menu-item-photo__badge"><Sparkles aria-hidden="true"/> SELLO SHET</span>}</div>}
                 <div className="menu-item-copy"><h3>{product.name}</h3><p>{product.description}</p><div className="menu-item-options" role="group" aria-label={`Tamaño de ${product.name}`}>{product.prices.map(variant => <button type="button" key={variant[0]} aria-pressed={selected[0] === variant[0]} onClick={() => setVariants(items => ({ ...items, [product.id]: variant }))}>{variant[0]} <b>{variant[1]}</b></button>)}</div></div>
-                <button className="menu-item-add" type="button" disabled={sold} aria-label={`${sold ? 'No disponible' : 'Agregar'} ${product.name} ${selected[0]} por ${selected[1]}`} onClick={() => onAdd(product, selected)}><span>{sold ? (storeOpen ? 'AGOTADO' : 'CERRADA') : 'AGREGAR AL PEDIDO'} <b>{selected[1]}</b></span><Plus aria-hidden="true"/></button>
+                <button className="menu-item-add" type="button" disabled={sold} aria-label={`${sold ? 'No disponible' : 'Elegir'} ${product.name} ${selected[0]} por ${selected[1]}`} onClick={() => addProduct(product, selected)}><span><span className="menu-item-add__desktop">{sold ? (storeOpen ? 'AGOTADO' : 'CERRADA') : (product.category === 'burgers' || product.category === 'promos' ? 'ELEGIR Y PERSONALIZAR' : 'AGREGAR AL PEDIDO')}</span><span className="menu-item-add__mobile">{sold ? 'NO' : 'ELEGIR'}</span><b>{selected[1]}</b></span><Plus aria-hidden="true"/></button>
               </article>;
             })}
           </div>
         </section>;
       })}
     </div>
-  </section></>;
+  </section>
+  {configuring && <ProductConfigurator
+    product={configuring.product}
+    initialVariant={configuring.variant}
+    stock={stock}
+    storeOpen={storeOpen}
+    onCancel={() => setConfiguring(null)}
+    onConfirm={(product, variant, customization) => {
+      onAdd(product, variant, customization);
+      setConfiguring(null);
+    }}
+  />}
+  </>;
 }

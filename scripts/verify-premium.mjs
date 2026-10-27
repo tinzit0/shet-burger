@@ -78,22 +78,22 @@ try {
   await page.goto(base, { waitUntil: 'domcontentloaded' });
   assert.equal(await page.locator('.hero video').count(), 1);
   assert.equal(await page.locator('.initial-hero-media').count(), 0);
-  assert.equal(await page.locator('.mood-card img').evaluateAll(images => images.length === 4 && images.every(image => image.getBoundingClientRect().height < 500)), true);
-  assert.equal(await page.locator('.mood-ticker__track').count(), 2);
-  assert.equal(await page.getByText('Carne contra el fierro, cheddar que cae y una caja rosa que se reconoce de lejos. En la mesa, en el auto o donde te agarre el hambre.', { exact: true }).count(), 0);
-  assert.equal(await page.locator('.brand-signal__track').count(), 2);
-  assert.equal(await page.locator('.signature').count(), 0);
-  assert.equal(await page.getByText('CUATRO FORMAS', { exact: false }).count(), 0);
+  assert.deepEqual(await page.locator('.mood-board, .film').evaluateAll(sections => sections.map(section => section.className)), ['mood-board', 'film']);
+  assert.equal(await page.locator('.mood-board__photo img').count(), 3);
+  assert.equal(await page.locator('.home-choices').count(), 0);
+  assert.equal(await page.getByText('CARTA ONLINE', { exact: true }).count(), 0);
+  assert.equal(await page.getByText('VISITAR SHET', { exact: true }).count(), 0);
   assert.equal(await page.evaluate(() => Number.parseFloat(getComputedStyle(document.body).fontSize) >= 16), true);
-  const textOverflow = await page.evaluate(() => [...document.querySelectorAll('.home-actions__item strong, .mood__note strong, .club-card h3, .club-card a, .club-card strong')].flatMap(element => {
-    const box = element.closest('.home-actions__item, .mood__note, .club-card');
+  assert.equal(await page.locator('.home-actions, .atelier, .flavor-finder').count(), 0, 'La portada no debe mostrar promociones ni experiencias de burger por capas');
+  const textOverflow = await page.evaluate(() => [...document.querySelectorAll('.mood-board h2, .mood-board__statement strong, .film h2')].flatMap(element => {
+    const box = element.closest('.mood-board__header, .mood-board__statement, .film__copy');
     const textRect = element.getBoundingClientRect(), boxRect = box.getBoundingClientRect();
     return textRect.left < boxRect.left - 1 || textRect.right > boxRect.right + 1 || textRect.top < boxRect.top - 1 || textRect.bottom > boxRect.bottom + 1 ? [element.textContent.trim()] : [];
   }));
   assert.deepEqual(textOverflow, []);
-  await page.locator('.home-actions a[href="#ambiente"]').click();
-  await page.waitForFunction(() => { const top = document.getElementById('ambiente').getBoundingClientRect().top; return top >= 0 && top < innerHeight / 2; });
-  assert.equal(await page.locator('#ambiente').evaluate(element => element.getBoundingClientRect().top >= 0), true);
+  await page.locator('.hero__story').click();
+  await page.waitForFunction(() => { const top = document.getElementById('promesa').getBoundingClientRect().top; return top >= 0 && top < innerHeight / 2; });
+  assert.equal(await page.locator('#promesa').evaluate(element => element.getBoundingClientRect().top >= 0), true);
   await page.getByRole('button', { name: 'Abrir menú', exact: true }).click();
   assert.equal(await page.locator('main').evaluate(element => element.inert), true);
   await page.keyboard.press('Escape');
@@ -123,7 +123,7 @@ try {
   await page.locator('#delivery-title').waitFor();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(base, { waitUntil: 'domcontentloaded' });
-  assert.deepEqual(await page.locator('.mood__stamp, .mood-ticker__track, .brand-signal__words').evaluateAll(elements => elements.map(element => getComputedStyle(element).animationName)), ['none', 'none', 'none', 'none']);
+  assert.deepEqual(await page.locator('.brand-tape > div').evaluateAll(elements => elements.map(element => getComputedStyle(element).animationName)), ['none', 'none']);
   assert.equal(await page.locator('.hero video').evaluate(video => video.paused), true);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.waitForFunction(() => !document.querySelector('.hero video').paused);

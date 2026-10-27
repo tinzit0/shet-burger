@@ -1,5 +1,7 @@
 # SHET BURGER
 
+La portada abre con el ojo de SHET y pasa directo al universo de marca: un collage de fotos reales, una franja gráfica, video de cocina y la información de Nonguén. Los prototipos interactivos anteriores se conservan fuera del flujo activo y están documentados en [INTERACTIVE-EXPERIENCE.md](INTERACTIVE-EXPERIENCE.md).
+
 La separación **INICIO / PEDIR / PUNTO DE RETIRO** está documentada en [HOME-DELIVERY.md](HOME-DELIVERY.md): composición audiovisual, rutas, archivos originales, pruebas y despliegue. El carrito y la integración existente con Supabase se conservan.
 
 La actualización visual y el sistema de reseñas están documentados en [EDITORIAL.md](EDITORIAL.md): archivos, variables, migración Supabase, moderación, ubicación pendiente y despliegue en Cloudflare.

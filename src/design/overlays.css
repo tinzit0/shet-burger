@@ -16,6 +16,8 @@
 .cart-item__image > span { display: grid; height: 100%; place-items: center; color: var(--color-pink-deep); font-size: var(--text-xs); font-weight: 700; }
 .cart-item__info h3 { margin: 0; font: 700 1.2rem var(--font-display); text-transform: uppercase; }
 .cart-variant { color: var(--color-muted-dark); font-size: var(--text-xs); }
+.cart-customization { display: block; margin-top: 0.3rem; color: var(--color-muted-dark); font-size: var(--text-xs); line-height: 1.35; }
+.cart-customization b { color: var(--color-ink); }
 .cart-item__info > strong { display: block; margin-top: 0.35rem; }
 .cart-quantity { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; border: 1px solid var(--color-line-dark); border-radius: var(--radius-pill); }
 .cart-quantity button { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 0; background: transparent; cursor: pointer; }
@@ -106,6 +108,9 @@
 .tracker-receipt h3 { margin: 0; font: 700 1.25rem var(--font-display); text-transform: uppercase; }
 .tracker-receipt__heading span, .tracker-item { font-size: var(--text-xs); }
 .tracker-item { padding: 0.6rem 0; color: var(--color-muted-dark); }
+.tracker-item-detail { padding-block: 0.35rem; }
+.tracker-item-detail .tracker-item { padding-bottom: 0.2rem; }
+.tracker-item-detail small { display: block; color: var(--color-muted-dark); font-size: var(--text-xs); line-height: 1.4; }
 .tracker-total { margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--color-line-dark); }
 .tracker-total strong { font: 700 1.4rem var(--font-display); }
 .tracker-info { display: grid; grid-template-columns: auto 1fr; gap: 1rem; padding: 1.25rem; background: white; }
@@ -149,6 +154,8 @@
 .account-order__top small, .account-order__top span { display: block; color: var(--color-muted-dark); font-size: var(--text-xs); }
 .account-order__top strong, .account-order__top b { font: 700 1.1rem var(--font-display); }
 .account-order__items p { margin: 0; padding: 0.4rem 0; color: var(--color-muted-dark); font-size: var(--text-xs); }
+.account-order__item { padding-block: 0.2rem; }
+.account-order__item > small { display: block; color: var(--color-muted-dark); font-size: var(--text-xs); line-height: 1.4; }
 .account-progress { display: grid; grid-template-columns: repeat(4, 1fr); padding: 1rem 0; border-top: 1px solid var(--color-line-dark); }
 .account-progress > div { text-align: center; color: #aaa; }
 .account-progress > div > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; margin: auto; border: 1px solid #ccc; border-radius: 50%; }

@@ -33,3 +33,19 @@ export async function saveManagedContent(content) {
   if (!supabase) return { error: new Error('Supabase no configurado') };
   return supabase.from('site_content').upsert({ id: 'main', payload: content, updated_at: new Date().toISOString() });
 }
+
+export async function uploadManagedImage(file, productId) {
+  if (!supabase) return { error: new Error('Supabase no configurado') };
+  const safeProductId = String(productId || 'producto').replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+  const extension = file.type === 'image/png' ? 'png' : file.type === 'image/jpeg' ? 'jpg' : 'webp';
+  const uniqueId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const path = `${safeProductId}/${uniqueId}.${extension}`;
+  const upload = await supabase.storage.from('menu-images').upload(path, file, {
+    cacheControl: '31536000',
+    contentType: file.type,
+    upsert: false,
+  });
+  if (upload.error) return { error: upload.error };
+  const { data } = supabase.storage.from('menu-images').getPublicUrl(upload.data.path);
+  return { url: data.publicUrl, path: upload.data.path, error: null };
+}

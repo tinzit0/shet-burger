@@ -2,7 +2,7 @@ const enhancedIds = new Set(['bbq-beast','onion-shet','bacon-trip','cowboy-smoke
 
 /** Same real catalog product, with responsive, reviewed photo restorations. */
 export default function BurgerPhoto({ product, sizes = '(max-width: 600px) 90vw, (max-width: 900px) 38vw, 30vw', loading = 'lazy' }) {
-  const enhanced = enhancedIds.has(product.id);
+  const enhanced = enhancedIds.has(product.id) && product.image?.startsWith('/assets/menu/page-');
   const base = `/assets/menu/hd/${product.id}-v2`;
   return <img
     src={enhanced ? `${base}-1024.webp` : product.image}

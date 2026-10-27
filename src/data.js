@@ -34,8 +34,8 @@ export const defaultSiteContent = {
   heroDetail: 'Plancha fuerte. Pan de papa. Hechas al momento.',
   heroPrimaryLabel: 'PEDIR AHORA',
   heroSecondaryLabel: 'CONOCE EL MOOD',
-  menuEyebrow: 'DE NUESTRA PLANCHA A TU MESA',
-  menuTitle: 'ELIGE TU',
-  menuAccent: 'ANTOJO.',
+  menuEyebrow: 'PASA SMASH',
+  menuTitle: 'MENÚ',
+  menuAccent: 'BURGERS',
   menuNote: 'Todas las hamburguesas incluyen papas fritas.',
 };

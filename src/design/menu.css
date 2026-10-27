@@ -135,3 +135,69 @@
   .product-configurator__content { padding-top: 1rem; }
   .product-configurator__content h2 { font-size: 2rem; }
 }
+
+/* Carta visual inspirada en la referencia entregada por el cliente. */
+.menu-reference-jump { border-color: #302c30; background: rgb(7 7 8 / 96%); color: white; }
+.menu-reference-jump a { border-color: #4a4349; background: #171719; color: white; }
+.menu-reference-jump a:hover, .menu-reference-jump a:focus-visible { border-color: var(--color-pink); background: var(--color-pink); color: #09090a; }
+.menu-reference { padding: clamp(3.5rem, 7vw, 6.5rem) var(--gutter) clamp(5rem, 8vw, 8rem); background: #050506; color: white; }
+.menu-reference .store-closed-banner { border: 1px solid #5e515a; background: #171719; }
+.menu-reference .editorial-menu-heading { align-items: center; justify-content: center; flex-direction: column; gap: 1.4rem; width: min(44rem, 100%); margin: 0 auto clamp(3rem, 6vw, 5rem); text-align: center; }
+.menu-reference .editorial-menu-heading > div { display: grid; justify-items: center; }
+.menu-reference .menu-eyebrow { width: fit-content; margin: 0 0 -0.2rem; color: white; font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(0.72rem, 1.4vw, 1rem); letter-spacing: 0.08em; transform: rotate(-7deg); }
+.menu-reference .editorial-menu-heading h2 { margin: 0; color: var(--color-pink); font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(4.2rem, 10vw, 8.5rem); line-height: 0.68; letter-spacing: -0.035em; text-transform: uppercase; text-shadow: 0.08em 0 #050506, -0.025em 0 white; }
+.menu-reference .editorial-menu-heading h2 span { display: block; color: white; text-shadow: 0.045em 0 #050506; }
+.menu-reference .editorial-menu-heading > p { display: block; margin: 0; padding: 0; border: 0; color: white; font-size: clamp(0.68rem, 1.2vw, 0.85rem); font-weight: 800; letter-spacing: 0.055em; line-height: 1.35; text-transform: uppercase; transform: none; }
+.menu-reference .editorial-menu-heading > p svg { display: none; }
+.menu-reference .menu-catalog { width: min(68rem, 100%); }
+.menu-reference .menu-category { padding: 2.5rem 0 4rem; border-color: #3b363a; }
+.menu-reference .menu-category--burgers { padding-top: 0; border-top: 0; }
+.menu-reference .menu-category--burgers > .menu-category__heading { display: none; }
+.menu-reference .menu-category__heading { margin-bottom: 1rem; }
+.menu-reference .menu-category__heading h3 { color: var(--color-pink); font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: 0.01em; }
+.menu-reference .menu-category__heading > span { border-color: #4a4349; color: #c8c0c5; }
+.menu-reference .editorial-products { width: 100%; grid-template-columns: minmax(0, 1fr); gap: 0.9rem; }
+.menu-reference .menu-item { display: grid; grid-template-columns: clamp(9rem, 19vw, 12.5rem) minmax(0, 1fr) 4.5rem; min-height: 10.5rem; overflow: hidden; border-color: #302c30; border-radius: 0.65rem; background: #19191a; box-shadow: none; color: white; }
+.menu-reference .menu-item:hover { border-color: rgb(244 163 198 / 70%); box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 38%); }
+.menu-reference .menu-item-photo { grid-column: 1; min-height: 100%; aspect-ratio: auto; background: #d7d0df; }
+.menu-reference .menu-item-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 56%; transform: none; }
+.menu-reference .menu-item:hover .menu-item-photo img { transform: scale(1.035); }
+.menu-reference .menu-item-photo__badge { display: none; }
+.menu-reference .menu-item-copy { grid-column: 2; min-width: 0; padding: 1rem 1.1rem; }
+.menu-reference .menu-item h3 { margin: 0 0 0.45rem; color: white; font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(1.5rem, 2.8vw, 2.2rem); line-height: 1; letter-spacing: 0.025em; }
+.menu-reference .menu-item-options { display: flex; flex-wrap: wrap; gap: 0.7rem; margin: 0 0 0.55rem; padding: 0; }
+.menu-reference .menu-item-options button { display: flex; flex: 0 0 auto; min-width: 4.9rem; min-height: 0; align-items: flex-start; flex-direction: column; gap: 0.12rem; padding: 0; border: 0; background: transparent; color: #ded8dc; font-size: 0.68rem; line-height: 1.1; }
+.menu-reference .menu-item-options button b { padding: 0.26rem 0.38rem; border-radius: 0.23rem; background: white; color: #111113; font-size: 0.78rem; }
+.menu-reference .menu-item-options button[aria-pressed="true"] { border: 0; background: transparent; color: white; }
+.menu-reference .menu-item-options button[aria-pressed="true"] b { background: var(--color-pink); color: #111113; }
+.menu-reference .menu-item-copy > p { display: block; margin: 0; color: #f2edf0; font-size: clamp(0.68rem, 1.25vw, 0.82rem); font-weight: 650; letter-spacing: 0.045em; line-height: 1.35; text-transform: uppercase; }
+.menu-reference .menu-item-add { align-self: center; justify-self: center; grid-column: 3; grid-row: 1; display: flex; width: 3.15rem; height: 3.15rem; min-height: 0; align-items: center; justify-content: center; margin: 0; padding: 0; border: 0; border-radius: 50%; background: var(--color-pink); color: #111113; line-height: 0; }
+.menu-reference .menu-item-add > span { display: none; }
+.menu-reference .menu-item-add > svg { display: block; width: 1.15rem; height: 1.15rem; flex: 0 0 auto; margin: 0; transform: none; }
+.menu-reference .menu-item-add:hover:not(:disabled) { background: white; color: #111113; transform: scale(1.08); }
+.menu-reference .menu-item-add:disabled { background: #4b4549; color: #aca4a9; }
+.menu-reference .menu-item--text { grid-template-columns: minmax(0, 1fr) 4.5rem; min-height: 8rem; }
+.menu-reference .menu-item--text .menu-item-copy { grid-column: 1; }
+.menu-reference .menu-item--text .menu-item-add { grid-column: 2; }
+
+@media (max-width: 620px) {
+  .menu-reference-jump { padding-inline: 0; }
+  .menu-reference { padding: 2rem 1rem 5rem; }
+  .menu-reference .editorial-menu-heading { gap: 0.7rem; margin-bottom: 1.75rem; }
+  .menu-reference .editorial-menu-heading h2 { font-size: clamp(3.8rem, 21vw, 5.6rem); }
+  .menu-reference .menu-category { padding-block: 1.75rem 3rem; overflow: visible; }
+  .menu-reference .menu-category--burgers { padding-top: 0; }
+  .menu-reference .editorial-products { width: 100%; grid-template-columns: minmax(0, 1fr); gap: 0.62rem; }
+  .menu-reference .menu-item { grid-template-columns: clamp(6.1rem, 27vw, 7.2rem) minmax(0, 1fr) 2.7rem; height: 7.25rem; min-height: 7.25rem; border-radius: 0.45rem; }
+  .menu-reference .menu-item-photo { aspect-ratio: auto; }
+  .menu-reference .menu-item .menu-item-photo img { object-position: 50% 56%; transform: none; }
+  .menu-reference .menu-item-copy { overflow: hidden; padding: 0.52rem 0.5rem; }
+  .menu-reference .menu-item h3 { margin-bottom: 0.3rem; font-size: clamp(1rem, 4.7vw, 1.3rem); letter-spacing: 0.025em; }
+  .menu-reference .menu-item-options { display: flex; gap: 0.35rem; margin-bottom: 0.35rem; }
+  .menu-reference .menu-item-options button { min-width: 3.65rem; font-size: 0.52rem; }
+  .menu-reference .menu-item-options button b { padding: 0.18rem 0.25rem; font-size: 0.58rem; }
+  .menu-reference .menu-item-copy > p { display: -webkit-box; overflow: hidden; font-size: clamp(0.5rem, 2vw, 0.62rem); line-height: 1.22; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+  .menu-reference .menu-item-add { width: 2rem; height: 2rem; margin: 0; }
+  .menu-reference .menu-item-add > svg { display: block; width: 0.9rem; height: 0.9rem; }
+  .menu-reference .menu-item--text { grid-template-columns: minmax(0, 1fr) 2.7rem; height: auto; min-height: 6rem; }
+}

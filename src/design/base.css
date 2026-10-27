@@ -1,7 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--color-ink); }
 body { margin: 0; overflow-x: clip; background: var(--color-ink); color: var(--color-cream); font: 400 var(--text-base)/1.6 var(--font-body); -webkit-font-smoothing: antialiased; }
-body.nav-open { overflow: hidden; }
+body.nav-open { height: 100dvh; overflow: hidden; overscroll-behavior: none; }
 button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { color: inherit; }

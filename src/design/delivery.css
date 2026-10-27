@@ -4,6 +4,7 @@
 .menu-cover__media { z-index: -2; }
 .menu-cover__slide { opacity: 0; transform: scale(1.04); transition: opacity 900ms var(--ease-standard), transform 6s linear; }
 .menu-cover__slide.is-active { opacity: 1; transform: scale(1); }
+.menu-cover__slide picture { display: block; width: 100%; height: 100%; }
 .menu-cover__slide img { width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center 55%; filter: saturate(0.94) contrast(1.03); }
 .menu-cover__slide[data-product-id="triple-shet"] img { object-position: 58% 55%; }
 .menu-cover__slide[data-product-id="bbq-beast"] img { object-position: 66% 58%; }

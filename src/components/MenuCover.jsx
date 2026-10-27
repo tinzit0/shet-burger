@@ -12,6 +12,12 @@ const slideCopy = {
   'vicio': { eyebrow: 'COMBO INDIVIDUAL', headline: 'TU VICIO.\nTU BURGER.', note: 'Elige una hamburguesa, suma papas y bebida. Así de simple.' },
 };
 
+const mobileHeroImages = {
+  'triple-shet': '/assets/campaign/triple-cheddar.jpg',
+  tentacion: '/assets/campaign/bacon-clasica.jpg',
+  vicio: '/assets/campaign/cowboy-smoke.jpg',
+};
+
 const slides = slideIds.map(id => products.find(product => product.id === id)).filter(Boolean);
 
 export default function MenuCover({ storeOpen }) {
@@ -31,7 +37,12 @@ export default function MenuCover({ storeOpen }) {
   return <section className="menu-cover" id="top" aria-roledescription="carrusel" aria-label="Promociones y hamburguesas destacadas">
     <div className="menu-cover__media" aria-live="polite">
       {slides.map((product, index) => <div className={`menu-cover__slide${index === active ? ' is-active' : ''}`} data-product-id={product.id} aria-hidden={index !== active} key={product.id}>
-        <BurgerPhoto product={product} sizes="100vw" loading={index === 0 ? 'eager' : 'lazy'}/>
+        <picture>
+          {mobileHeroImages[product.id] && (
+            <source media="(max-width: 720px)" srcSet={mobileHeroImages[product.id]}/>
+          )}
+          <BurgerPhoto product={product} sizes="100vw" loading={index === 0 ? 'eager' : 'lazy'}/>
+        </picture>
       </div>)}
       <div className="menu-cover__shade"/>
     </div>

@@ -11,12 +11,16 @@ export async function loadStoreState(productIds = []) {
   return { storeOpen: settings.data?.is_open ?? true, stock, error: settings.error || availability.error };
 }
 
-export const updateStoreOpen = isOpen => supabase
-  ? supabase.from('store_settings').update({ is_open: isOpen, updated_at: new Date().toISOString() }).eq('id', 1)
+export const updateStoreOpen = (isOpen, demoToken = null) => supabase
+  ? demoToken
+    ? supabase.rpc('demo_update_store_open', { p_token: demoToken, p_is_open: isOpen })
+    : supabase.from('store_settings').update({ is_open: isOpen, updated_at: new Date().toISOString() }).eq('id', 1)
   : Promise.resolve({ error: new Error('Supabase no configurado') });
 
-export const updateProductAvailability = (productId, available) => supabase
-  ? supabase.from('product_availability').upsert({ product_id: productId, available, updated_at: new Date().toISOString() })
+export const updateProductAvailability = (productId, available, demoToken = null) => supabase
+  ? demoToken
+    ? supabase.rpc('demo_update_product_availability', { p_token: demoToken, p_product_id: productId, p_available: available })
+    : supabase.from('product_availability').upsert({ product_id: productId, available, updated_at: new Date().toISOString() })
   : Promise.resolve({ error: new Error('Supabase no configurado') });
 
 export function subscribeToStore(onChange, onStatus) {

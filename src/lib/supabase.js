@@ -21,6 +21,15 @@ export async function signInAdminWithPassword(email, password) {
   return supabase.auth.signInWithPassword({ email, password });
 }
 
+export async function signInDemoAdmin(email, password) {
+  if (!supabase) return { error: new Error('Supabase no configurado') };
+  const { data, error } = await supabase.rpc('demo_admin_login', {
+    p_email: email,
+    p_password: password,
+  });
+  return { token: data || null, error };
+}
+
 export async function isCurrentUserAdmin() {
   if (!supabase) return false;
   const { data, error } = await supabase.rpc('is_admin');

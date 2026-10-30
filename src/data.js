@@ -23,6 +23,7 @@ export const products = [
   {id:'aros',category:'fritos',name:'Aros de cebolla',description:'Aros de cebolla crujientes.',prices:[['Porción','$2.990']]},
   {id:'papas-pork',category:'fritos',name:'Papas Pork',description:'Papas fritas naturales con pulled pork, salsa BBQ, salsa cheddar y un toque de cebollín.',prices:[['Bowl','$7.990']]},
   ...['Coca Cola','Coca Cola Zero','Sprite','Sprite Zero','Fanta','Kem'].map((name,index)=>({id:`bebida-${index}`,category:'bebidas',name,description:'Bebida en lata 350 ml.',prices:[['Lata','$1.500']]})),
+  {id:'jugo-jumex',category:'bebidas',name:'Jugo Jumex',description:'Jugo Jumex en lata. Elige tu sabor favorito al agregarlo al pedido.',prices:[['Lata','$1.500']],optionGroup:{label:'Sabor',prompt:'Elige tu sabor',values:['Durazno','Manzana','Piña','Mango']},requiredCatalogEntry:true},
   ...[['Extra carne y cheddar','$2.500'],['Salsa queso azul','$2.000'],['Mermelada de tocino','$2.000'],['Pulled pork','$1.500'],['Salsa cheddar','$1.000'],['Cebolla crispy','$800'],['Tocino','$800'],['Champiñones','$800'],['Salsa Emmy','$800'],['Jalapeño','$800']].map(([name,price],index)=>({id:`extra-${index}`,category:'extras',name,description:'Agregado para personalizar tu pedido.',prices:[['Extra',price]]})),
 ];
 export const instagramUrl='https://www.instagram.com/shetburger/';

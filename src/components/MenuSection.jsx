@@ -10,7 +10,7 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true, produ
   const activeCategories = categories.filter(category => products.some(product => product.category === category.id));
 
   const addProduct = (product, variant) => {
-    if (product.category === 'burgers' || product.category === 'promos') {
+    if (product.category === 'burgers' || product.category === 'promos' || product.optionGroup) {
       setConfiguring({ product, variant });
       return;
     }
@@ -37,10 +37,17 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true, produ
               const sold = stock[product.id] === false || !storeOpen;
               const unavailableLabel = !storeOpen ? 'TIENDA CERRADA' : stock[product.id] === false ? 'AGOTADO' : '';
               const selected = variants[product.id] || product.prices[0];
+              const chooseLabel = product.category === 'burgers'
+                ? 'ELEGIR SIMPLE O DOBLE'
+                : product.optionGroup
+                  ? `ELEGIR ${product.optionGroup.label.toUpperCase()}`
+                  : product.category === 'promos'
+                    ? 'ELEGIR Y PERSONALIZAR'
+                    : 'AGREGAR AL PEDIDO';
               return <article className={`menu-item${product.image ? '' : ' menu-item--text'}${sold ? ' is-sold-out' : ''}`} id={`product-${product.id}`} key={product.id} data-product-id={product.id}>
                 {product.image && <div className="menu-item-photo" data-tilt><BurgerPhoto product={product} sizes="(max-width: 620px) 90vw, (max-width: 1179px) 44vw, 29vw"/>{sold ? <span className="menu-item-photo__unavailable">{storeOpen ? 'AGOTADO' : 'PEDIDOS CERRADOS'}</span> : product.featured && <span className="menu-item-photo__badge"><Sparkles aria-hidden="true"/> SELLO SHET</span>}</div>}
-                <div className="menu-item-copy"><div className="menu-item-title"><h3>{product.name}</h3>{unavailableLabel && <span className="menu-item__status">{unavailableLabel}</span>}</div><div className="menu-item-options" role="group" aria-label={`Tamaño de ${product.name}`}>{product.prices.map(variant => <button type="button" key={variant[0]} disabled={sold} aria-pressed={selected[0] === variant[0]} onClick={() => setVariants(items => ({ ...items, [product.id]: variant }))}>{variant[0]} <b>{variant[1]}</b></button>)}</div><p>{product.description}</p></div>
-                <button className="menu-item-add" type="button" disabled={sold} aria-label={`${sold ? 'No disponible' : 'Elegir'} ${product.name} ${selected[0]} por ${selected[1]}`} onClick={() => addProduct(product, selected)}><span><span className="menu-item-add__desktop">{sold ? (storeOpen ? 'AGOTADO' : 'CERRADA') : (product.category === 'burgers' || product.category === 'promos' ? 'ELEGIR Y PERSONALIZAR' : 'AGREGAR AL PEDIDO')}</span><span className="menu-item-add__mobile">{sold ? 'NO' : 'ELEGIR'}</span><b>{selected[1]}</b></span><Plus aria-hidden="true"/></button>
+                <div className="menu-item-copy"><div className="menu-item-title"><h3>{product.name}</h3>{unavailableLabel && <span className="menu-item__status">{unavailableLabel}</span>}</div>{product.category === 'burgers' ? <div className="menu-item-price"><b>{product.prices[0][1]}</b></div> : product.optionGroup ? <div className="menu-item-price"><span>{product.prices[0][0]}</span><b>{product.prices[0][1]}</b></div> : <div className="menu-item-options" role="group" aria-label={`Opción de ${product.name}`}>{product.prices.map(variant => <button type="button" key={variant[0]} disabled={sold} aria-pressed={selected[0] === variant[0]} onClick={() => setVariants(items => ({ ...items, [product.id]: variant }))}>{variant[0]} <b>{variant[1]}</b></button>)}</div>}<p>{product.description}</p></div>
+                <button className="menu-item-add" type="button" disabled={sold} aria-label={`${sold ? 'No disponible' : 'Elegir'} ${product.name} desde ${product.prices[0][1]}`} onClick={() => addProduct(product, selected)}><span><span className="menu-item-add__desktop">{sold ? (storeOpen ? 'AGOTADO' : 'CERRADA') : chooseLabel}</span><span className="menu-item-add__mobile">{sold ? 'NO' : 'ELEGIR'}</span><b>{product.prices[0][1]}</b></span><Plus aria-hidden="true"/></button>
               </article>;
             })}
           </div>

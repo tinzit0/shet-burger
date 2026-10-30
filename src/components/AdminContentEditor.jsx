@@ -142,7 +142,9 @@ export default function AdminContentEditor({ products, siteContent, onSaveProduc
           localImageFallback = true;
         }
       }
+      const existingProduct = products.find(item => item.id === id);
       const product = {
+        ...existingProduct,
         id,
         category: form.category,
         name: form.name.trim(),

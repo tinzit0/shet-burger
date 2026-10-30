@@ -1,6 +1,11 @@
 import { supabase } from './supabase';
 
 const missingTable = error => /relation .* does not exist|schema cache|could not find the table/i.test(error?.message || '');
+const withRequiredCatalogEntries = (products, defaults) => {
+  const catalog = Array.isArray(products) ? products : [];
+  const required = defaults.filter(product => product.requiredCatalogEntry && !catalog.some(item => item.id === product.id));
+  return [...catalog, ...required];
+};
 
 export async function loadManagedContent(defaultProducts, defaultContent) {
   if (!supabase) return { products: defaultProducts, content: defaultContent, remote: false };
@@ -11,7 +16,9 @@ export async function loadManagedContent(defaultProducts, defaultContent) {
   const catalogUnavailable = catalogResult.error && missingTable(catalogResult.error);
   const contentUnavailable = contentResult.error && missingTable(contentResult.error);
   return {
-    products: !catalogResult.error && catalogResult.data?.length ? catalogResult.data.map(item => item.payload) : defaultProducts,
+    products: !catalogResult.error && catalogResult.data?.length
+      ? withRequiredCatalogEntries(catalogResult.data.map(item => item.payload), defaultProducts)
+      : defaultProducts,
     content: !contentResult.error && contentResult.data?.payload ? { ...defaultContent, ...contentResult.data.payload } : defaultContent,
     remote: !catalogUnavailable && !contentUnavailable,
   };

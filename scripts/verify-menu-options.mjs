@@ -63,11 +63,16 @@ try {
   const burgerDialog = page.locator('.product-configurator');
   await burgerDialog.waitFor();
   assert.deepEqual(await burgerDialog.locator('.product-configurator__variants button').allTextContents(), ['Simple$9.490', 'Doble$11.990']);
+  assert.equal(await burgerDialog.locator('.product-configurator__extras button').count(), 10, 'La hamburguesa debe permitir elegir extras en el mismo selector');
   await burgerDialog.getByRole('button', { name: /Doble\s*\$11\.990/ }).click();
-  await burgerDialog.getByRole('button', { name: /AGREGAR AL PEDIDO/ }).click();
+  await burgerDialog.getByRole('button', { name: /Extra carne y cheddar/ }).click();
+  assert.match(await burgerDialog.locator('.product-configurator__submit').innerText(), /14\.490/, 'El total debe sumar el extra elegido');
+  await page.screenshot({ path: `${artifacts}/burger-extras-390.png` });
+  await burgerDialog.getByRole('button', { name: /AGREGAR CON 1 EXTRA/ }).click();
   await page.locator('.cart-drawer').waitFor();
   assert.match(await page.locator('.cart-item').first().innerText(), /DOBLE/i);
-  assert.match(await page.locator('.cart-total').innerText(), /11\.990/);
+  assert.match(await page.locator('.cart-drawer').innerText(), /EXTRA CARNE Y CHEDDAR[\s\S]*PARA:\s*BBQ BEAST/i);
+  assert.match(await page.locator('.cart-total').innerText(), /14\.490/);
   await page.keyboard.press('Escape');
 
   const jumex = page.locator('#product-jugo-jumex');
@@ -82,8 +87,18 @@ try {
   await jumexDialog.locator('.product-configurator__submit').click();
   await page.locator('.cart-drawer').waitFor();
   assert.match(await page.locator('.cart-drawer').innerText(), /JUGO JUMEX[\s\S]*SABOR:\s*MANGO/i);
+
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(`${base}/delivery`, { waitUntil: 'domcontentloaded' });
+  await page.locator('.menu-category--burgers .menu-item').first().locator('.menu-item-add').click();
+  const desktopBurgerDialog = page.locator('.product-configurator');
+  await desktopBurgerDialog.waitFor();
+  assert.equal(await desktopBurgerDialog.locator('.product-configurator__extras button').count(), 10, 'Los extras también deben estar disponibles en escritorio');
+  assert.equal(await desktopBurgerDialog.locator('.product-configurator__panel').evaluate(element => element.scrollWidth <= element.clientWidth), true, 'El selector de escritorio no debe desbordarse');
+  await page.screenshot({ path: `${artifacts}/burger-extras-1440.png` });
   assert.deepEqual(errors, []);
-console.log('PASS fondo premium fijo, portada completa rotativa, tarjetas con precio limpio, selector Simple/Doble y sabores Jumex');
+console.log('PASS fondo premium fijo, portada completa rotativa, tarjetas con precio limpio, selector Simple/Doble con extras y sabores Jumex');
 } finally {
   await browser.close();
 }

@@ -63,8 +63,12 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true, produ
     storeOpen={storeOpen}
     onCancel={() => setConfiguring(null)}
     onConfirm={(product, variant, customization) => {
-      onAdd(product, variant, customization);
-      setConfiguring(null);
+      const { extraProducts = [], ...productCustomization } = customization;
+      const added = onAdd(product, variant, productCustomization);
+      if (added !== false) {
+        extraProducts.forEach(extra => onAdd(extra, extra.prices[0], { selections: [{ label: 'Para', value: product.name }] }));
+        setConfiguring(null);
+      }
     }}
   />}
   </>;

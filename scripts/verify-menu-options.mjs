@@ -75,6 +75,34 @@ try {
   assert.match(await page.locator('.cart-total').innerText(), /14\.490/);
   await page.keyboard.press('Escape');
 
+  await page.goto(`${base}/delivery`, { waitUntil: 'domcontentloaded' });
+  const triplePromo = page.locator('#product-triple-shet');
+  await triplePromo.scrollIntoViewIfNeeded();
+  await triplePromo.locator('.menu-item-add').click();
+  const promoDialog = page.locator('.product-configurator');
+  await promoDialog.waitFor();
+  assert.equal(await promoDialog.locator('.product-configurator__drinks select').count(), 3, 'Triple SHET debe permitir elegir sus tres bebidas');
+  assert.deepEqual(await promoDialog.locator('.product-configurator__drinks select').first().locator('option').allTextContents(), ['Coca Cola', 'Coca Cola Zero', 'Sprite', 'Sprite Zero', 'Fanta', 'Kem']);
+  await promoDialog.locator('.product-configurator__drinks select').nth(0).selectOption({ label: 'Coca Cola Zero' });
+  await promoDialog.locator('.product-configurator__drinks select').nth(1).selectOption({ label: 'Sprite' });
+  await promoDialog.locator('.product-configurator__drinks select').nth(2).selectOption({ label: 'Fanta' });
+  await page.screenshot({ path: `${artifacts}/promo-drinks-390.png` });
+  await promoDialog.locator('.product-configurator__submit').click();
+  await page.locator('.cart-drawer').waitFor();
+  assert.match(await page.locator('.cart-drawer').innerText(), /BEBIDA 1:\s*COCA COLA ZERO[\s\S]*BEBIDA 2:\s*SPRITE[\s\S]*BEBIDA 3:\s*FANTA/i);
+  await page.keyboard.press('Escape');
+
+  for (const [promoId, expectedDrinks] of [['vicio', 1], ['tentacion', 2]]) {
+    const promo = page.locator(`#product-${promoId}`);
+    await promo.scrollIntoViewIfNeeded();
+    await promo.locator('.menu-item-add').click();
+    const dialog = page.locator('.product-configurator');
+    await dialog.waitFor();
+    assert.equal(await dialog.locator('.product-configurator__drinks select').count(), expectedDrinks, `${promoId} debe mostrar ${expectedDrinks} selector(es) de bebida`);
+    await page.keyboard.press('Escape');
+    await dialog.waitFor({ state: 'detached' });
+  }
+
   const jumex = page.locator('#product-jugo-jumex');
   await jumex.scrollIntoViewIfNeeded();
   await jumex.locator('.menu-item-add').click();
@@ -96,9 +124,15 @@ try {
   await desktopBurgerDialog.waitFor();
   assert.equal(await desktopBurgerDialog.locator('.product-configurator__extras button').count(), 10, 'Los extras también deben estar disponibles en escritorio');
   assert.equal(await desktopBurgerDialog.locator('.product-configurator__panel').evaluate(element => element.scrollWidth <= element.clientWidth), true, 'El selector de escritorio no debe desbordarse');
+  assert.equal(await desktopBurgerDialog.locator('.product-configurator__submit').isVisible(), true, 'El botón para agregar debe quedar visible sin deslizar en escritorio');
   await page.screenshot({ path: `${artifacts}/burger-extras-1440.png` });
+  assert.equal(await desktopBurgerDialog.locator('.product-configurator__submit').evaluate(element => {
+    const button = element.getBoundingClientRect();
+    const panel = element.closest('.product-configurator__panel').getBoundingClientRect();
+    return button.bottom <= panel.bottom && button.top >= panel.top;
+  }), true, 'El botón para agregar debe permanecer dentro del selector');
   assert.deepEqual(errors, []);
-console.log('PASS fondo premium fijo, portada completa rotativa, tarjetas con precio limpio, selector Simple/Doble con extras y sabores Jumex');
+console.log('PASS fondo premium fijo, portada completa rotativa, burgers con extras, bebidas en promociones y sabores Jumex');
 } finally {
   await browser.close();
 }

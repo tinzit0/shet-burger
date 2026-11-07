@@ -2,99 +2,67 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Pause, Play } from 'lucide-react';
 import BurgerPhoto from './BurgerPhoto';
 
-const featuredIds = ['bacon-trip', 'bbq-beast', 'onion-shet', 'cowboy-smoke', 'cheeseburger-bacon'];
-const featuredContent = {
-  'bacon-trip': {
-    eyebrow: 'FAT SMASH · HECHAS AL MOMENTO', title: 'TU ANTOJO.', accent: 'A TU MANERA.',
-    note: 'Elige tu burger, ábrela y arma tu pedido en Simple o Doble. Todas vienen con papas fritas.',
-    badge: 'LA JOYA DE LA CASA', details: ['MERMELADA DE TOCINO', 'DOBLE CHEDDAR', 'SALSA EMMY'],
-  },
-  'bbq-beast': {
-    eyebrow: 'FAT SMASH · SELLO SHET', title: 'AHUMADA.', accent: 'BRUTAL.',
-    note: 'Tocino, BBQ y aros de cebolla en una burger intensa, crujiente y hecha para ensuciarse las manos.',
-    badge: 'INTENSA Y AHUMADA', details: ['TOCINO + BBQ', 'AROS DE CEBOLLA', 'PEPINILLOS'],
-  },
-  'onion-shet': {
-    eyebrow: 'DOBLE CHEDDAR · MAYO SRIRACHA', title: 'CRISPY.', accent: 'CON ACTITUD.',
-    note: 'Cebolla crispy, tocino y un picor suave que aparece justo al final. Equilibrada, pero nada tímida.',
-    badge: 'CRISPY Y PICANTE', details: ['DOBLE CHEDDAR', 'CEBOLLA CRISPY', 'MAYO SRIRACHA'],
-  },
-  'cowboy-smoke': {
-    eyebrow: 'PULLED PORK · CEBOLLA CRISPY', title: 'SMOKE.', accent: 'SIN ATAJOS.',
-    note: 'Pulled pork artesanal, salsa BBQ y cheddar fundido. Mucho sabor, preparado como corresponde.',
-    badge: 'PULLED PORK SHET', details: ['PULLED PORK', 'CEBOLLA CRISPY', 'SALSA BBQ'],
-  },
-  'cheeseburger-bacon': {
-    eyebrow: 'TRIPLE CHEDDAR · TOCINO', title: 'CLÁSICA.', accent: 'BIEN SHET.',
-    note: 'La cheeseburger que conoces, llevada a nuestro terreno con triple cheddar, tocino y pan de papa.',
-    badge: 'UN CLÁSICO SHET', details: ['TRIPLE CHEDDAR', 'TOCINO', 'KETCHUP + MOSTAZA'],
-  },
-};
+const featuredIds = ['bacon-trip', 'tentacion', 'cowboy-smoke', 'bbq-beast', 'triple-shet', 'onion-shet', 'cheeseburger-bacon'];
+const scenes = ['slate', 'wine', 'forest', 'copper', 'plum'];
+const SLIDE_DURATION = 11000;
 
-export default function MenuCover({ storeOpen, products = [] }) {
-  const slides = useMemo(() => {
-    const preferred = featuredIds.map(id => products.find(product => product.id === id)).filter(product => product?.image);
-    return preferred.length > 1 ? preferred : products.filter(product => product.category === 'burgers' && product.image).slice(0, 5);
-  }, [products]);
+export default function MenuCover({ storeOpen, stock = {}, products = [], onChooseProduct, selectionOpen = false }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  const featured = slides[active % Math.max(slides.length, 1)];
-  const copy = featured ? featuredContent[featured.id] || {
-    eyebrow: 'FAT SMASH BURGER', title: featured.name, accent: 'A TU MANERA.', note: featured.description,
-    badge: 'FAVORITA SHET', details: ['CARNE SMASH 125 G', 'PAN DE PAPA', 'PAPAS INCLUIDAS'],
-  } : null;
+  const [focused, setFocused] = useState(false);
+  const [hidden, setHidden] = useState(() => document.hidden);
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const slides = useMemo(() => {
+    const ordered = [...featuredIds.map(id => products.find(p => p.id === id)), ...products.filter(p => ['burgers','promos'].includes(p.category) && !featuredIds.includes(p.id))];
+    return ordered.filter(p => p?.image);
+  }, [products]);
+  const index = active % Math.max(slides.length, 1);
+  const rotating = !paused && !focused && !hidden && !reducedMotion && !selectionOpen && slides.length > 1;
+  const move = direction => { if (slides.length) setActive(value => (value + direction + slides.length) % slides.length); };
 
   useEffect(() => {
-    if (paused || slides.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
-    const timer = window.setInterval(() => setActive(index => (index + 1) % slides.length), 6000);
-    return () => window.clearInterval(timer);
-  }, [paused, slides.length]);
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const motionChanged = event => setReducedMotion(event.matches);
+    const visibilityChanged = () => setHidden(document.hidden);
+    media.addEventListener('change', motionChanged);
+    document.addEventListener('visibilitychange', visibilityChanged);
+    return () => { media.removeEventListener('change', motionChanged); document.removeEventListener('visibilitychange', visibilityChanged); };
+  }, []);
 
-  const move = direction => setActive(index => (index + direction + slides.length) % slides.length);
+  useEffect(() => {
+    if (!rotating) return;
+    const timer = window.setTimeout(() => setActive(value => (value + 1) % slides.length), SLIDE_DURATION);
+    return () => window.clearTimeout(timer);
+  }, [rotating, active, slides.length]);
 
-  return <section className="menu-cover" id="top" aria-labelledby="delivery-title">
-    <div className="menu-cover__ambient" aria-hidden="true"><span/><span/></div>
-    <div className="menu-cover__content">
-      <header className="menu-cover__topline">
-        <p className={`delivery-status${storeOpen ? '' : ' is-closed'}`}><span aria-hidden="true"/>{storeOpen ? 'PEDIDOS ABIERTOS' : 'PEDIDOS CERRADOS'}</p>
-        <span>CARTA ONLINE</span>
-      </header>
-      <div className="menu-cover__layout">
-        <div className="menu-cover__copy" key={`copy-${featured?.id || 'menu'}`}>
-          <span>{copy?.eyebrow || 'FAT SMASH BURGERS'}</span>
-          <h1 id="delivery-title">{copy?.title || 'MENÚ SHET.'}<br/><em>{copy?.accent || 'A TU MANERA.'}</em></h1>
-          <p>{copy?.note || 'Elige tu favorita y arma tu pedido.'}</p>
-          <div className="menu-cover__actions">
-            <a className="menu-cover__primary" href="#menu"><span>EXPLORAR EL MENÚ</span><ArrowDown/></a>
-            {featured && <a className="menu-cover__secondary" href={`#product-${featured.id}`}><span>VER {featured.name.toUpperCase()}</span><strong>{featured.prices[0][1]}</strong><ArrowUpRight/></a>}
+  return <section className={`menu-campaign${rotating ? ' is-playing' : ''}`} id="top" aria-label="La carta SHET">
+    <h1 className="sr-only" id="delivery-title">Hamburguesas y promociones SHET BURGER</h1>
+    <div className="menu-campaign__stage" role="region" aria-roledescription="carrusel" aria-label="Destacados del menú"
+      onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
+      {slides.map((product, number) => {
+        const current = index === number, promo = product.category === 'promos';
+        return <article key={product.id} className={`menu-campaign__slide menu-campaign__slide--${scenes[number % scenes.length]}${current ? ' is-active' : ''}`}
+          aria-hidden={!current} inert={!current} aria-roledescription="diapositiva" aria-label={`${number + 1} de ${slides.length}: ${product.name}`}>
+          <div className="menu-campaign__texture" aria-hidden="true"/>
+          <div className="menu-campaign__visual">
+            <button className="menu-campaign__photo" type="button" tabIndex={current ? 0 : -1} onClick={() => onChooseProduct?.(product)} aria-label={`Ver y personalizar ${product.name}`}>
+              <BurgerPhoto product={product} sizes="(max-width: 700px) 100vw, 52vw" loading={number === 0 ? 'eager' : 'lazy'}/>
+            </button>
+            <span className="menu-campaign__sticker">{promo ? 'EL PLAN ES COMPARTIR' : 'INCLUYE PAPITAS'} <ArrowUpRight aria-hidden="true"/></span>
           </div>
-        </div>
-        {featured && <div className="menu-cover__feature" role="region" aria-roledescription="carrusel" aria-label="Burgers destacadas">
-          <a className="menu-cover__feature-card" href={`#product-${featured.id}`} aria-label={`Ver ${featured.name} en el menú`} key={featured.id}>
-            <div className="menu-cover__feature-media">
-              <BurgerPhoto product={featured} sizes="(max-width: 720px) 92vw, 44vw" loading="eager"/>
-              <span>{copy.badge}</span>
-            </div>
-            <div className="menu-cover__feature-caption">
-              <div><small>FAT SMASH BURGER</small><strong>{featured.name}</strong></div>
-              <div><small>INCLUYE PAPAS</small><strong>{featured.prices[0][1]}</strong></div>
-              <ArrowUpRight aria-hidden="true"/>
-            </div>
-          </a>
-          {slides.length > 1 && <div className="menu-cover__feature-nav">
-            <span>{String(active + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}</span>
-            <div className="menu-cover__feature-dots" aria-label="Elegir burger destacada">{slides.map((product, index) => <button type="button" key={product.id} aria-label={`Ver ${product.name}`} aria-pressed={index === active} onClick={() => setActive(index)}/>)}</div>
-            <div className="menu-cover__feature-buttons">
-              <button type="button" onClick={() => move(-1)} aria-label="Burger anterior"><ArrowLeft/></button>
-              <button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? 'Reanudar cambio automático' : 'Pausar cambio automático'}>{paused ? <Play/> : <Pause/>}</button>
-              <button type="button" onClick={() => move(1)} aria-label="Siguiente burger"><ArrowRight/></button>
-            </div>
-          </div>}
-        </div>}
-      </div>
-      <footer className="menu-cover__proof" aria-label="Ingredientes destacados" key={`details-${featured?.id || 'menu'}`}>
-        {(copy?.details || ['CARNE SMASH 125 G', 'PAN DE PAPA', 'PAPAS INCLUIDAS']).map((detail, index) => <span key={detail}><b>{String(index + 1).padStart(2, '0')}</b> {detail}</span>)}
-      </footer>
+          <div className="menu-campaign__name"><span>{promo ? 'LA PROMO' : 'LA SMASH'}</span><h2>{product.name}</h2><p>MUCHO SHET.<br/>CERO VUELTAS.</p></div>
+          <div className="menu-campaign__details"><span className="menu-campaign__eyebrow">{promo ? 'JUNTOS SABE MEJOR' : 'HECHA AL MOMENTO · NONGUÉN'}</span><p>{product.description}</p><span className="menu-campaign__price">Desde <b>{product.prices[0]?.[1]}</b></span><button type="button" tabIndex={current ? 0 : -1} className="menu-campaign__order" onClick={() => onChooseProduct?.(product)}>{!storeOpen ? 'VER OPCIONES' : stock[product.id] === false ? 'VER DETALLES' : 'PIDE AQUÍ'}<ArrowUpRight aria-hidden="true"/></button>{(!storeOpen || stock[product.id] === false)&&<small>{!storeOpen ? 'Por ahora los pedidos están cerrados.' : 'Producto agotado temporalmente.'}</small>}</div>
+        </article>;
+      })}
+      {!slides.length&&<div className="menu-campaign__empty"><h2>LA CARTA SHET.</h2><a href="#menu">Ver el menú <ArrowDown/></a></div>}
+      <div className="menu-campaign__brand" aria-hidden="true">SHET<span>FAT SMASH BURGERS</span></div>
+      {slides.length > 1&&<>
+        <button className="menu-campaign__arrow menu-campaign__arrow--prev" type="button" onClick={() => move(-1)} aria-label="Destacado anterior"><ArrowLeft/></button>
+        <button className="menu-campaign__arrow menu-campaign__arrow--next" type="button" onClick={() => move(1)} aria-label="Siguiente destacado"><ArrowRight/></button>
+        <div className="menu-campaign__controls"><span className="menu-campaign__count">{String(index+1).padStart(2,'0')} / {String(slides.length).padStart(2,'0')}</span><div className="menu-campaign__dots" role="group" aria-label="Elegir destacado">{slides.map((product, number)=><button type="button" key={product.id} aria-label={`Ver ${product.name}`} aria-pressed={index===number} onClick={()=>setActive(number)}><span/></button>)}</div><button className="menu-campaign__pause" type="button" onClick={()=>setPaused(value=>!value)} aria-pressed={paused} aria-label={paused?'Reanudar carrusel':'Pausar carrusel'}>{paused?<Play/>:<Pause/>}</button></div>
+        <div className="menu-campaign__progress" aria-hidden="true"><span key={`${active}-${rotating}`} className={rotating?'is-running':''}/></div>
+      </>}
     </div>
+    <div className="menu-campaign__footer"><span><i className={storeOpen?'is-open':''}/>{storeOpen?'RECIBIENDO PEDIDOS':'PEDIDOS CERRADOS'}</span><a href="#menu">EXPLORA TODA LA CARTA <ArrowDown aria-hidden="true"/></a><span>NONGUÉN, CONCEPCIÓN</span></div>
   </section>;
 }

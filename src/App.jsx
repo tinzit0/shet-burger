@@ -6,7 +6,8 @@ import WhatsAppButton from './components/WhatsAppButton';
 import { usePublicRoute, navigate } from './lib/navigation';
 import ScrollReveals from './components/ScrollReveals';
 import { products as defaultProducts, defaultSiteContent } from './data';
-import { calculateOrderTotal, formatDeliveryAddress, getDeliveryZone } from './lib/delivery';
+import { couponDiscount, couponError } from './lib/couponRules';
+import { getDeliveryFee, calculateOrderTotal, formatDeliveryAddress, getDeliveryZone } from './lib/delivery';
 
 const CartDrawer = lazy(() => import('./components/CartDrawer'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
@@ -112,12 +113,12 @@ export default function App(){
  const uploadProductImage=async(file,productId)=>{const{uploadManagedImage}=await contentApi();return uploadManagedImage(file,productId)};
  const connectAdmin=async redirectPath=>{localStorage.removeItem('shet-admin-auth');localStorage.removeItem('shet-demo-admin-token');setDemoToken('');const{signInWithGoogle}=await supabaseApi();return signInWithGoogle(redirectPath)};
  const adminProps={products,stock,onToggleStock:toggleStock,orders,onUpdateOrder:statusUpdate,onDeleteOrder:deleteOrder,storeOpen,onToggleStore:toggleStore,storeSyncState,user,authReady:authReady&&(!user||adminAllowed!==null),adminAllowed,onSignOut:logoutAdmin,demoAdmin,onDemoLogin:demoLogin};
- if(path==='/admin/content'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>connectAdmin('/admin/content')}/></Suspense>;
+ if(path==='/admin/content'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} demoToken={demoToken} onLogin={()=>connectAdmin('/admin/content')}/></Suspense>;
  if(path==='/admin/content')return <Suspense fallback={<AdminLoading/>}><AdminContentEditor products={products} siteContent={siteContent} onSaveProduct={saveProduct} onDeleteProduct={removeProduct} onSaveContent={saveContent} onUploadImage={uploadProductImage}/></Suspense>;
- if(path==='/admin/analytics'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>connectAdmin('/admin/analytics')}/></Suspense>;
+ if(path==='/admin/analytics'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} demoToken={demoToken} onLogin={()=>connectAdmin('/admin/analytics')}/></Suspense>;
  if(path==='/admin/analytics')return <Suspense fallback={<AdminLoading/>}><AdminAnalytics orders={orders}/></Suspense>;
- if(path==='/admin'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>connectAdmin('/admin')}/></Suspense>;
- if(path==='/admin')return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} onLogin={()=>connectAdmin('/admin')}/><a className="admin-content-fab" href="/admin/content">EDITAR SITIO</a></Suspense>;
+ if(path==='/admin'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} demoToken={demoToken} onLogin={()=>connectAdmin('/admin')}/></Suspense>;
+ if(path==='/admin')return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} demoToken={demoToken} onLogin={()=>connectAdmin('/admin')}/><a className="admin-content-fab" href="/admin/content">EDITAR SITIO</a></Suspense>;
  const add=(product,variant,customization={})=>{if(!storeOpen){setShopNotice('TIENDA CERRADA · Los pedidos están temporalmente deshabilitados.');return false}if(stock[product.id]===false){setShopNotice(`${product.name.toUpperCase()} ESTÁ AGOTADO · Elige otra opción disponible.`);return false}const selected={label:variant[0],price:Number(variant[1].replace(/\D/g,''))},normalizedCustomization={note:(customization.note||'').trim(),burgerChoices:Array.isArray(customization.burgerChoices)?customization.burgerChoices:[],burgerChoiceIds:Array.isArray(customization.burgerChoiceIds)?customization.burgerChoiceIds:[],selections:Array.isArray(customization.selections)?customization.selections.filter(item=>item?.label&&item?.value):[]},key=`${product.id}-${selected.label}-${JSON.stringify(normalizedCustomization)}`;setCart(items=>{const found=items.find(item=>item.key===key);return found?items.map(item=>item.key===key?{...item,quantity:item.quantity+1}:item):[...items,{key,product,variant:selected,customization:normalizedCustomization,quantity:1}]});setOpen(true);return true};
  const change=(key,quantity)=>{const current=cart.find(item=>item.key===key);if(current&&quantity>current.quantity){if(!storeOpen){setShopNotice('TIENDA CERRADA · No puedes aumentar productos mientras los pedidos están cerrados.');return}if(stock[current.product.id]===false){setShopNotice(`${current.product.name.toUpperCase()} ESTÁ AGOTADO.`);return}}setCart(items=>quantity<=0?items.filter(item=>item.key!==key):items.map(item=>item.key===key?{...item,quantity}:item))};
  const confirm=async details=>{
@@ -127,15 +128,18 @@ export default function App(){
  if(!details.form.name.trim()||details.form.name.trim().length>80)throw new Error('Revisa el nombre ingresado.');
  if(!/^\+569\d{8}$/.test(details.form.phone))throw new Error('El teléfono debe tener el formato +569 seguido de 8 números.');
   const deliveryZone=details.mode==='delivery'?getDeliveryZone(details.form.zone):null;
-  if(details.mode==='delivery'&&!deliveryZone)throw new Error('Selecciona una población disponible para delivery.');
+  if(details.mode==='delivery'&&!deliveryZone)throw new Error('Espera a que se confirme tu dirección y el valor del delivery.');
   if(details.mode==='delivery'&&(!details.form.address.trim()||details.form.address.trim().length>180))throw new Error('Ingresa una dirección válida.');
   if(!details.receipt)throw new Error('Debes adjuntar el comprobante.');
   if(details.receipt.size>8*1024*1024)throw new Error('El comprobante no puede superar los 8 MB.');
   if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(details.receipt.type))throw new Error('Usa un comprobante JPG, PNG, WEBP o PDF.');
   const subtotal=cart.reduce((sum,item)=>sum+item.variant.price*item.quantity,0);
-  const total=calculateOrderTotal(subtotal,details.mode,details.form.zone);
+  const couponContext={items:cart,mode:details.mode,deliveryFee:getDeliveryFee(details.mode,details.form.zone)};
+  if(details.coupon&&couponError(details.coupon,subtotal,Date.now(),couponContext))throw new Error(couponError(details.coupon,subtotal,Date.now(),couponContext));
+  const discount=couponDiscount(details.coupon,subtotal,Date.now(),couponContext);
+  const total=calculateOrderTotal(subtotal,details.mode,details.form.zone)-discount;
   const address=details.mode==='delivery'?formatDeliveryAddress(details.form.zone,details.form.address):'';
-  const preview=await fileData(details.receipt),order={order_number:`SHET-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0,4).toUpperCase()}`,user_id:user?.id||null,items:cart.map(item=>({product:item.product,quantity:item.quantity,price:item.variant.price,variant:item.variant.label,note:item.customization?.note||'',burger_choices:item.customization?.burgerChoices||[],selections:item.customization?.selections||[]})),total,fulfillment:details.mode,customer_name:details.form.name.trim(),customer_phone:details.form.phone,address,status:'Pedido recibido',stage:0,receipt_name:details.receipt?.name||'',receipt_preview:preview,created_at:new Date().toISOString()};
+  const preview=await fileData(details.receipt),order={order_number:`SHET-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0,4).toUpperCase()}`,user_id:user?.id||null,items:cart.map(item=>({product:item.product,quantity:item.quantity,price:item.variant.price,variant:item.variant.label,note:item.customization?.note||'',burger_choices:item.customization?.burgerChoices||[],selections:item.customization?.selections||[]})),coupon_code:details.coupon?.code||null,discount_amount:discount,total,fulfillment:details.mode,customer_name:details.form.name.trim(),customer_phone:details.form.phone,address,status:'Pedido recibido',stage:0,receipt_name:details.receipt?.name||'',receipt_preview:preview,created_at:new Date().toISOString()};
   const{saveOrder,normalizeOrder}=await ordersApi();const result=await saveOrder(order,details.receipt);
   if(result.error&&result.error.message!=='Supabase no configurado')throw result.error;
   const saved=result.data?normalizeOrder(result.data):normalizeOrder({...order,id:order.order_number,receipt_path:null});

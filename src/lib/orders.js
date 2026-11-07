@@ -24,7 +24,8 @@ export async function saveOrder(order, receiptFile) {
     if (upload.error) return { data: null, error: upload.error };
   }
   const payload = { ...databaseOrder, receipt_path: receiptPath };
-  const { data, error } = await supabase.rpc('place_order', {
+  const { data, error } = await supabase.rpc(databaseOrder.coupon_code ? 'place_order_with_coupon' : 'place_order', {
+    ...(databaseOrder.coupon_code ? { p_coupon_code: databaseOrder.coupon_code } : {}),
     p_order_number: databaseOrder.order_number,
     p_customer_name: databaseOrder.customer_name,
     p_customer_phone: databaseOrder.customer_phone,
@@ -34,7 +35,7 @@ export async function saveOrder(order, receiptFile) {
     p_receipt_name: databaseOrder.receipt_name,
     p_receipt_path: receiptPath,
   }).single();
-  if (error && /place_order|function.*exist/i.test(error.message || '')) {
+  if (!databaseOrder.coupon_code && error && /place_order|function.*exist/i.test(error.message || '')) {
     if (!order.user_id) {
       const { error: insertError } = await supabase.from('orders').insert(payload);
       if (insertError) return { data: null, error: insertError };

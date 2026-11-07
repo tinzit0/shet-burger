@@ -8,10 +8,12 @@ import './design/hero.css';
 import './design/home.css';
 import './design/experience.css';
 import './design/delivery.css';
+import './design/menu-cover.css';
 import './design/menu.css';
 import './design/reviews.css';
 import './design/footer.css';
 import './design/overlays.css';
 import './design/admin.css';
+import './design/coupons.css';
 class AppErrorBoundary extends React.Component{state={error:null};static getDerivedStateFromError(error){return {error}}componentDidCatch(error){console.error(error)}render(){if(this.state.error)return <main className="app-error"><div><img src="/assets/logo shet burger.png" alt="SHET BURGER"/><p>SHET BURGER · ERROR DE CARGA</p><h1>Algo salió<br/><em>mal.</em></h1><span>Recarga la página para continuar. Si el problema persiste, limpia los datos de este sitio.</span><small className="app-error__detail">{this.state.error?.message}</small><button type="button" onClick={()=>window.location.reload()}>RECARGAR PÁGINA</button></div></main>;return this.props.children}}
 ReactDOM.createRoot(document.getElementById('root')).render(<React.StrictMode><AppErrorBoundary><App/></AppErrorBoundary></React.StrictMode>);

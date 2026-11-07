@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Copy, MapPin, Minus, Plus, ShoppingBag, Trash2, Upload, X } from 'lucide-react';
 import { business, directionsUrl } from '../config';
-import { calculateOrderTotal, DELIVERY_ZONES, getDeliveryFee } from '../lib/delivery';
+import { calculateOrderTotal, composeDeliveryAddress, detectDeliveryZone, getDeliveryFee, getDeliveryZone, DELIVERY_ZONES } from '../lib/delivery';
+import { lookupDeliveryAddress } from '../lib/addressLookup';
 import BurgerPhoto from './BurgerPhoto';
+import { findCoupon } from '../lib/coupons';
+import { couponDiscount, couponError, couponConditions } from '../lib/couponRules';
 
 const money=value=>`$${Number(value||0).toLocaleString('es-CL')}`;
 const priceOf=item=>item.variant?.price??Number(item.product.prices[0][1].replace(/\D/g,''));
@@ -11,17 +14,69 @@ const upsellCategories=[['fritos','Fritos'],['bebidas','Bebidas'],['extras','Ext
 
 export default function CartDrawer({cart,onClose,onChange,onClear,onConfirm,onTrack,products=[],stock={},storeOpen=true,onAdd,onExplore}){
  const[step,setStep]=useState('cart'),[mode,setMode]=useState('delivery'),[sent,setSent]=useState(false),[receipt,setReceipt]=useState(null),[form,setForm]=useState({name:'',phone:'',zone:'',address:''}),[copied,setCopied]=useState(false),[saving,setSaving]=useState(false),[error,setError]=useState(''),[upsellCategory,setUpsellCategory]=useState('fritos');
+ const[coupon,setCoupon]=useState(null),[couponCode,setCouponCode]=useState(''),[couponMessage,setCouponMessage]=useState(''),[couponBusy,setCouponBusy]=useState(false);
  const subtotal=cart.reduce((sum,item)=>sum+priceOf(item)*item.quantity,0);
  const deliveryFee=getDeliveryFee(mode,form.zone);
- const total=calculateOrderTotal(subtotal,mode,form.zone);
- const paymentReady=mode==='pickup'||Boolean(form.zone);
+ const couponContext={items:cart,mode,deliveryFee};
+ const discount=couponDiscount(coupon,subtotal,Date.now(),couponContext);
+ const total=calculateOrderTotal(subtotal,mode,form.zone)-discount;
+ const [addressLookup, setAddressLookup] = useState({ status: 'idle', message: '', formattedAddress: '' });
+ const [lookupAttempt, setLookupAttempt] = useState(0);
+ const paymentReady=mode==='pickup'||Boolean(form.zone && addressLookup.status === 'ready');
+ const [addressFields, setAddressFields] = useState({ street: '', number: '', population: '' });
+ const updateAddress = (field, value) => {
+   const fields = { ...addressFields, [field]: value };
+   setAddressFields(fields);
+   setForm(current => ({ ...current, address: composeDeliveryAddress(fields), zone: '' }));
+   setAddressLookup({ status: 'idle', message: '', formattedAddress: '' });
+   setError('');
+ };
+ useEffect(() => {
+   if (mode !== 'delivery') return;
+   const address = form.address.trim();
+   if (!addressFields.street.trim() || !/\d/.test(addressFields.number)) return;
+   let cancelled = false;
+   const controller = new AbortController();
+   const timer = window.setTimeout(async () => {
+     setForm(current => ({ ...current, zone: '' }));
+     setAddressLookup({ status: 'loading', message: '', formattedAddress: '' });
+     try {
+       const result = await lookupDeliveryAddress(address, { signal: controller.signal });
+       if (cancelled) return;
+       setForm(current => ({ ...current, zone: result.zone.id }));
+       setAddressLookup({ status: 'ready', message: '', formattedAddress: result.formattedAddress });
+     } catch (error) {
+       if (!cancelled) setAddressLookup({ status: error.code === 'DELIVERY_UNAVAILABLE' ? 'unavailable' : 'error', message: error.message, formattedAddress: '' });
+     }
+   }, detectDeliveryZone(address) ? 0 : 1500);
+   return () => { cancelled = true; controller.abort(); window.clearTimeout(timer); };
+ }, [form.address, addressFields.street, addressFields.number, mode, lookupAttempt]);
  const unavailableItems=cart.filter(item=>stock[item.product.id]===false||item.customization?.burgerChoiceIds?.some(id=>stock[id]===false));
  const suggestions=storeOpen?products.filter(product=>product.category===upsellCategory&&stock[product.id]!==false&&!product.optionGroup).slice(0,4):[];
  useEffect(()=>{document.body.style.overflow='hidden';const escape=event=>{if(event.key==='Escape')onClose()};window.addEventListener('keydown',escape);return()=>{document.body.style.overflow='';window.removeEventListener('keydown',escape)}},[onClose]);
  const copy=async()=>{if(!paymentReady)return;await navigator.clipboard?.writeText(`${business.name}\n${business.bank}\n${business.account}\n${business.rut}\nMonto: ${money(total)}`);setCopied(true);window.setTimeout(()=>setCopied(false),1500)};
  const chooseReceipt=file=>{setError('');if(!file){setReceipt(null);return}if(file.size>8*1024*1024){setReceipt(null);setError('El comprobante no puede superar los 8 MB.');return}if(!allowedReceipts.includes(file.type)){setReceipt(null);setError('Usa un archivo JPG, PNG, WEBP o PDF.');return}setReceipt(file)};
- const submit=async event=>{event.preventDefault();setError('');if(!storeOpen){setError('La tienda está cerrada y no está recibiendo pedidos.');return}if(unavailableItems.length){setError('Retira o vuelve a elegir los productos agotados antes de continuar.');return}if(mode==='delivery'&&!form.zone){setError('Selecciona la población donde entregaremos tu pedido.');return}setSaving(true);try{await onConfirm({mode,form:{...form,phone:`+569${form.phone}`},receipt});setSent(true)}catch(err){setError(err.message||'No se pudo enviar el pedido. Intenta nuevamente.')}finally{setSaving(false)}};
+ const submit=async event=>{event.preventDefault();setError('');if(!storeOpen){setError('La tienda está cerrada y no está recibiendo pedidos.');return}if(unavailableItems.length){setError('Retira o vuelve a elegir los productos agotados antes de continuar.');return}if(mode==='delivery'&&!form.zone){setError('Espera a que confirmemos tu dirección y el valor del delivery.');return}if(coupon&&couponError(coupon,subtotal,Date.now(),couponContext)){setError(couponError(coupon,subtotal,Date.now(),couponContext));return}setSaving(true);try{if(coupon){const fresh=await findCoupon(coupon.code);if(fresh.error)throw fresh.error;const issue=couponError(fresh.data,subtotal,Date.now(),couponContext);if(issue)throw new Error(issue);if(couponDiscount(fresh.data,subtotal,Date.now(),couponContext)!==discount){setCoupon(fresh.data);throw new Error('El descuento cambió. Revisa el total antes de enviar el pedido.')}}await onConfirm({coupon,mode,form:{...form,phone:`+569${form.phone}`},receipt});setSent(true)}catch(err){setError(err.message||'No se pudo enviar el pedido. Intenta nuevamente.')}finally{setSaving(false)}};
+ const applyCoupon=async()=>{setCouponBusy(true);setCouponMessage('');try{const result=await findCoupon(couponCode);if(result.error)throw result.error;const issue=couponError(result.data,subtotal,Date.now(),couponContext);if(issue)throw new Error(issue);setCoupon(result.data);setCouponCode(result.data.code)}catch(error){setCouponMessage(error.message||'No se pudo validar el cupón.')}finally{setCouponBusy(false)}};
+ const couponDetails=<section className="cart-coupon" aria-label="Cupón de descuento"><label htmlFor="cart-coupon-code">¿Tienes un cupón?</label><div><input id="cart-coupon-code" maxLength="30" placeholder="Ingresa tu código" value={couponCode} onChange={event=>{setCouponCode(event.target.value.toUpperCase());setCouponMessage('')}}/><button type="button" disabled={couponBusy||!couponCode.trim()} onClick={applyCoupon}>{couponBusy?'VALIDANDO...':'APLICAR'}</button></div>{coupon&&<p>{coupon.code} · {couponError(coupon,subtotal,Date.now(),couponContext)||('Ahorras '+money(discount))} <button type="button" onClick={()=>{setCoupon(null);setCouponCode('');setCouponMessage('')}}>Quitar</button></p>}{couponMessage&&<small role="alert">{couponMessage}</small>}{coupon&&<small>{couponConditions(coupon)}</small>}<small>Un cupón por pedido. Las condiciones dependen de la promo.</small></section>;
+ const discountRow=discount>0?<div className="coupon-discount"><span>Cupón {coupon.code}</span><b>-{money(discount)}</b></div>:null;
  const viewStatus=()=>{onClose();onTrack?.()};
+ const deliveryDetails = <section className="cart-delivery-details" aria-label="Entrega y valor del pedido">
+   <div className="fulfillment-toggle"><button type="button" className={mode==='delivery'?'active':''} onClick={()=>{setMode('delivery');setError('')}}>A DOMICILIO<span>Calcula con tu dirección</span></button><button type="button" className={mode==='pickup'?'active':''} onClick={()=>{setMode('pickup');setError('')}}>RETIRO<span>Río Loa 130 · Sin costo</span></button></div>
+   {mode==='delivery'?<>
+     <div className="delivery-address-fields">
+       <label htmlFor="order-delivery-street">Calle<input id="order-delivery-street" required maxLength="80" autoComplete="address-line1" placeholder="Ej.: Río Itata" value={addressFields.street} onChange={event=>updateAddress('street',event.target.value)}/></label>
+       <label htmlFor="order-delivery-number">Número<input id="order-delivery-number" required maxLength="10" placeholder="50" pattern=".*[0-9].*" value={addressFields.number} onChange={event=>updateAddress('number',event.target.value)}/></label>
+       <label className="delivery-address-fields__population" htmlFor="order-delivery-population">Población o sector <span>(opcional)</span><input id="order-delivery-population" maxLength="60" list="delivery-populations" placeholder="Ej.: Nonguén o Concepción Centro" aria-describedby="delivery-address-help" value={addressFields.population} onChange={event=>updateAddress('population',event.target.value)}/></label>
+     </div>
+     <datalist id="delivery-populations">{DELIVERY_ZONES.map(zone=><option key={zone.id} value={zone.label}/>)}</datalist>
+     <small id="delivery-address-help">Escribe tu dirección en Concepción. Si conoces la población, puedes agregarla para calcular el despacho directamente.</small>
+     <small>Mapas: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a></small>
+     <details className="delivery-coverage"><summary>Consultar zonas de reparto y tarifas</summary><ul>{DELIVERY_ZONES.map(zone=><li key={zone.id}><span>{zone.label}</span><b>{money(zone.fee)}</b></li>)}</ul></details>
+     <div className={`delivery-quote${paymentReady?' is-ready':''}${addressLookup.status==='unavailable'?' is-unavailable':''}`} role="status" aria-live="polite" aria-busy={addressLookup.status==='loading'}><MapPin aria-hidden="true"/><div><strong>{paymentReady ? `Delivery: ${money(deliveryFee)}` : addressLookup.status==='unavailable' ? 'Fuera de cobertura' : addressLookup.status==='loading' ? 'Buscando tu dirección…' : 'Tu dirección de entrega'}</strong>{addressFields.street&&<span className="delivery-quote__address">{form.address}</span>}<span>{paymentReady ? `${getDeliveryZone(form.zone)?.label} · Productos ${money(subtotal)}` : ['error','unavailable'].includes(addressLookup.status) ? addressLookup.message : addressLookup.status==='loading' ? 'Estamos calculando el despacho para esta dirección.' : 'Completa calle y número para conocer el valor de entrega.'}</span>{paymentReady&&<b className="delivery-quote__total">Total a pagar <strong>{money(total)}</strong></b>}</div></div>
+     {addressLookup.status==='error'&&<button className="cart-address-retry" type="button" onClick={()=>setLookupAttempt(value=>value+1)}>Volver a buscar dirección</button>}
+   </>:<aside className="pickup-note"><MapPin/><div><strong>RETIRA EN EL CARRITO SHET</strong><span>{business.pickupAddress}</span><a href={directionsUrl} target="_blank" rel="noreferrer">VER CÓMO LLEGAR ↗</a></div></aside>}
+ </section>;
 
  return <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="Tu pedido">
   <button className="cart-overlay__backdrop" type="button" onClick={onClose} aria-label="Cerrar carrito"/>
@@ -31,23 +86,20 @@ export default function CartDrawer({cart,onClose,onChange,onClear,onConfirm,onTr
    {sent?<div className="cart-success"><div className="cart-success__icon"><Check/></div><p className="cart-kicker">COMPROBANTE ENVIADO</p><h3>¡Pedido recibido!</h3><p>Revisaremos tu transferencia y actualizaremos el estado del pedido.</p><button className="cart-main-action" type="button" onClick={viewStatus}>VER ESTADO DEL PEDIDO <ArrowRight/></button></div>:step==='cart'?<>
     {!cart.length?<div className="cart-empty"><ShoppingBag/><h3>Tu carrito está vacío</h3><p>Agrega una hamburguesa o una promoción para comenzar.</p><button type="button" onClick={onExplore||onClose}>EXPLORAR MENÚ</button></div>:<div className="cart-drawer__body">
      <div className="cart-items">{cart.map(({key,product,variant,customization,quantity})=>{const unavailable=stock[product.id]===false||customization?.burgerChoiceIds?.some(id=>stock[id]===false);return <article className={`cart-item${unavailable?' is-unavailable':''}`} key={key}><div className="cart-item__image">{product.image?<BurgerPhoto product={product} sizes="84px"/>:<span>SHET</span>}</div><div className="cart-item__info"><h3>{product.name}</h3>{unavailable&&<small className="cart-item__unavailable">AGOTADO · VUELVE A ELEGIR</small>}<small className="cart-variant">{variant?.label}</small>{customization?.burgerChoices?.length>0&&<small className="cart-customization"><b>Hamburguesas:</b> {customization.burgerChoices.join(', ')}</small>}{customization?.selections?.map(item=><small className="cart-customization" key={`${item.label}-${item.value}`}><b>{item.label}:</b> {item.value}</small>)}{customization?.note&&<small className="cart-customization"><b>Nota:</b> {customization.note}</small>}<strong>{money(priceOf({product,variant}))}</strong><div className="cart-quantity"><button type="button" onClick={()=>onChange(key,quantity-1)} aria-label={`Quitar una unidad de ${product.name}`}><Minus/></button><span>{quantity}</span><button type="button" disabled={!storeOpen||unavailable} onClick={()=>onChange(key,quantity+1)} aria-label={`Agregar una unidad de ${product.name}`}><Plus/></button></div></div><button className="cart-item__remove" type="button" onClick={()=>onChange(key,0)} aria-label={`Eliminar ${product.name}`}><Trash2/></button></article>})}</div>
+     {deliveryDetails}{couponDetails}
      <section className="cart-upsell"><p>¿DESEAS AGREGAR ALGO MÁS?</p><div className="cart-upsell__tabs">{upsellCategories.map(([id,label])=><button type="button" className={upsellCategory===id?'active':''} key={id} onClick={()=>setUpsellCategory(id)}>{label}</button>)}</div><div className="cart-upsell__items">{suggestions.map(product=><button type="button" key={product.id} onClick={()=>onAdd?.(product,product.prices[0])}><span>{product.name}</span><b>{product.prices[0][1]}</b><Plus/></button>)}</div></section>
     </div>}
-    {cart.length>0&&<footer className="cart-drawer__footer"><div className="cart-total"><span>Subtotal de productos</span><strong>{money(subtotal)}</strong></div><small className="cart-delivery-hint">El despacho se calcula según tu población en el siguiente paso.</small><button className="cart-main-action" type="button" disabled={!storeOpen||unavailableItems.length>0} onClick={()=>setStep('checkout')}>{!storeOpen?'TIENDA CERRADA':unavailableItems.length?'REVISA PRODUCTOS AGOTADOS':'CONTINUAR PEDIDO'} <ArrowRight/></button><button className="cart-clear" type="button" onClick={onClear}>VACIAR CARRITO</button></footer>}
+    {cart.length>0&&<footer className="cart-drawer__footer"><div className="cart-price-breakdown" aria-live="polite"><div><span>Productos</span><b>{money(subtotal)}</b></div><div><span>{mode==='pickup'?'Retiro':'Delivery'}</span><b>{mode==='pickup'?'Sin costo':paymentReady?money(deliveryFee):'Por calcular'}</b></div>{discountRow}<div className="cart-total"><span>Total del pedido</span><strong>{paymentReady?money(total):'Por calcular'}</strong></div></div>{!paymentReady&&<small className="cart-delivery-hint">Ingresa tu dirección para calcular automáticamente el total con delivery.</small>}<button className="cart-main-action" type="button" disabled={!storeOpen||unavailableItems.length>0} onClick={()=>setStep('checkout')}>{!storeOpen?'TIENDA CERRADA':unavailableItems.length?'REVISA PRODUCTOS AGOTADOS':'CONTINUAR PEDIDO'} <ArrowRight/></button><button className="cart-clear" type="button" onClick={onClear}>VACIAR CARRITO</button></footer>}
    </>:<form className="cart-checkout" onSubmit={submit}>
     <button type="button" className="cart-back" onClick={()=>setStep('cart')}><ArrowLeft/> VOLVER</button>
-    <div className="fulfillment-toggle"><button type="button" className={mode==='delivery'?'active':''} onClick={()=>{setMode('delivery');setError('')}}>A DOMICILIO<span>Selecciona tu población</span></button><button type="button" className={mode==='pickup'?'active':''} onClick={()=>{setMode('pickup');setError('')}}>RETIRO<span>Río Loa 130</span></button></div>
+    {deliveryDetails}{couponDetails}
     <label>Nombre<input required maxLength="80" autoComplete="name" value={form.name} onChange={event=>setForm({...form,name:event.target.value})}/></label>
     <label>Teléfono<div className="phone-input"><span>+569</span><input required type="tel" inputMode="numeric" autoComplete="tel-national" pattern="[0-9]{8}" minLength="8" maxLength="8" placeholder="12345678" aria-label="Número móvil, 8 dígitos" value={form.phone} onChange={event=>setForm({...form,phone:event.target.value.replace(/\D/g,'').slice(0,8)})}/></div><small className="phone-input__hint">Ingresa los 8 dígitos restantes</small></label>
-    {mode==='delivery'?<>
-     <section className="delivery-zone-picker" aria-labelledby="delivery-zone-title"><div><p id="delivery-zone-title">¿DÓNDE ENTREGAMOS?</p><span>Selecciona tu población</span></div><div className="delivery-zone-grid">{DELIVERY_ZONES.map(zone=><button type="button" className={form.zone===zone.id?'active':''} aria-pressed={form.zone===zone.id} key={zone.id} onClick={()=>{setForm({...form,zone:zone.id});setError('')}}><span>{zone.label}</span><b>{money(zone.fee)}</b></button>)}</div></section>
-     <label>Dirección exacta<input required maxLength="140" autoComplete="street-address" placeholder="Calle, número, casa o departamento" value={form.address} onChange={event=>setForm({...form,address:event.target.value})}/></label>
-    </>:<aside className="pickup-note"><MapPin/><div><strong>RETIRA EN EL CARRITO SHET</strong><span>{business.pickupAddress}</span><a href={directionsUrl} target="_blank" rel="noreferrer">VER CÓMO LLEGAR ↗</a></div></aside>}
-    <section className="transfer-box"><div><p>TRANSFERENCIA BANCARIA</p><strong>{business.name}</strong><span>{business.bank} · {business.account}</span><span>{business.rut}</span><span>Productos: {money(subtotal)}</span>{mode==='delivery'&&<span>Despacho: {form.zone?money(deliveryFee):'Selecciona una población'}</span>}<b>{paymentReady?money(total):'TOTAL PENDIENTE'}</b></div><button type="button" onClick={copy} disabled={!paymentReady}>{copied?<Check/>:<Copy/>}{copied?'COPIADO':'COPIAR DATOS'}</button></section>
+    <section className="transfer-box"><div><p>TRANSFERENCIA BANCARIA</p><strong>{business.name}</strong><span>{business.bank} · {business.account}</span><span>{business.rut}</span><span>Productos: {money(subtotal)}</span>{discount>0&&<span>Cupón {coupon.code}: -{money(discount)}</span>}{mode==='delivery'&&<span>Despacho: {form.zone?money(deliveryFee):'Dirección pendiente'}</span>}<b>{paymentReady?money(total):'TOTAL PENDIENTE'}</b></div><button type="button" onClick={copy} disabled={!paymentReady}>{copied?<Check/>:<Copy/>}{copied?'COPIADO':'COPIAR DATOS'}</button></section>
     <label className="receipt-upload"><span><Upload/> Comprobante de transferencia</span><input required type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={event=>chooseReceipt(event.target.files?.[0]||null)}/>{receipt&&<small>{receipt.name}</small>}</label>
     {error&&<p className="cart-error" role="alert">{error}</p>}
-    <div className="checkout-summary checkout-summary--detailed"><div><span>Productos</span><b>{money(subtotal)}</b></div><div><span>{mode==='delivery'?'Despacho':'Retiro'}</span><b>{mode==='delivery'?(form.zone?money(deliveryFee):'—'):'$0'}</b></div><div><span>Total del pedido</span><strong>{money(total)}</strong></div></div>
-    <button className="cart-main-action" type="submit" disabled={saving||!storeOpen||unavailableItems.length>0}>{saving?'GUARDANDO...':!storeOpen?'TIENDA CERRADA':unavailableItems.length?'PRODUCTOS AGOTADOS':'ENVIAR PEDIDO Y COMPROBANTE'} <Check/></button>
+    <div className="checkout-summary checkout-summary--detailed"><div><span>Productos</span><b>{money(subtotal)}</b></div><div><span>{mode==='delivery'?'Despacho':'Retiro'}</span><b>{mode==='delivery'?(form.zone?money(deliveryFee):'—'):'$0'}</b></div>{discountRow}<div><span>Total del pedido</span><strong>{paymentReady?money(total):'Por calcular'}</strong></div></div>
+    <button className="cart-main-action" type="submit" disabled={saving||!storeOpen||unavailableItems.length>0||!paymentReady}>{saving?'GUARDANDO...':!storeOpen?'TIENDA CERRADA':unavailableItems.length?'PRODUCTOS AGOTADOS':!paymentReady?'CONFIRMA TU DIRECCIÓN':'ENVIAR PEDIDO Y COMPROBANTE'} <Check/></button>
    </form>}
   </aside>
  </div>;

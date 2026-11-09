@@ -1,9 +1,9 @@
-import { ArrowDown, ArrowUpRight, Pause, Play } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import miradaVideo from '../../assets/mirada.mp4';
 import useVideoPlayback from '../lib/useVideoPlayback';
 
 export default function Hero({ content }) {
-  const { videoRef, playing, togglePlayback } = useVideoPlayback({ src: miradaVideo });
+  const { videoRef } = useVideoPlayback({ src: miradaVideo });
 
   return <section className="hero" id="top" aria-labelledby="hero-title">
     <div className="hero__scene">
@@ -20,12 +20,9 @@ export default function Hero({ content }) {
         <div className="hero__content">
           <div className="hero__actions">
             <a className="button button--primary" href="/delivery" data-route>{content.heroPrimaryLabel} <ArrowUpRight aria-hidden="true"/></a>
-            <a className="hero__story" href="#promesa">{content.heroSecondaryLabel} <ArrowDown aria-hidden="true"/></a>
           </div>
-          <p className="hero__detail">{content.heroDetail}</p>
         </div>
       </div>
     </div>
-    <button type="button" className="hero__video-control" onClick={togglePlayback} aria-label={`${playing ? 'Pausar' : 'Reproducir'} video de portada`}>{playing ? <Pause aria-hidden="true"/> : <Play aria-hidden="true"/>}<span>{playing ? 'PAUSAR' : 'REPRODUCIR'}</span></button>
   </section>;
 }

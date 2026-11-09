@@ -1,0 +1,82 @@
+{
+  "bacon-trip": {
+    "catalogImage": "/assets/menu/page-2-2.webp",
+    "src": "/assets/menu/original-editorial/bacon-trip.svg",
+    "width": 751,
+    "height": 597,
+    "sourceWidth": 924,
+    "sourceHeight": 1383
+  },
+  "bbq-beast": {
+    "catalogImage": "/assets/menu/page-2-3.webp",
+    "src": "/assets/menu/original-editorial/bbq-beast.svg",
+    "width": 1180,
+    "height": 727,
+    "sourceWidth": 1600,
+    "sourceHeight": 2400
+  },
+  "onion-shet": {
+    "catalogImage": "/assets/menu/page-2-4.webp",
+    "src": "/assets/menu/original-editorial/onion-shet.svg",
+    "width": 1302,
+    "height": 1141,
+    "sourceWidth": 1362,
+    "sourceHeight": 1815
+  },
+  "cowboy-smoke": {
+    "catalogImage": "/assets/menu/page-2-1.webp",
+    "src": "/assets/menu/original-editorial/cowboy-smoke.svg",
+    "width": 708,
+    "height": 581,
+    "sourceWidth": 924,
+    "sourceHeight": 1383
+  },
+  "blue-hit": {
+    "catalogImage": "/assets/menu/page-3-1.webp",
+    "src": "/assets/menu/original-editorial/blue-hit.svg",
+    "width": 751,
+    "height": 585,
+    "sourceWidth": 924,
+    "sourceHeight": 1383
+  },
+  "clasica-bacon": {
+    "catalogImage": "/assets/menu/page-3-2.webp",
+    "src": "/assets/menu/original-editorial/clasica-bacon.svg",
+    "width": 793,
+    "height": 649,
+    "sourceWidth": 924,
+    "sourceHeight": 1383
+  },
+  "cheeseburger-bacon": {
+    "catalogImage": "/assets/menu/page-3-3.webp",
+    "src": "/assets/menu/original-editorial/cheeseburger-bacon.svg",
+    "width": 766,
+    "height": 570,
+    "sourceWidth": 924,
+    "sourceHeight": 924
+  },
+  "tentacion": {
+    "catalogImage": "/assets/menu/page-1-1.webp",
+    "src": "/assets/menu/original-editorial/tentacion.svg",
+    "width": 1383,
+    "height": 752,
+    "sourceWidth": 1383,
+    "sourceHeight": 924
+  },
+  "vicio": {
+    "catalogImage": "/assets/menu/page-1-2.webp",
+    "src": "/assets/menu/original-editorial/vicio.svg",
+    "width": 1383,
+    "height": 787,
+    "sourceWidth": 1383,
+    "sourceHeight": 924
+  },
+  "triple-shet": {
+    "catalogImage": "/assets/menu/page-1-3.webp",
+    "src": "/assets/menu/original-editorial/triple-shet.svg",
+    "width": 1340,
+    "height": 821,
+    "sourceWidth": 1383,
+    "sourceHeight": 924
+  }
+}

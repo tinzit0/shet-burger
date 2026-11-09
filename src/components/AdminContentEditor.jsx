@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, ArrowLeft, Check, ImagePlus, Pencil, Plus, Save, Trash2, Upload, X } from 'lucide-react';
+import { standaloneExtra } from '../lib/customization';
+import PromotionRulesEditor from './PromotionRulesEditor';
 import { categories } from '../data';
 
 const emptyProduct = {
   id: '', category: 'burgers', name: '', description: '', image: '', imagePath: '',
-  variant1: 'Simple', price1: '', variant2: 'Doble', price2: '', featured: false, burgerChoiceCount: 0,
+  standalone: true, burgerExtra: true, friesExtra: false, drinkChoiceCount: 0, allowBurgerVariants: true, allowedBurgerIds: [], allowedExtraIds: [], promotionSlots: [], variant1: 'Simple', price1: '', variant2: 'Doble', price2: '', featured: false, burgerChoiceCount: 0,
 };
 
 const slugify = value => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 64);
@@ -42,6 +44,7 @@ async function prepareImage(file) {
 }
 
 const productToForm = product => ({
+  standalone: standaloneExtra(product), burgerExtra: product.burgerExtra !== false, friesExtra: product.friesExtra ?? ['extra-4','extra-6'].includes(product.id), drinkChoiceCount: product.drinkChoiceCount ?? ({'triple-shet':3,vicio:1,tentacion:2}[product.id]||0), allowBurgerVariants: product.allowBurgerVariants !== false, allowedBurgerIds: product.allowedBurgerIds || [], allowedExtraIds: product.allowedExtraIds || [], promotionSlots: product.promotionSlots || [],
   id: product.id,
   category: product.category,
   name: product.name,
@@ -153,6 +156,8 @@ export default function AdminContentEditor({ products, siteContent, onSaveProduc
         ...(imagePath ? { imagePath } : {}),
         prices,
         featured: Boolean(form.featured),
+        standalone: Boolean(form.standalone), burgerExtra: Boolean(form.burgerExtra), friesExtra: Boolean(form.friesExtra),
+        drinkChoiceCount: form.category === 'promos' ? Number(form.drinkChoiceCount || 0) : 0, allowBurgerVariants: Boolean(form.allowBurgerVariants), allowedBurgerIds: form.allowedBurgerIds, allowedExtraIds: form.allowedExtraIds, promotionSlots: (form.promotionSlots || []).slice(0,Number(form.burgerChoiceCount)||0),
         ...(form.category === 'promos' ? { burgerChoiceCount: Math.max(0, Number(form.burgerChoiceCount || 0)) } : {}),
       };
       const result = await onSaveProduct(product);
@@ -176,11 +181,14 @@ export default function AdminContentEditor({ products, siteContent, onSaveProduc
       setNotice({ tone: 'warning', text: 'La carta debe conservar al menos un producto.' });
       return;
     }
-    if (!window.confirm(`¿Eliminar ${product.name} de la carta?`)) return;
+    if (!window.confirm(`¿Archivar ${product.name} de la carta? Sus registros se conservarán.`)) return;
     setSaving(true);
     try {
       const result = await onDeleteProduct(product.id);
-      if (result !== false) setNotice({ tone: result?.synced ? 'success' : 'warning', text: result?.synced ? 'Producto eliminado de la carta.' : 'Producto eliminado en este dispositivo; la nube no pudo sincronizarse.' });
+      if (result?.ok === false) throw result.error;
+      if (result !== false) setNotice({ tone: result?.synced ? 'success' : 'warning', text: result?.synced ? 'Producto archivado. Sus datos se conservan en Supabase.' : 'No se pudo sincronizar el archivo del producto.' });
+    } catch (error) {
+      setFormError(error.message || 'No se pudo archivar el producto.');
     } finally {
       setSaving(false);
     }
@@ -229,15 +237,19 @@ export default function AdminContentEditor({ products, siteContent, onSaveProduc
               <details className="admin-image-url"><summary>Usar una URL en vez de subir un archivo</summary><div className="admin-image-input"><ImagePlus/><input value={imageFile ? '' : form.image} placeholder="https://… o /assets/menu/imagen.webp" onChange={event => { setImageFile(null); setImagePreview(event.target.value); setForm({ ...form, image: event.target.value, imagePath: '' }); }}/></div></details>
             </div>
             <label>Nombre de opción 1<input required value={form.variant1} onChange={event => setForm({ ...form, variant1: event.target.value })}/></label>
+            {form.category === 'promos' && <PromotionRulesEditor count={form.burgerChoiceCount} slots={form.promotionSlots || []} products={products} onChange={promotionSlots => setForm({ ...form, promotionSlots })}/>}
             <label>Precio opción 1<input required inputMode="numeric" value={form.price1} placeholder="9990" onChange={event => setForm({ ...form, price1: digits(event.target.value) })}/></label>
             <label>Nombre de opción 2 <small>Opcional</small><input value={form.variant2} onChange={event => setForm({ ...form, variant2: event.target.value })}/></label>
             <label>Precio opción 2 <small>Opcional</small><input inputMode="numeric" value={form.price2} placeholder="11990" onChange={event => setForm({ ...form, price2: digits(event.target.value) })}/></label>
             {form.category === 'promos' && <label>Hamburguesas a elegir<input type="number" min="0" max="10" value={form.burgerChoiceCount} onChange={event => setForm({ ...form, burgerChoiceCount: event.target.value })}/></label>}
+            {(form.category === 'extras' || form.category === 'salsas') && <>{[['standalone','Vender por separado'],['burgerExtra','Disponible como extra de hamburguesa'],['friesExtra','Mostrar en MEJORA TUS PAPAS']].map(([field,label]) => <label className="admin-check" key={field}><input type="checkbox" checked={Boolean(form[field])} onChange={event=>setForm({...form,[field]:event.target.checked})}/><span>{label}</span></label>)}</>}
+            {form.category === 'promos' && <><label>Bebidas a elegir<input type="number" min="0" max="10" value={form.drinkChoiceCount} onChange={event=>setForm({...form,drinkChoiceCount:event.target.value})}/></label><label className="admin-check"><input type="checkbox" checked={form.allowBurgerVariants} onChange={event=>setForm({...form,allowBurgerVariants:event.target.checked})}/><span>Permitir doble cobrando la diferencia del precio del catálogo</span></label><fieldset className="wide"><legend>Hamburguesas participantes (sin selección: todas)</legend>{products.filter(item=>item.category==='burgers').map(item=><label className="admin-check" key={item.id}><input type="checkbox" checked={form.allowedBurgerIds.includes(item.id)} onChange={event=>setForm({...form,allowedBurgerIds:event.target.checked?[...form.allowedBurgerIds,item.id]:form.allowedBurgerIds.filter(id=>id!==item.id)})}/><span>{item.name}</span></label>)}</fieldset></>}
+            {form.category === 'burgers' && <fieldset className="wide"><legend>Extras permitidos (sin selección: todos)</legend>{products.filter(item=>['extras','salsas'].includes(item.category)).map(item=><label className="admin-check" key={item.id}><input type="checkbox" checked={form.allowedExtraIds.includes(item.id)} onChange={event=>setForm({...form,allowedExtraIds:event.target.checked?[...form.allowedExtraIds,item.id]:form.allowedExtraIds.filter(id=>id!==item.id)})}/><span>{item.name}</span></label>)}</fieldset>}
             <label className="admin-check"><input type="checkbox" checked={form.featured} onChange={event => setForm({ ...form, featured: event.target.checked })}/><span>Mostrar como destacado</span></label>
           </div>
           <div className="admin-editor-actions"><small>Revisa la vista previa antes de publicar.</small><button className="admin-editor-save" type="submit" disabled={saving || imagePreparing}><Save/> {saving ? 'GUARDANDO…' : 'GUARDAR Y PUBLICAR'}</button></div>
         </form>}
-        <div className="admin-catalog-groups">{groupedProducts.map(group => <section key={group.id}><header><h3>{group.label}</h3><span>{group.products.length}</span></header>{group.products.length === 0 ? <p>Sin productos en esta categoría.</p> : <div>{group.products.map(product => <article key={product.id}><div className="admin-product-thumb">{product.image ? <img src={product.image} alt=""/> : <span>{product.category}</span>}</div><div><strong>{product.name}</strong><small>{product.description}</small><b>{product.prices.map(price => `${price[0]} ${price[1]}`).join(' · ')}</b></div><div><button type="button" onClick={() => startEdit(product)}><Pencil/> EDITAR</button><button type="button" className="danger" onClick={() => remove(product)} disabled={saving}><Trash2/> ELIMINAR</button></div></article>)}</div>}</section>)}</div>
+        <div className="admin-catalog-groups">{groupedProducts.map(group => <section key={group.id}><header><h3>{group.label}</h3><span>{group.products.length}</span></header>{group.products.length === 0 ? <p>Sin productos en esta categoría.</p> : <div>{group.products.map(product => <article key={product.id}><div className="admin-product-thumb">{product.image ? <img src={product.image} alt=""/> : <span>{product.category}</span>}</div><div><strong>{product.name}</strong><small>{product.description}</small><b>{product.prices.map(price => `${price[0]} ${price[1]}`).join(' · ')}</b></div><div><button type="button" onClick={() => startEdit(product)}><Pencil/> EDITAR</button><button type="button" className="danger" onClick={() => remove(product)} disabled={saving}><Trash2/> ARCHIVAR</button></div></article>)}</div>}</section>)}</div>
       </section>}
 
       {section === 'texts' && <form className="admin-copy-editor" onSubmit={submitContent}>
@@ -256,6 +268,8 @@ export default function AdminContentEditor({ products, siteContent, onSaveProduc
           <label>Palabra destacada<input value={contentForm.menuAccent} onChange={event => setContentForm({ ...contentForm, menuAccent: event.target.value })}/></label>
           <label className="wide">Nota del menú<input value={contentForm.menuNote} onChange={event => setContentForm({ ...contentForm, menuNote: event.target.value })}/></label>
         </div></div>
+        <div className="admin-copy-editor__group"><h3>Aviso de local cerrado</h3><div className="admin-editor-form__grid"><label className="wide">Mensaje del pop-up<textarea maxLength="500" value={contentForm.closedMessage || ''} onChange={event=>setContentForm({...contentForm,closedMessage:event.target.value})}/></label><label className="wide">Horario de atención (opcional)<textarea maxLength="500" value={contentForm.openingHours || ''} onChange={event=>setContentForm({...contentForm,openingHours:event.target.value})}/></label></div><p>El estado abierto/cerrado se controla desde el panel de disponibilidad.</p></div>
+        <div className="admin-copy-editor__group"><h3>Papeles antigrasas originales</h3><p>Usa las imágenes web exportadas desde los PDF originales. Se alternan entre las tarjetas sin deformar el patrón.</p><div className="admin-editor-form__grid"><label className="wide">Imagen del papel blanco (ANTIGRASAA.pdf)<input type="url" value={contentForm.menuPaperWhite || ''} onChange={event => setContentForm({ ...contentForm, menuPaperWhite: event.target.value })}/></label><label className="wide">Imagen del papel rosado (Papel antigrasas.pdf)<input type="url" value={contentForm.menuPaperPink || ''} onChange={event => setContentForm({ ...contentForm, menuPaperPink: event.target.value })}/></label></div></div>
         <button className="admin-editor-save" type="submit" disabled={saving}><Save/> {saving ? 'GUARDANDO…' : 'PUBLICAR TEXTOS'}</button>
       </form>}
     </div>

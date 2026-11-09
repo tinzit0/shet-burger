@@ -14,7 +14,21 @@
   src: url("/assets/fonts/space-grotesk-latin.woff2") format("woff2");
 }
 
+@font-face {
+  font-family: "Anton";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/assets/fonts/anton-regular.ttf") format("truetype");
+}
+
 :root {
+  --negro: #0A0A0A;
+  --rosa: #F09AC4;
+  --magenta: #C2185B;
+  --crema: #F7F3EE;
+  --blanco: #FFFFFF;
+  --font-street: "Anton", Impact, sans-serif;
   --color-ink: #09090b;
   --color-graphite: #151317;
   --color-graphite-soft: #242027;
@@ -36,6 +50,7 @@
   --font-display: "Space Grotesk", "Arial Narrow", Arial, sans-serif;
   --font-body: "DM Sans", Inter, Arial, sans-serif;
   --font-editorial: Georgia, "Times New Roman", serif;
+  --font-heading: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   --display: var(--font-display);
   --body: var(--font-body);
   --text-xs: 0.75rem;

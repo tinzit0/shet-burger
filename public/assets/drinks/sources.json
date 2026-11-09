@@ -1,0 +1,79 @@
+[
+  {
+    "id": "bebida-0",
+    "name": "Coca Cola",
+    "page": "https://operals.cl/products/coca-cola-original-350cc",
+    "url": "https://operals.cl/cdn/shop/files/cocaoriginallata.png?v=1723219952",
+    "file": "coca-cola.png",
+    "optimized": "coca-cola.webp",
+    "width": 480,
+    "height": 480,
+    "bytes": 19570
+  },
+  {
+    "id": "bebida-1",
+    "name": "Coca Cola Zero",
+    "page": "https://www.ofimaster.cl/products/bebida-coca-cola-zero-lata-350cc",
+    "url": "https://www.ofimaster.cl/cdn/shop/files/cl_z388426.jpg?v=1767979190&width=1000",
+    "file": "coca-cola-zero.jpg",
+    "optimized": "coca-cola-zero.webp",
+    "width": 480,
+    "height": 480,
+    "bytes": 16068
+  },
+  {
+    "id": "bebida-2",
+    "name": "Sprite",
+    "page": "https://www.ofimaster.cl/products/bebida-sprite-lata-350cc",
+    "url": "https://www.ofimaster.cl/cdn/shop/files/cl_z387914.jpg?v=1769086664&width=1000",
+    "file": "sprite.jpg",
+    "optimized": "sprite.webp",
+    "width": 480,
+    "height": 480,
+    "bytes": 17486
+  },
+  {
+    "id": "bebida-3",
+    "name": "Sprite Zero",
+    "page": "https://dondelanegra.cl/producto/sprite-zero-lata-350cc-12-unidades/",
+    "url": "https://dashboard.dondelanegra.cl/images/products/20617_0_sprite-lata-zero.jpg",
+    "file": "sprite-zero.jpg",
+    "optimized": "sprite-zero.webp",
+    "width": 480,
+    "height": 480,
+    "bytes": 16028
+  },
+  {
+    "id": "bebida-4",
+    "name": "Fanta",
+    "page": "https://tostexpress.cl/products/bebida-fanta-normal-lata-350cc",
+    "url": "https://tostexpress.cl/cdn/shop/files/20BBX37_7b534b59-0549-4546-872e-0eec3d6c4ced.jpg?crop=center&height=1200&v=1758743541&width=1200",
+    "file": "fanta.jpg",
+    "optimized": "fanta.webp",
+    "width": 480,
+    "height": 480,
+    "bytes": 20032
+  },
+  {
+    "id": "bebida-5",
+    "name": "Kem",
+    "page": "https://www.dimerc.cl/bebida-kem-pi-a-lata-350cc.html",
+    "url": "https://cdn.dimerc.cl/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/8/0/80f049641a51b8a512258ff2af4e8c20.jpg",
+    "file": "kem.jpg",
+    "optimized": "kem.webp",
+    "width": 480,
+    "height": 480,
+    "bytes": 15974
+  },
+  {
+    "id": "jugo-jumex",
+    "name": "Jugo Jumex",
+    "page": "https://www.licoresvillafraz.cl/product/nectar-jumex-durazno-lata-335-ml",
+    "url": "https://dojiw2m9tvv09.cloudfront.net/79333/product/M_dsc007919158.jpg",
+    "file": "jumex-durazno.jpg",
+    "optimized": "jumex-durazno.webp",
+    "width": 400,
+    "height": 400,
+    "bytes": 11576
+  }
+]

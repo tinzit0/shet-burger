@@ -1,0 +1,70 @@
+/* Focused overrides for the existing SHET layout. */
+.quantity-control { display:flex; align-items:center; justify-content:center; gap:.4rem; flex-shrink:0; }
+.menu-reference .menu-item.has-brand-paper { background-repeat:repeat; background-size:auto 20rem; }
+.menu-reference .has-brand-paper .menu-item-copy { align-self:stretch; justify-content:center; background:rgb(12 10 13 / 94%); margin:.4rem; border-radius:.4rem; }
+.menu-reference .has-brand-paper > .quantity-control { background:#171117; border-radius:2rem; padding:.25rem; }
+.quantity-control button { display:grid; place-items:center; width:2.75rem; height:2.75rem; min-height:2.75rem; padding:0; border:1px solid #d9cdd1; border-radius:50%; background:#fff; color:#171117; cursor:pointer; }
+.quantity-control button:disabled { opacity:.4; cursor:not-allowed; }
+.quantity-control svg { width:1rem; height:1rem; }
+.quantity-control output { min-width:1.5rem; text-align:center; font-weight:700; }
+.menu-reference .menu-category--bebidas .menu-item { grid-template-columns:minmax(0,1fr) auto 3.5rem; gap:.75rem; }
+.menu-reference .menu-category--bebidas .menu-item > .quantity-control { grid-column:2; grid-row:1; color:white; }
+.menu-reference .menu-category--bebidas .menu-item-add { grid-column:3; }
+/* Drink packshots keep the complete can visible beside copy and quantity. */
+.menu-reference .menu-category--bebidas .menu-item.menu-item--drink-photo { grid-template-columns:clamp(5.25rem,12vw,8rem) minmax(0,1fr) 3rem; grid-template-rows:auto auto; height:auto; min-height:13rem; gap:.25rem .5rem; padding-right:.5rem; }
+.menu-reference .menu-item.menu-item--drink-photo .menu-item-photo { grid-column:1; grid-row:1 / 3; min-height:100%; background:#fff; }
+.menu-reference .menu-item.menu-item--drink-photo .menu-item-photo img { position:absolute; top:0; left:-50%; width:200%; max-width:none; height:100%; padding:.5rem; object-fit:contain; object-position:center; transform:none; }
+.menu-reference .menu-category--bebidas .menu-item.menu-item--drink-photo .menu-item-copy { grid-column:2; grid-row:1; overflow:visible; padding:.75rem .5rem; }
+.menu-reference .menu-category--bebidas .menu-item.menu-item--drink-photo > .quantity-control { grid-column:2; grid-row:2; justify-self:start; align-self:start; margin:0 .4rem .75rem; }
+.menu-reference .menu-category--bebidas .menu-item.menu-item--drink-photo .menu-item-add { grid-column:3; grid-row:1 / 3; }
+.product-configurator__panel.is-drink .product-configurator__photo { background:#fff; }
+.product-configurator__panel.is-drink .product-configurator__photo img { object-fit:contain; object-position:center; }
+@media(min-width:1000px) {
+ .menu-category--bebidas .editorial-products { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+.extra-quantities__row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:.5rem; padding:.8rem 0; border-bottom:1px solid #e1d5da; }
+.extra-quantities__row strong { font-size:.85rem; }
+.extra-quantities__row small { display:block; margin-top:.3rem; font-size:.75rem; color:#64545d; }
+.extra-quantities__row > b { grid-column:2; text-align:right; font-size:.8rem; color:#934462; }
+.extra-quantities__row.is-unavailable { opacity:.6; }
+.promo-burger { grid-column:1/-1; border:1px solid #ddcad2; padding:1rem; border-radius:1rem; }
+.promo-burger h3 { margin:0 0 1rem; }
+.promo-rules-editor details { margin-top:.75rem; padding:1rem; border:1px solid #d9cdd1; border-radius:.75rem; }
+.promo-rules-editor summary { cursor:pointer; font-weight:700; margin-bottom:.75rem; }
+.product-configurator__choices > .promo-burger .extra-quantities legend { font-size:.7rem; }
+.closed-popup { position:fixed; inset:0; z-index:1800; display:grid; place-items:center; padding:1rem; background:#100a10c9; backdrop-filter:blur(8px); }
+.closed-popup__card { position:relative; width:min(31rem,100%); max-height:90svh; overflow:auto; padding:2.5rem 2rem; border:2px solid #171117; border-radius:1.75rem; background:#f4b1ce; color:#171117; text-align:center; box-shadow:8px 8px 0 #171117; }
+.closed-popup__card > button { position:absolute; top:1rem; right:1rem; display:grid; place-items:center; width:2.75rem; height:2.75rem; background:#171117; color:white; border:0; border-radius:50%; cursor:pointer; }
+.closed-popup__card img { display:block; width:7rem; height:6rem; object-fit:contain; margin:0 auto 1rem; }
+.closed-popup__card > span { font-size:.7rem; letter-spacing:.15em; font-weight:700; }
+.closed-popup__card h2 { font-size:clamp(2.5rem,9vw,4rem); margin:1rem 0; line-height:1; }
+.closed-popup__card p { line-height:1.5; white-space:pre-line; }
+.closed-popup__card small { display:block; line-height:1.5; }
+.closed-popup__hours { background:#171117; color:#f4b1ce; padding:1rem; border-radius:.75rem; }
+@media(max-width:620px) {
+ .menu-reference .menu-category--bebidas .menu-item { grid-template-columns:minmax(0,1fr) auto; padding-right:.75rem; }
+ .menu-reference .menu-category--bebidas .menu-item > .quantity-control { grid-column:2; grid-row:1; }
+ .menu-reference .menu-category--bebidas .menu-item-add { grid-column:2; grid-row:2; margin-bottom:.75rem; }
+ .menu-reference .menu-category--bebidas .menu-item-copy { grid-row:1/3; }
+ .product-configurator__panel.has-photo { grid-template-rows:8rem minmax(0,1fr); }
+ .product-configurator__photo { min-height:0; }
+ .product-configurator__content { padding:1rem; }
+ .product-configurator__submit { font-size:.65rem; gap:.4rem; }
+}
+.home-page .hero { min-height:0; height:min(52rem,90svh); }
+.home-page .hero__layout { min-height:0; height:100%; align-items:flex-end; justify-content:center; padding:calc(var(--header-height) + 1rem) var(--gutter) 2rem; }
+.home-page .hero__copy { display:block; width:100%; max-width:36rem; text-align:center; }
+.home-page .hero__heading { width:100%; }
+.home-page .hero__eyebrow { margin-bottom:.6rem; }
+.home-page .hero h1 { font-size:clamp(2.5rem,4.5vw,4.5rem); }
+.home-page .hero h1 em { font-size:.85em; }
+.home-page .hero__actions { justify-content:center; margin-top:1rem; }
+.home-page .hero__actions .button { min-width:12rem; justify-content:space-between; font-size:.95rem; min-height:3.5rem; }
+@media(max-width:720px) {
+ .home-page .hero { height:min(44rem,85svh); min-height:30rem; }
+ .home-page .hero__layout { flex-direction:row; padding-bottom:1.25rem; }
+ .home-page .hero__content { max-width:none; }
+ .home-page .hero h1 { font-size:clamp(2.1rem,9vw,3rem); }
+ .home-page .hero__eyebrow { font-size:.6rem; }
+ .home-page .hero__video-control { bottom:1.5rem; }
+}

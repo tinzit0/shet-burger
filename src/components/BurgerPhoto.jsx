@@ -1,14 +1,17 @@
-const enhancedIds = new Set(['bbq-beast','onion-shet','bacon-trip','cowboy-smoke','blue-hit','clasica-bacon','cheeseburger-bacon']);
+import { productImage } from '../lib/productImages';
+import originalMenuPhotos from '../lib/originalMenuPhotos.json';
 
-/** Same real catalog product, with responsive, reviewed photo restorations. */
-export default function BurgerPhoto({ product, sizes = '(max-width: 600px) 90vw, (max-width: 900px) 38vw, 30vw', loading = 'lazy' }) {
-  const enhanced = enhancedIds.has(product.id) && product.image?.startsWith('/assets/menu/page-');
-  const base = `/assets/menu/hd/${product.id}-v2`;
+/** Preserve the real catalog photo; hero framing clips its original pixels only. */
+export default function BurgerPhoto({ product, sizes = '(max-width: 600px) 90vw, (max-width: 900px) 38vw, 30vw', loading = 'lazy', presentation = 'catalog' }) {
+  const source = productImage(product);
+  const original = originalMenuPhotos[product.id];
+  const matches = original?.catalogImage === source;
+  const editorial = presentation === 'hero' && matches ? original : null;
   return <img
-    src={enhanced ? `${base}-1024.webp` : product.image}
-    srcSet={enhanced ? `${base}-640.webp 640w, ${base}-1024.webp 1024w` : undefined}
-    sizes={enhanced ? sizes : undefined}
-    width="1024" height="1024" loading={loading} decoding="async" alt={product.name}
-    onError={event => { const image = event.currentTarget; if (image.dataset.fallback) return; image.dataset.fallback = 'true'; image.removeAttribute('srcset'); image.src = product.image; }}
+    className={editorial ? 'is-original-photo' : undefined}
+    src={editorial?.src || source}
+    sizes={sizes}
+    width={editorial?.width || (matches && original.sourceWidth) || 1024} height={editorial?.height || (matches && original.sourceHeight) || 1024} loading={loading} decoding="async" alt={product.name}
+    onError={event => { const image = event.currentTarget; if (image.dataset.fallback) return; image.dataset.fallback = 'true'; image.removeAttribute('srcset'); image.src = source; }}
   />;
 }

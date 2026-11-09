@@ -1,0 +1,20 @@
+/* One public heading face, shared with the real menu and campaign references. */
+.home-page :is(h1,h2,h3),
+.delivery-page :is(h1,h2,h3),
+.home-page .hero h1,
+.product-configurator :is(h2,h3),
+.cart-drawer h2,
+.closed-popup h2 {
+  font-family:var(--font-heading);
+  font-weight:400;
+  font-style:normal;
+  letter-spacing:-.015em;
+}
+.home-page :is(h1,h2,h3) em,
+.delivery-page :is(h1,h2,h3) em,
+.home-page .hero h1 em {
+  font-family:var(--font-heading);
+  font-style:normal;
+  font-weight:400;
+  letter-spacing:-.015em;
+}

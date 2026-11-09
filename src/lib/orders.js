@@ -23,8 +23,7 @@ export async function saveOrder(order, receiptFile) {
     const upload = await supabase.storage.from('order-receipts').upload(receiptPath, receiptFile, { upsert: false });
     if (upload.error) return { data: null, error: upload.error };
   }
-  const payload = { ...databaseOrder, receipt_path: receiptPath };
-  const { data, error } = await supabase.rpc(databaseOrder.coupon_code ? 'place_order_with_coupon' : 'place_order', {
+  const { data, error } = await supabase.rpc(databaseOrder.coupon_code ? 'shet_place_order_with_coupon' : 'shet_place_order', {
     ...(databaseOrder.coupon_code ? { p_coupon_code: databaseOrder.coupon_code } : {}),
     p_order_number: databaseOrder.order_number,
     p_customer_name: databaseOrder.customer_name,
@@ -35,16 +34,6 @@ export async function saveOrder(order, receiptFile) {
     p_receipt_name: databaseOrder.receipt_name,
     p_receipt_path: receiptPath,
   }).single();
-  if (!databaseOrder.coupon_code && error && /place_order|function.*exist/i.test(error.message || '')) {
-    if (!order.user_id) {
-      const { error: insertError } = await supabase.from('orders').insert(payload);
-      if (insertError) return { data: null, error: insertError };
-      const remote = await supabase.from('orders').select('*').eq('order_number', order.order_number).single();
-      return { data: remote.data || { ...payload, id: order.order_number }, error: remote.error && remote.error.code !== 'PGRST116' ? remote.error : null };
-    }
-    const fallback = await supabase.from('orders').insert(payload).select().single();
-    return fallback;
-  }
   return { data, error };
 }
 

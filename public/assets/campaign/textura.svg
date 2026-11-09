@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 220" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="rough" x="-10%" y="-35%" width="120%" height="170%">
+      <feTurbulence type="fractalNoise" baseFrequency=".035 .14" numOctaves="3" seed="13" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="28" xChannelSelector="R" yChannelSelector="B"/>
+    </filter>
+    <pattern id="scratches" width="86" height="57" patternUnits="userSpaceOnUse" patternTransform="rotate(-17)">
+      <path d="M3 0v22m7 9v26m13-48v28m20-40v37m8-15v24m19-44v45m9-30v28" stroke="#F09AC4" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <path fill="#F09AC4" d="M0 0h1440v220H0z"/>
+  <g fill="none" stroke="#0A0A0A" filter="url(#rough)">
+    <path stroke-width="65" d="M-80 64 300 10 105 157 540 45 401 210 810 62 672 223 1070 60 948 212 1500 30"/>
+    <path stroke-width="17" d="m-40 199 298-99m-159 121L562-8m22 225L973-4m-12 228L1417-7"/>
+    <path stroke-width="7" d="m0 20 470 149m-48-140 410 159m125-174 384 152"/>
+  </g>
+  <path fill="url(#scratches)" d="M0 0h1440v220H0z"/>
+</svg>

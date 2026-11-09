@@ -30,10 +30,10 @@ export const instagramUrl='https://www.instagram.com/shetburger/';
 
 export const defaultSiteContent = {
   heroEyebrow: 'FAT SMASH BURGERS · NONGUÉN',
-  heroTitle: 'SMASH',
-  heroAccent: 'de verdad.',
+  heroTitle: '¿Hambre?',
+  heroAccent: 'Pide SHET',
   heroDetail: 'Plancha fuerte. Pan de papa. Hechas al momento.',
-  heroPrimaryLabel: 'PEDIR AHORA',
+  heroPrimaryLabel: 'PEDIR',
   heroSecondaryLabel: 'CONOCE EL MOOD',
   menuEyebrow: 'PASA SMASH',
   menuTitle: 'MENÚ',

@@ -1,9 +1,22 @@
 import { useState } from 'react';
-import { ArrowUpRight, MapPin, Pause, Play } from 'lucide-react';
+import { MapPin, Pause, Play } from 'lucide-react';
 import video1 from '../../assets/videos shet o fotos/video1.mp4';
-import { instagramUrl } from '../data';
 import { business, directionsUrl } from '../config';
 import useVideoPlayback from '../lib/useVideoPlayback';
+
+function MoodSticker({ name, alt }) {
+  return <picture className="mood-board__sticker">
+    <source media="(prefers-reduced-motion: reduce)" srcSet={`/assets/caricaturas/${name}-still.png`}/>
+    <img src={`/assets/caricaturas/${name}.gif`} alt={alt} width="140" height="140" loading="lazy"/>
+  </picture>;
+}
+
+export function MoodStickers() {
+  return <div className="mood-stickers" aria-label="Personajes de SHET Burger">
+    <MoodSticker name="abrazo" alt="Bebida y hamburguesa kawaii abrazándose"/>
+    <MoodSticker name="tocino" alt="Hamburguesa kawaii animada comiendo tocino"/>
+  </div>;
+}
 
 export function CampaignVideo({ src, poster, label }) {
   const { videoRef, playing, togglePlayback } = useVideoPlayback({ src, lazy: true });
@@ -17,37 +30,29 @@ export function CampaignVideo({ src, poster, label }) {
 
 export function ShetMoodBoard() {
   return <section className="mood-board" id="promesa" aria-labelledby="mood-board-title">
-    <header className="mood-board__header" data-reveal>
-      <span>NO ES SOLO UNA BURGER</span>
-      <h2 id="mood-board-title"><strong>SHET</strong><em>MOOD</em></h2>
-      <p>NONGUÉN,<br/>BUENA BURGER<br/>Y CERO POSE.</p>
-    </header>
-    <div className="mood-board__grid">
-      <figure className="mood-board__photo mood-board__photo--outside" data-reveal>
+    <div className="mood-board__collage">
+      <header className="mood-board__title">
+        <span className="sr-only">NO ES SOLO UNA BURGER</span>
+        <h2 id="mood-board-title"><strong>SHET</strong><em>MOOD</em></h2>
+      </header>
+      <figure className="mood-board__photo mood-board__photo--outside">
         <img src="/assets/campaign/home-foto-1-1024.webp" alt="Dos hamburguesas SHET disfrutadas al aire libre" width="1024" height="1365" loading="lazy" decoding="async"/>
-        <figcaption>AL AIRE LIBRE</figcaption>
+        <figcaption className="sr-only">AL AIRE LIBRE</figcaption>
       </figure>
-      <figure className="mood-board__photo mood-board__photo--table" data-reveal>
+      <figure className="mood-board__photo mood-board__photo--table">
         <img src="/assets/campaign/mesa-shet.jpg" alt="Tres hamburguesas SHET servidas en platos rosados" width="1200" height="1800" loading="lazy" decoding="async"/>
-        <figcaption>PARA COMPARTIR</figcaption>
+        <figcaption className="sr-only">PARA COMPARTIR</figcaption>
       </figure>
-      <figure className="mood-board__photo mood-board__photo--people" data-reveal>
+      <figure className="mood-board__photo mood-board__photo--people">
         <img src="/assets/campaign/momento-shet.jpg" alt="Clienta disfrutando una hamburguesa SHET" width="1200" height="1800" loading="lazy" decoding="async"/>
-        <figcaption>SIN POSES</figcaption>
+        <figcaption className="sr-only">SIN POSES</figcaption>
       </figure>
-      <div className="mood-board__statement" data-reveal>
-        <span>FAT SMASH BURGERS</span>
-        <strong>CRUJIENTE.<br/>JUGOSA.<br/><em>DESORDENADA.</em></strong>
-        <a href="/delivery" data-route>VER LA CARTA <ArrowUpRight aria-hidden="true"/></a>
+      <div className="mood-board__side">
+        <p>CRUJIENTE.<br/>JUGOSA.<br/>DESORDENADA.</p>
+        <figure className="mood-board__photo mood-board__photo--box"><img src="/assets/campaign/auto-shet.jpg" alt="Compartiendo hamburguesas SHET en el auto" width="1200" height="1800" loading="lazy" decoding="async"/></figure>
       </div>
     </div>
-    <div className="brand-tape" aria-hidden="true">
-      {[0, 1].map(track => <div key={track}><span>FAT SMASH</span><i>✳</i><span>PINK BOX</span><i>✳</i><span>NONGUÉN</span><i>✳</i></div>)}
-    </div>
-    <div className="mood-board__social" data-reveal>
-      <p>LO QUE PASA ALREDEDOR<br/>DE UNA CAJA ROSA.</p>
-      <a href={instagramUrl} target="_blank" rel="noreferrer">SÍGUENOS @SHETBURGER <ArrowUpRight aria-hidden="true"/></a>
-    </div>
+    <div className="sr-only"><span>FAT SMASH BURGERS</span><p>CRUJIENTE. JUGOSA. DESORDENADA.</p><p>LO QUE PASA ALREDEDOR DE UNA CAJA ROSA.</p></div>
   </section>;
 }
 

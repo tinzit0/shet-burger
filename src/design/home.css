@@ -1,6 +1,6 @@
 /* Dense home composition. Protected hero, navbar and WhatsApp styles are unchanged. */
 .home-page :is(.mood-board,.community,.location,.site-footer,.brand-tape) { --color-ink:var(--negro); --color-pink:var(--rosa); --color-bone:var(--crema); --color-cream:var(--blanco); }
-.home-page :is(.mood-board,.community,.location) :is(h2,h3),.home-page :is(.mood-board,.location) h2 em { font-family:var(--font-street); font-weight:400; font-style:normal; line-height:.85; letter-spacing:-.035em; text-transform:uppercase; }
+.home-page :is(.mood-board,.community,.location) :is(h2,h3),.home-page :is(.mood-board,.location) h2 em { font-family:var(--font-street); font-weight:400; font-style:normal; line-height:1.02; letter-spacing:0; word-spacing:.06em; text-transform:uppercase; }
 .home-page :is(.mood-board,.community,.location,.site-footer) :is(a,button,input):focus-visible { outline:3px solid var(--magenta); outline-offset:4px; }
 .home-page :is(.community__vibe,.community__instagram,.site-footer) :is(a,button):focus-visible { outline-color:var(--rosa); }
 
@@ -17,7 +17,7 @@
 .home-page .mood-board { padding:3rem .75rem 0; background:var(--crema); color:var(--negro); }
 .mood-board__collage { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:end; gap:0; }
 .mood-board__title { position:relative; z-index:2; grid-column:1 / -1; grid-row:2; margin:0; padding:0; }
-.home-page .mood-board h2 { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 .06em; margin:0; font-size:clamp(4rem,17vw,7.5rem); }
+.home-page .mood-board h2 { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 .15em; margin:0; font-size:clamp(4rem,17vw,7.5rem); }
 .mood-board h2 strong { font:inherit; }
 .home-page .mood-board h2 em { color:var(--magenta); font-size:1em; }
 .home-page .mood-board__photo { position:relative; min-width:0; height:220px; margin:0; padding:0; border:0; border-radius:0; background:var(--negro); }
@@ -51,8 +51,8 @@
 .community__pill:hover { background:var(--negro); color:var(--blanco); }
 .community__photo { height:420px; min-height:420px; overflow:hidden; }
 .community__photo > img { width:100%; height:100%; min-height:420px; object-fit:cover; object-position:50% 64%; }
-.community__instagram { display:flex; flex-direction:column; height:520px; background:var(--negro); }
-.home-page .community__instagram h2 { flex:none; margin:0; padding:1.1rem; text-align:right; font-size:clamp(1.9rem,2.7vw,2.8rem); }
+.community__instagram { display:flex; flex-direction:column; height:520px; align-items:center; background:var(--negro); }
+.home-page .community__instagram h2 { flex:none; margin:0; padding:.6rem 1rem; width:100%; text-align:right; font-size:clamp(1.9rem,2.7vw,2.8rem); }
 .community__instagram h2 svg { display:inline-block; width:1.2rem; height:1.2rem; }
 .instagram-feed { position:relative; flex:1; min-height:0; overflow:hidden; border:0; border-radius:0; background:var(--negro); }
 .instagram-feed__track { animation:instagram-scroll 34s linear infinite; }
@@ -94,7 +94,7 @@
  .home-page .mood-board { padding-top:4rem; }
  .mood-board__collage { grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,2.125fr) minmax(0,1fr); grid-template-rows:auto 260px; }
  .mood-board__title { grid-column:1 / 3; grid-row:1; }
- .home-page .mood-board h2 { font-size:clamp(8rem,10vw,11rem); letter-spacing:-.05em; }
+ .home-page .mood-board h2 { font-size:clamp(8rem,10vw,11rem); letter-spacing:0; }
  .home-page .mood-board__photo--outside { grid-column:1; grid-row:2; height:260px; }
  .home-page .mood-board__photo--people { grid-column:2; grid-row:2; height:260px; }
  .home-page .mood-board__photo--table { grid-column:3; grid-row:1 / 3; height:420px; }
@@ -113,6 +113,25 @@
  .home-page .site-footer { grid-template-columns:1fr 1fr 1fr; align-items:center; }
  .home-page .site-footer__nav { grid-column:1 / -1; justify-content:flex-start; padding-right:10rem; }
 }
+/* Original scroll video, framed as a brand post without simulated social stats. */
+.location__video { width:min(100%,340px); min-width:0; overflow:hidden; border:2px solid var(--negro); border-radius:12px; background:var(--blanco); color:var(--negro); }
+.social-video__header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.75rem; }
+.social-video__profile { display:flex; align-items:center; gap:.65rem; min-width:0; }
+.social-video__profile img { flex:none; width:36px; height:36px; border:1px solid var(--negro); border-radius:50%; }
+.social-video__profile strong,.social-video__profile small { display:block; }
+.social-video__profile strong { font:700 .8rem/1.4 var(--font-body); }
+.social-video__profile small { font:.65rem/1.4 var(--font-body); }
+.social-video__header > svg { flex:none; width:20px; height:20px; }
+.social-video__media { aspect-ratio:480/872; background:var(--negro); }
+.social-video__media video { display:block; width:100%; height:100%; object-fit:contain; }
+.social-video__footer { display:grid; gap:.85rem; padding:.8rem; }
+.social-video__icons { display:flex; align-items:center; gap:.8rem; }
+.social-video__icons svg { width:22px; height:22px; }
+.social-video__icons svg:last-child { margin-left:auto; }
+.social-video__footer a { display:flex; align-items:center; justify-content:center; gap:.6rem; min-height:2.75rem; border-top:1px solid #ded8db; font:700 .65rem/1.3 var(--font-body); }
+.social-video__footer a svg { width:16px; height:16px; }
+.location__video a:focus-visible { outline:3px solid var(--magenta); outline-offset:3px; }
+
 @media(prefers-reduced-motion:reduce) {
  .brand-tape > div,.instagram-feed__track { animation:none; transform:none; }
 }
@@ -141,3 +160,15 @@
  .film__control { right:var(--gutter); bottom:1.5rem; width:3rem; padding:0; justify-content:center; }
  .film__control span { display:none; }
 }
+
+.community__instagram > .location__video { display:flex; flex-direction:column; flex:1; min-height:0; width:min(calc(100% - 1rem),400px); margin:0 .5rem .75rem; }
+.community__instagram .social-video__header,.community__instagram .social-video__footer { flex:none; }
+.community__instagram .social-video__header { padding:.5rem .65rem; }
+.community__instagram .social-video__profile img { width:28px; height:28px; }
+.community__instagram .social-video__footer { gap:.35rem; padding:.5rem .65rem; }
+.community__instagram .social-video__icons svg { width:20px; height:20px; }
+.community__instagram .social-video__footer a { min-height:2rem; }
+.community__instagram > .community__social { display:none; }
+.community__instagram .social-video__media { flex:1; min-height:0; aspect-ratio:auto; overflow:hidden; }
+.community__instagram .social-video__media video { object-fit:cover; object-position:center; }
+.community__photo { align-self:stretch; }

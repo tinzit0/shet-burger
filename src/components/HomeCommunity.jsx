@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 import { instagramUrl } from '../data';
-import InstagramFeed from './InstagramFeed';
+import LocationVideo from './LocationVideo';
 import muerdeLaTentacion from '../../assets/fotos burger/muerde la tentacion.jpeg';
 
 export default function HomeCommunity() {
@@ -15,7 +15,7 @@ export default function HomeCommunity() {
     </div>
     <div className="community__instagram">
       <h2><a href={instagramUrl} target="_blank" rel="noreferrer">SÍGUENOS<br/>@SHETBURGER <ArrowUpRight aria-hidden="true"/></a></h2>
-      <InstagramFeed/>
+      <LocationVideo/>
       <div className="community__social">
         <a href={instagramUrl} target="_blank" rel="noreferrer" aria-label="Instagram de SHET Burger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
       </div>

@@ -5,7 +5,7 @@
 .menu-campaign__slide { position:relative; grid-area:1/1; min-width:0; isolation:isolate; overflow:hidden; background:var(--slide-bg); transform:translateX(calc(var(--slide-position) * 100%)); visibility:hidden; pointer-events:none; transition:transform 650ms cubic-bezier(.22,.68,.24,1),visibility 650ms; }
 .menu-campaign__slide.is-active { z-index:1; visibility:visible; pointer-events:auto; }
 .menu-campaign__backdrop { position:absolute; z-index:-3; inset:0; overflow:hidden; }
-.menu-campaign__backdrop img { display:block; width:100%; height:100%; object-fit:cover; transform:scale(1.4); filter:blur(35px) brightness(.85) saturate(1.05); opacity:.38; }
+.menu-campaign__backdrop img { display:block; width:100%; height:100%; object-fit:cover; transform:scale(1.12); filter:blur(var(--slide-backdrop-blur,8px)) brightness(.85) saturate(1.05); opacity:var(--slide-backdrop-opacity,.22); }
 .menu-campaign__backdrop::after { content:''; position:absolute; inset:0; background:var(--slide-bg); opacity:.35; }
 .menu-campaign__slide--paper-white { --menu-paper:url('/assets/brand-papers/antigrasa-white-1920.webp'); }
 .menu-campaign__slide--paper-pink { --menu-paper:url('/assets/brand-papers/antigrasa-pink-1920.webp'); }
@@ -16,7 +16,7 @@
 .menu-campaign__visual { position:absolute; z-index:0; left:31%; top:4%; width:40%; height:88%; }
 .menu-campaign__photo { display:flex; align-items:center; justify-content:center; width:100%; height:100%; padding:0; border:0; border-radius:0; background:transparent; cursor:pointer; }
 .menu-campaign .menu-campaign__framed-photo { display:block; flex:1; width:100%; height:100%; min-width:0; overflow:hidden; }
-.menu-campaign__photo > img { display:block; width:100%; height:100%; object-fit:contain; border:0; border-radius:0; -webkit-mask-image:radial-gradient(ellipse,#000 45%,transparent 72%); mask-image:radial-gradient(ellipse,#000 45%,transparent 72%); }
+.menu-campaign__photo > img { display:block; width:100%; height:100%; object-fit:contain; border:0; border-radius:0; -webkit-mask-image:radial-gradient(ellipse,#000 60%,transparent 72%); mask-image:radial-gradient(ellipse,#000 60%,transparent 72%); }
 .menu-campaign__spread.is-promo .menu-campaign__copy { grid-template-columns:minmax(0,38fr) minmax(0,37fr) minmax(0,25fr); }
 .menu-campaign__spread.is-promo .menu-campaign__visual { left:31%; width:43%; }
 .menu-campaign__copy { grid-template-columns:minmax(0,38fr) minmax(0,37fr) minmax(0,25fr); }
@@ -25,7 +25,7 @@
 .menu-campaign__copy::before { content:''; position:absolute; z-index:-1; inset:-2rem -5.6% -4rem 60%; background:linear-gradient(90deg,transparent,rgb(10 10 10 / 52%) 35%); pointer-events:none; }
 .menu-campaign__name { grid-column:1; min-width:0; text-align:left; }
 .menu-campaign__name > span:first-child { display:inline-block; padding:.4rem .7rem; border:2px solid var(--negro); background:var(--rosa); color:var(--negro); font:700 .7rem/1.2 var(--font-body); letter-spacing:.12em; transform:rotate(-3deg); }
-.menu-campaign .menu-campaign__name h2 { max-width:9ch; margin:1rem 0 0; padding:0; color:var(--blanco); font:400 clamp(3.5rem,7.3vw,7.5rem)/.85 var(--font-street); letter-spacing:-.025em; text-transform:uppercase; overflow-wrap:normal; text-shadow:0 3px 18px rgb(0 0 0 / 45%); }
+.menu-campaign .menu-campaign__name h2 { max-width:9ch; margin:1rem 0 0; padding:0; color:var(--blanco); font:400 clamp(3.5rem,7.3vw,7.5rem)/.98 var(--font-street); letter-spacing:-.025em; text-transform:uppercase; overflow-wrap:normal; text-shadow:0 3px 18px rgb(0 0 0 / 45%); }
 .menu-campaign .menu-campaign__name h2.is-long { max-width:none; font-size:clamp(2.8rem,5.2vw,5.5rem); }
 .menu-campaign__price { display:flex; align-items:baseline; flex-wrap:wrap; gap:.6rem; margin:1.4rem 0 0; color:var(--blanco); font:700 .65rem/1.3 var(--font-body); letter-spacing:.12em; text-transform:uppercase; }
 .menu-campaign__price b { display:inline-block; padding:0; background:transparent; color:var(--rosa); font:400 clamp(3rem,5vw,5.5rem)/1 var(--font-street); letter-spacing:-.025em; text-shadow:0 2px 14px rgb(0 0 0 / 30%); }
@@ -96,7 +96,7 @@
 
  .menu-campaign__copy { display:flex; flex-direction:column; align-items:stretch; height:auto; margin-top:-.5rem; padding:0 1.25rem; gap:1.3rem; }
  .menu-campaign__copy::before { display:none; }
- .menu-campaign .menu-campaign__name h2,.menu-campaign .menu-campaign__name h2.is-long { max-width:none; margin:.85rem 0 0; font-size:clamp(2.5rem,11vw,4.5rem); line-height:.9; overflow-wrap:anywhere; }
+ .menu-campaign .menu-campaign__name h2,.menu-campaign .menu-campaign__name h2.is-long { max-width:none; margin:.85rem 0 0; font-size:clamp(2.5rem,11vw,4.5rem); line-height:1.02; overflow-wrap:anywhere; }
  .menu-campaign__name > span:first-child { font-size:.65rem; }
  .menu-campaign__price { margin-top:1rem; }
  .menu-campaign__price b { font-size:clamp(3rem,12vw,4.5rem); }
@@ -113,6 +113,24 @@
  .menu-campaign__footer { grid-template-columns:1fr auto; gap:0 .75rem; padding:.65rem 1rem; font-size:.53rem; letter-spacing:.035em; }
  .menu-campaign__footer > span:last-child { grid-column:1 / -1; justify-self:start; color:#947c89; }
  .delivery-page .menu-reference-jump a { padding-inline:.85rem; font-size:.7rem; }
+}
+/* Vicio, Bacon Trip and Onion: a clear original paper, without a photo haze. */
+.menu-campaign__slide--clear-paper { --menu-paper:url('/assets/brand-papers/antigrasa-white-1920.webp'); background:var(--crema); color:var(--negro); }
+.menu-campaign__slide--clear-paper .menu-campaign__backdrop { opacity:0; }
+.menu-campaign__slide--clear-paper .menu-campaign__texture { opacity:1; mix-blend-mode:normal; }
+.menu-campaign__slide--clear-paper .menu-campaign__shade { background:linear-gradient(90deg,rgb(247 243 238 / 94%) 0 27%,rgb(247 243 238 / 16%) 48%,rgb(247 243 238 / 94%) 75%); }
+.menu-campaign__slide--clear-paper .menu-campaign__copy::before { display:none; }
+.menu-campaign .menu-campaign__slide--clear-paper .menu-campaign__name h2,
+.menu-campaign__slide--clear-paper .menu-campaign__price,
+.menu-campaign__slide--clear-paper .menu-campaign__description,
+.menu-campaign__slide--clear-paper .menu-campaign__details > small { color:var(--negro); text-shadow:none; }
+.menu-campaign__slide--clear-paper .menu-campaign__price b { color:var(--magenta); text-shadow:none; }
+.menu-campaign__slide--clear-paper :is(button,a):focus-visible { outline-color:var(--negro); }
+@media(max-width:1000px) {
+ .menu-campaign__slide--clear-paper .menu-campaign__shade { background:rgb(247 243 238 / 76%); }
+}
+@media(max-width:767px) {
+ .menu-campaign__slide--clear-paper { --menu-paper:url('/assets/brand-papers/antigrasa-white-960.webp'); }
 }
 @media(prefers-reduced-motion:reduce) {
  .menu-campaign__slide,.menu-campaign__order,.menu-campaign__arrow { transition:none; }

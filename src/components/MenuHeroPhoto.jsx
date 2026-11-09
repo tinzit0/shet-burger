@@ -7,6 +7,7 @@ const campaignPhotos = {
   'bbq-beast': { catalog: '/assets/menu/page-2-3.webp', photo: '/assets/campaign/cowboy-smoke.jpg' },
   'cheeseburger-bacon': { catalog: '/assets/menu/page-3-3.webp', photo: '/assets/campaign/bacon-clasica.jpg' },
 };
+const definedBackgrounds = new Set(['vicio', 'bacon-trip', 'onion-shet']);
 
 // Coordinates use a 480px-wide original. Keep the entire food inside each frame.
 const catalogFrames = {
@@ -35,6 +36,7 @@ export function menuHeroImage(product) {
     framing: product.category === 'promos' ? 'promotion' : product.id === 'onion-shet' && original === '/assets/menu/page-2-4.webp' ? 'portrait' : 'burger',
     frame: photo ? { height:720, crop:product.id === 'bbq-beast' ? [30,170,450,360] : [20,120,460,430] } : knownFrame ? { height:frame[1], crop:frame[2] } : null,
     outline: !photo && knownFrame ? photoOutlines[product.id] : null,
+    definedBackground: definedBackgrounds.has(product.id),
   };
 }
 
@@ -42,13 +44,13 @@ export default function MenuHeroPhoto({ product, image = menuHeroImage(product),
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   if (!decorative && image.frame) {
     const [x,y,width,height] = image.frame.crop;
-    const feather = Math.min(width,height) * .04;
+    const feather = Math.min(width,height) * (image.definedBackground ? .004 : .012);
     const inset = feather * 1.6;
     return <svg className="menu-campaign__framed-photo" viewBox={`${x} ${y} ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={product.name} data-source={image.src}>
       <defs>
         <filter id={`${id}-soft`} x="-30%" y="-30%" width="160%" height="160%" colorInterpolationFilters="sRGB">
-          {image.outline && <feMorphology operator="dilate" radius="18"/>}
-          <feGaussianBlur stdDeviation={image.outline ? 12 : feather}/>
+          {image.outline && <feMorphology operator="dilate" radius={image.definedBackground ? 3 : 9}/>}
+          <feGaussianBlur stdDeviation={image.outline ? image.definedBackground ? 1.2 : 4 : feather}/>
         </filter>
         <mask id={`${id}-edge`} maskUnits="userSpaceOnUse" x={x} y={y} width={width} height={height}>
           {image.outline

@@ -8,7 +8,7 @@ export default function Hero({ content }) {
   return <section className="hero" id="top" aria-labelledby="hero-title">
     <div className="hero__scene">
       <div className="hero__frame">
-        <video ref={videoRef} className="hero__media" src={miradaVideo} width="720" height="1280" muted loop playsInline preload="metadata" aria-hidden="true"/>
+        <video ref={videoRef} className="hero__media" src={miradaVideo} poster="/assets/campaign/eye-poster.webp" width="720" height="1280" muted loop playsInline preload="metadata" aria-hidden="true"/>
       </div>
     </div>
     <div className="hero__layout">

@@ -62,8 +62,8 @@ export default function MenuCover({ storeOpen, stock = {}, products = [], onChoo
       {slides.map((slide, number) => {
         const { product, label, title, description, price, image, slideBg } = slide;
         const current = index === number;
-        return <article key={product.id} className={`menu-campaign__slide menu-campaign__slide--paper-${number % 2 ? 'pink' : 'white'}${current ? ' is-active' : ''}`}
-          style={{ '--slide-bg': slideBg, '--slide-position': current ? 0 : number < index ? -1 : 1 }}
+        return <article key={product.id} className={`menu-campaign__slide menu-campaign__slide--paper-${number % 2 ? 'pink' : 'white'}${image.definedBackground ? ' menu-campaign__slide--clear-paper' : ''}${current ? ' is-active' : ''}`}
+          style={{ '--slide-bg': slideBg, '--slide-position': current ? 0 : number < index ? -1 : 1, '--slide-backdrop-blur': image.definedBackground ? '0px' : '8px', '--slide-backdrop-opacity': image.definedBackground ? .1 : .22 }}
           aria-hidden={!current} inert={!current} aria-roledescription="diapositiva" aria-label={`${number + 1} de ${slides.length}: ${title}`}>
           <div className="menu-campaign__backdrop" aria-hidden="true"><MenuHeroPhoto product={product} image={image} decorative loading={number === 0 ? 'eager' : 'lazy'}/></div>
           <div className="menu-campaign__texture" aria-hidden="true"/>

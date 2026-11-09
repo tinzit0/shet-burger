@@ -42,11 +42,10 @@ try {
       await dots.nth(index).click();
       await page.waitForTimeout(700);
       assert.equal(await active.locator('h2').innerText(), names[index].toUpperCase());
-      await active.locator('.menu-campaign__backdrop img').evaluate(image => image.decode());
-      const imageQuality = await active.locator('.menu-campaign__framed-photo').evaluate(frame => {
+      const imageQuality = await active.locator('.menu-campaign__framed-photo').evaluate(async frame => {
         const crop=frame.viewBox.baseVal;
         const bounds=frame.getBoundingClientRect();
-        const native=frame.closest('article').querySelector('.menu-campaign__backdrop img');
+        const native=new Image();native.src=frame.dataset.source;await native.decode();
         const scale=Math.min(bounds.width/crop.width,bounds.height/crop.height);
         return { source:frame.querySelector('image').getAttribute('href'),fit:frame.getAttribute('preserveAspectRatio'),feather:Number(frame.querySelector('feGaussianBlur').getAttribute('stdDeviation')),pixels:native.naturalWidth,needed:480*scale*Math.min(devicePixelRatio,1.5) };
       });
@@ -70,7 +69,7 @@ try {
       if (width >= 768 && width <= 1000) assert.ok(photo.y + photo.height <= name.y + 1,'Tablet text and purchase button do not obscure the photo');
       const layers = await active.evaluate(element => ({ tint:element.style.getPropertyValue('--slide-bg'), blur:getComputedStyle(element.querySelector('.menu-campaign__backdrop img')).filter, mask:element.querySelector('.menu-campaign__framed-photo image').getAttribute('mask') }));
       assert.equal(layers.tint,['#F09AC4','#4A3A47','#C2185B'][index%3]);
-      assert.match(layers.blur,/blur\(35px\)/);
+      assert.match(layers.blur,/Vicio|Bacon Trip|Onion SHET/i.test(names[index]) ? /blur\(0px\)/ : /blur\(8px\)/);
       assert.match(layers.mask,/url\(#.+-edge\)/,'Photo edges fade into background');
       assert.equal(await active.locator('.menu-campaign__backdrop img').getAttribute('src'), imageQuality.source,'Background and foreground use the same photo');
       for (const selector of ['.menu-campaign__visual', '.menu-campaign__name', '.menu-campaign__description', '.menu-campaign__price', '.menu-campaign__order']) {
@@ -82,7 +81,7 @@ try {
       assert.equal(await active.locator('h2').evaluate(element => element.scrollWidth <= element.clientWidth + 1), true, `Product title fits: ${names[index]} at ${width}`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'No accidental horizontal scrolling');
       const pattern = await active.locator('.menu-campaign__texture').evaluate(element => ({ image: getComputedStyle(element).backgroundImage, size: getComputedStyle(element).backgroundSize, repeat: getComputedStyle(element).backgroundRepeat, position: getComputedStyle(element).backgroundPosition }));
-      assert.match(pattern.image, new RegExp(index % 2 ? 'antigrasa-pink' : 'antigrasa-white'));
+      assert.match(pattern.image, new RegExp(/Vicio|Bacon Trip|Onion SHET/i.test(names[index]) ? 'antigrasa-white' : index % 2 ? 'antigrasa-pink' : 'antigrasa-white'));
       assert.equal(pattern.size, 'cover', 'One continuous original artwork');
       assert.equal(pattern.repeat, 'no-repeat', 'No mismatched tile seams');
       assert.equal(pattern.position, '50% 50%', 'Artwork centered symmetrically');

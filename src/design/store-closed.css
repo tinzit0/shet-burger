@@ -1,0 +1,57 @@
+/* ════════ Store closed: sad-face sticker card (Pedir page + popup) ════════ */
+@keyframes sad-bob { 0%, 100% { translate: 0 0; rotate: var(--r, 0deg); } 50% { translate: 0 -0.4rem; rotate: calc(var(--r, 0deg) * -1); } }
+@keyframes tear-drip { 0%, 30% { opacity: 0; translate: 0 -4px; } 45% { opacity: 1; } 85% { opacity: 1; translate: 0 22px; } 100% { opacity: 0; translate: 0 28px; } }
+@keyframes sign-swing { 0%, 100% { rotate: -7deg; } 50% { rotate: 5deg; } }
+@keyframes closed-in { from { opacity: 0; translate: 0 1.5rem; scale: 0.96; } }
+
+.sad-face { display: block; width: 100%; height: auto; overflow: visible; }
+.sad-face__tear { animation: tear-drip 2.6s ease-in infinite; transform-box: fill-box; }
+
+/* In-page card on /delivery: sits under the fixed header, above the featured carousel. */
+.store-closed { padding: calc(var(--header-height) + clamp(1.25rem, 3vw, 2.25rem)) 4% clamp(1.5rem, 3vw, 2.5rem); background: radial-gradient(rgb(194 24 91 / 10%) 1.2px, transparent 1.4px) 0 0 / 18px 18px, var(--crema, #F7F3EE); color: var(--negro, #0A0A0A); }
+.store-closed + .menu-campaign { padding-top: 0; }
+.store-closed__card { position: relative; display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); align-items: center; gap: clamp(1.5rem, 4vw, 3.5rem); max-width: 72rem; margin: 0 auto; padding: clamp(2rem, 4vw, 3.25rem) clamp(1.5rem, 4vw, 3.5rem); border: 3px solid var(--negro, #0A0A0A); border-radius: 1.75rem; background: repeating-linear-gradient(-45deg, #f6c4dc 0 18px, #f3b6d2 18px 36px); box-shadow: 0.8rem 0.8rem 0 var(--negro, #0A0A0A); animation: closed-in 0.7s var(--ease-out) backwards; }
+
+/* The card already says it: hide the fixed alert bar while the card is on screen (Pedir page). */
+body:has(.store-closed) .global-store-alert { display: none; }
+
+/* Hanging "CERRADO" door sign. */
+.store-closed__sign { position: absolute; z-index: 2; top: -1.6rem; right: clamp(1.5rem, 6vw, 4.5rem); display: flex; flex-direction: column; align-items: center; transform-origin: 50% 0; animation: sign-swing 3.2s var(--ease-standard) infinite; }
+.store-closed__sign i { width: 4.5rem; height: 1.6rem; border: 3px solid var(--negro, #0A0A0A); border-bottom: 0; border-radius: 50% 50% 0 0 / 100% 100% 0 0; }
+.store-closed__sign span { margin-top: -2px; padding: 0.5rem 1.1rem 0.4rem; border: 3px solid var(--negro, #0A0A0A); border-radius: 0.7rem; background: var(--magenta, #C2185B); color: var(--blanco, #fff); font: 400 clamp(1.2rem, 2vw, 1.6rem)/1 var(--font-street); letter-spacing: 0.1em; box-shadow: 0.25rem 0.25rem 0 var(--negro, #0A0A0A); }
+
+.store-closed__faces { position: relative; aspect-ratio: 1.15; }
+.store-closed__face { position: absolute; filter: drop-shadow(0.3rem 0.3rem 0 var(--negro, #0A0A0A)); animation: sad-bob 3s var(--ease-standard) infinite; }
+.store-closed__face--a { top: 4%; left: 4%; width: 52%; --r: -6deg; }
+.store-closed__face--b { top: 30%; right: 2%; width: 44%; --r: 8deg; animation-delay: -1s; }
+.store-closed__face--c { bottom: 0; left: 26%; width: 36%; --r: -10deg; animation-delay: -2s; }
+
+.store-closed__pill { display: inline-block; padding: 0.4rem 0.9rem 0.35rem; border: 2px solid var(--negro, #0A0A0A); border-radius: var(--radius-pill); background: var(--negro, #0A0A0A); color: var(--rosa, #F09AC4); font: 400 0.85rem/1 var(--font-street); letter-spacing: 0.12em; rotate: -2deg; }
+.delivery-page .store-closed h2 { margin: 0.9rem 0 1rem; color: var(--negro, #0A0A0A); font: 400 clamp(2.6rem, 6vw, 5.5rem)/0.92 var(--font-street); letter-spacing: 0.005em; text-shadow: 0.035em 0.035em 0 var(--blanco, #fff); }
+.delivery-page .store-closed h2 em { color: var(--magenta, #C2185B); font-family: var(--font-street); font-style: normal; text-shadow: 0.035em 0.035em 0 var(--negro, #0A0A0A); }
+.store-closed p { max-width: 34rem; margin: 0 0 1rem; font-size: var(--text-sm); font-weight: 500; line-height: 1.6; white-space: pre-line; }
+.store-closed__hours { display: inline-block; padding: 0.75rem 1rem; border: 2px solid var(--negro, #0A0A0A); border-radius: 0.9rem; background: var(--blanco, #fff); font-weight: 700 !important; }
+.store-closed__link { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; padding-bottom: 0.2rem; border-bottom: 2px solid currentColor; font: 400 1rem/1 var(--font-street); letter-spacing: 0.08em; }
+.store-closed__link svg { width: 1rem; height: 1rem; animation: bob 1.4s var(--ease-standard) infinite; }
+.store-closed__link:focus-visible { outline: 3px solid var(--magenta, #C2185B); outline-offset: 4px; }
+
+/* Popup: same faces above the logo. */
+.closed-popup__card { border-width: 3px; box-shadow: 0.7rem 0.7rem 0 #171117; }
+.closed-popup__faces { display: flex; justify-content: center; gap: 0.6rem; margin: 0.25rem auto 1rem; }
+.closed-popup__faces .sad-face { width: 4.25rem; filter: drop-shadow(0.2rem 0.2rem 0 #171117); animation: sad-bob 3s var(--ease-standard) infinite; }
+.closed-popup__faces .sad-face:nth-child(1) { --r: -8deg; }
+.closed-popup__faces .sad-face:nth-child(2) { --r: 6deg; width: 5rem; animation-delay: -1s; }
+.closed-popup__faces .sad-face:nth-child(3) { --r: -4deg; animation-delay: -2s; }
+.closed-popup__card img { width: 5rem; height: 4rem; }
+
+@media (max-width: 767px) {
+  .store-closed { padding-inline: 1rem; }
+  .store-closed__card { grid-template-columns: 1fr; gap: 0.5rem; padding: 2.5rem 1.25rem 1.75rem; border-radius: 1.25rem; box-shadow: 0.45rem 0.45rem 0 var(--negro, #0A0A0A); text-align: center; }
+  .store-closed__faces { width: min(15rem, 70%); margin: 0 auto; }
+  .store-closed p { margin-inline: auto; }
+  .store-closed__sign { right: 50%; translate: 50% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-closed [class], .store-closed__card, .closed-popup__faces .sad-face, .sad-face__tear { animation: none !important; }
+}

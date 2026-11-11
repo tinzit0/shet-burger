@@ -16,7 +16,7 @@ try {
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     await page.goto(`${base}/delivery`);
     const active = page.locator('.menu-campaign__slide.is-active');
-    await active.locator('.menu-campaign__backdrop img').evaluate(image => image.decode());
+    await active.locator('.menu-campaign__framed-photo').evaluate(async frame=>{const image=new Image();image.src=frame.dataset.source;await image.decode();});
     const revealArrows = async () => {
       await page.evaluate(() => window.scrollTo(0, 0));
       if (width >= 768) await page.locator('.menu-campaign__stage').hover();
@@ -33,7 +33,8 @@ try {
     const catalogNames = await page.locator('.menu-category--burgers .menu-item h3,.menu-category--promos .menu-item h3').allTextContents();
     assert.equal(await page.locator('.delivery-outro').count(), 0, 'Pink Hecho en Nonguén block removed');
     assert.match(await page.locator('.menu-catalog > .menu-category').last().getAttribute('class'), /menu-category--extras/, 'Extras finish the menu');
-    assert.deepEqual([...names].sort(), [...catalogNames].sort(), 'All existing burgers and promotions remain available');
+    assert.deepEqual(names,['Bacon Trip','Onion SHET','Cowboy Smoke'],'Only the three requested burgers feature in the cover');
+    assert.ok(catalogNames.length>names.length && names.every(name=>catalogNames.includes(name)),'Other burgers and promotions remain in the catalog');
     assert.equal(await page.getByRole('button', { name: /Pausar carrusel|Reanudar carrusel/ }).count(), 0, 'Pause/play control removed');
     await page.locator('.menu-campaign__dots button').first().click();
     assert.equal(await page.locator('.menu-campaign.is-playing').count(), 0);
@@ -41,13 +42,13 @@ try {
     for (let index = 0; index < names.length; index++) {
       await dots.nth(index).click();
       await page.waitForTimeout(700);
-      assert.equal(await active.locator('h2').innerText(), names[index].toUpperCase());
+      assert.equal((await active.locator('h2').innerText()).replace(/\s+/g,' ').trim(), names[index].toUpperCase());
       const imageQuality = await active.locator('.menu-campaign__framed-photo').evaluate(async frame => {
         const crop=frame.viewBox.baseVal;
         const bounds=frame.getBoundingClientRect();
         const native=new Image();native.src=frame.dataset.source;await native.decode();
         const scale=Math.min(bounds.width/crop.width,bounds.height/crop.height);
-        return { source:frame.querySelector('image').getAttribute('href'),fit:frame.getAttribute('preserveAspectRatio'),feather:Number(frame.querySelector('feGaussianBlur').getAttribute('stdDeviation')),pixels:native.naturalWidth,needed:480*scale*Math.min(devicePixelRatio,1.5) };
+        return { source:frame.querySelector('.menu-campaign__source').getAttribute('href'),fit:frame.getAttribute('preserveAspectRatio'),feather:Number(frame.querySelector('feGaussianBlur').getAttribute('stdDeviation')),pixels:native.naturalWidth,needed:480*scale*Math.min(devicePixelRatio,1.5) };
       });
       assert.match(imageQuality.source,/\/assets\/(campaign\/[^/]+\.jpg|menu\/page-[\d-]+\.webp)$/,'Use authentic photographs, without generated or silhouette cutouts');
       assert.equal(imageQuality.fit,'xMidYMid meet','The complete product frame fits without being cropped to fill');
@@ -63,15 +64,16 @@ try {
       const nextArrow = await arrow.boundingBox();
       const stage = await page.locator('.menu-campaign__stage').boundingBox();
       assert.ok(previousArrow.x >= stage.x && previousArrow.x < stage.x + 12 && nextArrow.x + nextArrow.width <= stage.x + stage.width, 'Arrows stay at the outer edges');
-      const arrowCenter = width <= 1000 ? photo.y + photo.height / 2 : stage.y + stage.height / 2;
+      const arrowCenter = width < 768 ? photo.y + photo.height / 2 : spread.y + spread.height / 2;
       assert.ok(Math.abs(previousArrow.y + previousArrow.height / 2 - arrowCenter) < 1 && Math.abs(nextArrow.y + nextArrow.height / 2 - arrowCenter) < 1, 'Arrows center on the photo on mobile and banner on desktop');
-      if (width > 1000) assert.equal(Math.round(stage.height),460,'Compact desktop banner');
-      if (width >= 768 && width <= 1000) assert.ok(photo.y + photo.height <= name.y + 1,'Tablet text and purchase button do not obscure the photo');
-      const layers = await active.evaluate(element => ({ tint:element.style.getPropertyValue('--slide-bg'), blur:getComputedStyle(element.querySelector('.menu-campaign__backdrop img')).filter, mask:element.querySelector('.menu-campaign__framed-photo image').getAttribute('mask') }));
-      assert.equal(layers.tint,['#F09AC4','#4A3A47','#C2185B'][index%3]);
-      assert.match(layers.blur,/Vicio|Bacon Trip|Onion SHET/i.test(names[index]) ? /blur\(0px\)/ : /blur\(8px\)/);
+      if (width >= 768) {
+        assert.equal(Math.round(spread.height),520,'Integrated desktop campaign height');
+        assert.ok(photo.x+photo.width<=name.x+1,'Photo and text never overlap');
+      }
+      const layers = await active.evaluate(element => ({ blur:getComputedStyle(element.querySelector('.menu-campaign__source')).filter, mask:element.querySelector('.menu-campaign__source').getAttribute('mask') }));
+      assert.equal(layers.blur,'none','The actual burger photo stays sharp');
       assert.match(layers.mask,/url\(#.+-edge\)/,'Photo edges fade into background');
-      assert.equal(await active.locator('.menu-campaign__backdrop img').getAttribute('src'), imageQuality.source,'Background and foreground use the same photo');
+      assert.equal(await active.locator('.menu-campaign__backdrop').count(),0,'No blurred duplicate photograph behind the product');
       for (const selector of ['.menu-campaign__visual', '.menu-campaign__name', '.menu-campaign__description', '.menu-campaign__price', '.menu-campaign__order']) {
         const bounds = await active.locator(selector).boundingBox();
         assert.ok(bounds.x >= spread.x - 1 && bounds.x + bounds.width <= spread.x + spread.width + 1, `${selector} stays inside its composition`);
@@ -81,7 +83,7 @@ try {
       assert.equal(await active.locator('h2').evaluate(element => element.scrollWidth <= element.clientWidth + 1), true, `Product title fits: ${names[index]} at ${width}`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'No accidental horizontal scrolling');
       const pattern = await active.locator('.menu-campaign__texture').evaluate(element => ({ image: getComputedStyle(element).backgroundImage, size: getComputedStyle(element).backgroundSize, repeat: getComputedStyle(element).backgroundRepeat, position: getComputedStyle(element).backgroundPosition }));
-      assert.match(pattern.image, new RegExp(/Vicio|Bacon Trip|Onion SHET/i.test(names[index]) ? 'antigrasa-white' : index % 2 ? 'antigrasa-pink' : 'antigrasa-white'));
+      assert.match(pattern.image,/antigrasa-pink/,'The original brand paper accompanies the real photo');
       assert.equal(pattern.size, 'cover', 'One continuous original artwork');
       assert.equal(pattern.repeat, 'no-repeat', 'No mismatched tile seams');
       assert.equal(pattern.position, '50% 50%', 'Artwork centered symmetrically');

@@ -1,0 +1,113 @@
+/* ════════ Pedir cover: pop-poster restyle of the featured burger carousel ════════
+   Same slides, products and logic as MenuCover; only presentation and motion change. */
+
+@keyframes pop-photo { from { opacity: 0; scale: 0.55; rotate: -14deg; } 65% { opacity: 1; scale: 1.06; } }
+@keyframes pop-float { 0%, 100% { translate: 0 0; rotate: 0deg; } 50% { translate: 0 -0.7rem; rotate: -1.5deg; } }
+@keyframes pop-marquee { to { translate: calc(var(--dir) * -50%) 0; } }
+@keyframes pop-tab-fill { from { scale: 0 1; } }
+@keyframes pop-texture { to { scale: 1.1; rotate: 1.5deg; } }
+
+.menu-campaign { position: relative; }
+.menu-campaign__stage {
+  background:
+    radial-gradient(rgb(194 24 91 / 10%) 1.2px, transparent 1.4px) 0 0 / 18px 18px,
+    var(--crema, #F7F3EE);
+  padding-bottom: 1.75rem;
+  overflow: hidden;
+}
+
+/* Giant outlined words drifting behind the carousel. */
+.menu-pop__marquee { position: absolute; z-index: -1; inset: 0; display: flex; flex-direction: column; justify-content: space-around; overflow: hidden; pointer-events: none; }
+.menu-pop__marquee-row { display: flex; width: max-content; gap: 0.4em; color: transparent; font: 400 clamp(5rem, 13vw, 13rem)/0.9 var(--font-street); letter-spacing: 0.01em; white-space: nowrap; -webkit-text-stroke: 2px rgb(194 24 91 / 22%); animation: pop-marquee 60s linear infinite; }
+.menu-pop__marquee-row[style*="--dir: 1"] { translate: -50% 0; animation-direction: reverse; }
+
+/* The card: thick ink border and hard shadow, like a sticker. */
+.menu-campaign__slides { position: relative; z-index: 1; border: 3px solid var(--negro, #0A0A0A); border-radius: 1.75rem; box-shadow: 0.8rem 0.8rem 0 var(--negro, #0A0A0A); }
+.menu-campaign__texture { opacity: 0.45; animation: pop-texture 16s var(--ease-standard) infinite alternate; }
+.menu-campaign__visual { border-right: 3px solid var(--negro, #0A0A0A); }
+
+.menu-pop__number { position: absolute; z-index: 0; left: 1.25rem; bottom: -0.15em; color: transparent; font: 400 clamp(6rem, 14vw, 13rem)/1 var(--font-street); -webkit-text-stroke: 3px rgb(10 10 10 / 18%); pointer-events: none; }
+.menu-pop__seal { position: absolute; z-index: 2; top: 1.25rem; left: 1.25rem; width: clamp(5.5rem, 8vw, 7.5rem); color: var(--negro, #0A0A0A); }
+.menu-pop__seal .spin-seal__core { display: grid; place-items: center; width: 50%; aspect-ratio: 1; border: 2px solid var(--negro, #0A0A0A); border-radius: 50%; background: var(--magenta, #C2185B); color: var(--blanco, #fff); font-size: clamp(0.85rem, 1.1vw, 1.05rem); }
+.menu-pop__spark { color: var(--magenta, #C2185B); }
+.menu-pop__spark--a { top: 14%; right: 12%; width: 2.2rem; }
+.menu-pop__spark--b { bottom: 18%; left: 18%; width: 1.5rem; color: var(--blanco, #fff); animation-delay: -1.1s; }
+.menu-pop__spark--c { top: 48%; right: 5%; width: 1.2rem; color: var(--negro, #0A0A0A); animation-delay: -2s; }
+.menu-campaign__photo { position: relative; z-index: 1; }
+.menu-campaign__photo > * { filter: drop-shadow(0 1.4rem 1.4rem rgb(90 20 50 / 30%)); transition: scale 0.5s var(--ease-out); }
+.menu-campaign__photo:hover > * { scale: 1.05; }
+
+/* The legacy rule sizes every svg in the cover to 20px; decorative svgs need their own size. */
+.menu-campaign .spin-seal svg { width: 100%; height: 100%; }
+.menu-campaign svg.sparkle { width: var(--w, 1.6rem); height: auto; }
+.menu-pop__spark--a { --w: 2.2rem; }
+.menu-pop__spark--b { --w: 1.5rem; }
+.menu-pop__spark--c { --w: 1.2rem; }
+
+/* Copy panel: cream paper, magenta poster title. */
+.menu-campaign__copy { position: relative; background: radial-gradient(rgb(194 24 91 / 9%) 1.2px, transparent 1.4px) 0 0 / 16px 16px, var(--crema, #F7F3EE); color: var(--negro, #0A0A0A); }
+.menu-campaign__name > span { display: inline-block; padding: 0.4rem 0.85rem 0.35rem; border: 2px solid var(--negro, #0A0A0A); border-radius: var(--radius-pill); background: var(--magenta, #C2185B); color: var(--blanco, #fff); font: 400 0.85rem/1 var(--font-street); letter-spacing: 0.1em; rotate: -3deg; box-shadow: 0.2rem 0.2rem 0 var(--negro, #0A0A0A); }
+.delivery-page .menu-campaign .menu-campaign__name h2 { color: var(--negro, #0A0A0A); font-size: clamp(3.4rem, 6.4vw, 6.75rem); line-height: 0.9; text-shadow: 0.035em 0.035em 0 var(--rosa, #F09AC4); }
+.delivery-page .menu-campaign .menu-campaign__name h2 > span:last-child { color: var(--magenta, #C2185B); text-shadow: 0.035em 0.035em 0 var(--negro, #0A0A0A); }
+.menu-campaign__description { color: #3a3236; }
+.menu-campaign__purchase { gap: 1.25rem 1.75rem; }
+.menu-campaign__price { display: grid; place-items: center; align-content: center; width: clamp(6rem, 8vw, 7.25rem); aspect-ratio: 1; gap: 0; border: 3px solid var(--negro, #0A0A0A); border-radius: 50%; background: var(--rosa, #F09AC4); color: var(--negro, #0A0A0A); font: 400 0.75rem/1 var(--font-street); letter-spacing: 0.08em; text-transform: uppercase; rotate: -8deg; box-shadow: 0.3rem 0.3rem 0 var(--negro, #0A0A0A); animation: wobble 3.2s var(--ease-standard) infinite; }
+.menu-campaign__price b { color: var(--negro, #0A0A0A); font-size: clamp(1.35rem, 2vw, 1.75rem); line-height: 1; }
+.menu-campaign__order { position: relative; justify-content: center; gap: 0.7rem; min-height: 3.6rem; padding: 0 1.75rem; border: 2px solid var(--negro, #0A0A0A); border-radius: var(--radius-pill); background: var(--magenta, #C2185B); color: var(--blanco, #fff); font: 400 1.2rem/1 var(--font-street); letter-spacing: 0.07em; box-shadow: 0.35rem 0.35rem 0 var(--negro, #0A0A0A); }
+.menu-campaign__order::after { content: ""; position: absolute; inset: -7px; border: 2px solid var(--magenta, #C2185B); border-radius: inherit; pointer-events: none; animation: ring 2.4s ease-out infinite; }
+.menu-campaign__order:hover { background: var(--negro, #0A0A0A); border-color: var(--negro, #0A0A0A); color: var(--rosa, #F09AC4); }
+.menu-campaign__notice { color: var(--magenta, #C2185B); font-weight: 700; }
+
+/* Entrance choreography each time a slide becomes active. */
+.menu-campaign__slide.is-active .menu-campaign__photo > * { animation: pop-photo 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.15s backwards, pop-float 5s var(--ease-standard) 1.1s infinite; }
+.menu-campaign__slide.is-active .menu-campaign__name > span { animation: m-pop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.3) 0.2s backwards; }
+.menu-campaign__slide.is-active .menu-campaign__name h2 > span { animation: m-rise 0.75s cubic-bezier(0.2, 0.9, 0.3, 1.25) backwards; animation-delay: calc(0.3s + var(--i, 0) * 0.12s); }
+.menu-campaign__slide.is-active .menu-campaign__description { animation: m-rise 0.7s var(--ease-out) 0.55s backwards; }
+.menu-campaign__slide.is-active .menu-campaign__price { animation: m-pop 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.3) 0.7s backwards, wobble 3.2s var(--ease-standard) 1.5s infinite; }
+.menu-campaign__slide.is-active .menu-campaign__order { animation: m-rise 0.7s var(--ease-out) 0.8s backwards; }
+.menu-campaign__slide.is-active .menu-pop__seal { animation: m-pop 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.4s backwards; }
+
+/* Controls: chunky arrows and pill tabs with an autoplay fill. */
+.menu-campaign__arrow { top: calc(var(--campaign-pad) + 3px + var(--campaign-height) * .5); width: 3.25rem; height: 3.25rem; border: 2px solid var(--negro, #0A0A0A); background: var(--rosa, #F09AC4); box-shadow: 0.2rem 0.2rem 0 var(--negro, #0A0A0A); transition: scale 0.2s var(--ease-out), background 0.2s; }
+.menu-campaign__arrow:hover { scale: 1.1; background: var(--blanco, #fff); }
+.menu-campaign__arrow--prev { left: 0.6rem; }
+.menu-campaign__arrow--next { right: 0.6rem; }
+.menu-campaign__controls { position: relative; z-index: 1; margin-top: 1.5rem; }
+.menu-campaign__count { font: 400 1.4rem/1 var(--font-street); }
+.menu-campaign__count span { font-size: 0.9rem; opacity: 0.6; }
+.menu-campaign__dots button { position: relative; overflow: hidden; border: 2px solid var(--negro, #0A0A0A); border-radius: var(--radius-pill); background: var(--blanco, #fff); font: 400 1rem/1 var(--font-street); letter-spacing: 0.05em; box-shadow: 0.2rem 0.2rem 0 var(--negro, #0A0A0A); transition: translate 0.2s var(--ease-out), background 0.2s, color 0.2s; }
+.menu-campaign__dots button:hover { translate: 0 -3px; }
+.menu-campaign__dots button > * { position: relative; z-index: 1; }
+.menu-campaign__dots button[aria-pressed=true] { background: var(--magenta, #C2185B); border-color: var(--negro, #0A0A0A); color: var(--blanco, #fff); }
+.menu-campaign__dots button[aria-pressed=true]::before { content: ""; position: absolute; inset: 0; z-index: 0; background: rgb(10 10 10 / 28%); transform-origin: left; scale: 1 1; }
+.menu-campaign.is-playing .menu-campaign__dots button[aria-pressed=true]::before { animation: pop-tab-fill 6s linear; }
+
+/* Kawaii sticker hanging off the card corner. */
+.menu-pop__toon { position: absolute; z-index: 5; top: calc(var(--header-height) + 0.6rem); right: 2.6%; width: clamp(5rem, 7.5vw, 7.5rem); rotate: 9deg; }
+
+.menu-campaign__footer { background: var(--negro, #0A0A0A); }
+.menu-campaign__footer > a { color: var(--rosa, #F09AC4); font: 400 0.95rem/1 var(--font-street); letter-spacing: 0.08em; }
+.menu-campaign__footer > a svg { animation: bob 1.4s var(--ease-standard) infinite; }
+
+@media (max-width: 767px) {
+  .menu-campaign__slides { border-radius: 1.25rem; box-shadow: 0.45rem 0.45rem 0 var(--negro, #0A0A0A); }
+  .menu-campaign__visual { border-right: 0; border-bottom: 3px solid var(--negro, #0A0A0A); }
+  .menu-pop__seal { top: 0.75rem; left: 0.75rem; width: 4.5rem; }
+  .menu-pop__number { font-size: 6rem; }
+  .delivery-page .menu-campaign .menu-campaign__name h2 { font-size: clamp(2.5rem, 12vw, 3.5rem); }
+  .menu-campaign__controls { margin-top: 0.85rem; }
+  .menu-campaign__copy { gap: 0.9rem; padding-block: 1.25rem; }
+  .menu-campaign__name > span { margin-bottom: 0.5rem; }
+  .menu-campaign__price { width: 4.6rem; border-width: 2px; }
+  .menu-campaign__price b { font-size: 1.05rem; }
+  .menu-campaign__order { flex: 1; min-height: 3.1rem; padding: 0 1rem; font-size: 1rem; }
+  .menu-campaign__arrow { width: 2.6rem; height: 2.6rem; }
+  .menu-campaign__dots button { padding: 0.45rem 0.4rem; font-size: 0.74rem; line-height: 1.05; justify-content: center; white-space: normal; box-shadow: 0.15rem 0.15rem 0 var(--negro, #0A0A0A); }
+  .menu-campaign__dots span { text-align: center; }
+  .menu-pop__toon { top: calc(var(--header-height) + 0.4rem); right: 0.6rem; width: 4.25rem; }
+  .menu-pop__marquee-row { font-size: 6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-campaign [class], .menu-campaign [class]::before, .menu-campaign [class]::after, .menu-campaign__photo > * { animation: none !important; }
+}

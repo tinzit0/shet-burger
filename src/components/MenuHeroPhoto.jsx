@@ -44,17 +44,28 @@ export default function MenuHeroPhoto({ product, image = menuHeroImage(product),
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   if (!decorative && image.frame) {
     const [x,y,width,height] = image.frame.crop;
-    const feather = Math.min(width,height) * (image.definedBackground ? .004 : .012);
+    const detailedEdge = image.definedBackground || product.id === 'cowboy-smoke';
+    const feather = Math.min(width,height) * (detailedEdge ? .004 : .012);
     const inset = feather * 1.6;
     return <svg className="menu-campaign__framed-photo" viewBox={`${x} ${y} ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={product.name} data-source={image.src}>
       <defs>
+        {image.outline && <>
+          <filter id={`${id}-matte`} colorInterpolationFilters="sRGB">
+            <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 0 -6 0 -.1" result="warm"/>
+            <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 -6 0 -.1" result="green"/>
+            <feComposite in="warm" in2="green" operator="arithmetic" k2="1" k3="1" result="edge"/>
+            <feColorMatrix in="edge" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/>
+          </filter>
+          <filter id={`${id}-core`}><feMorphology operator="erode" radius="1.5"/><feGaussianBlur stdDeviation=".35"/></filter>
+          <clipPath id={`${id}-contour`}><path d={image.outline}/></clipPath>
+        </>}
         <filter id={`${id}-soft`} x="-30%" y="-30%" width="160%" height="160%" colorInterpolationFilters="sRGB">
-          {image.outline && <feMorphology operator="dilate" radius={image.definedBackground ? 3 : 9}/>}
-          <feGaussianBlur stdDeviation={image.outline ? image.definedBackground ? 1.2 : 4 : feather}/>
+          {image.outline && <feMorphology operator="dilate" radius={detailedEdge ? 2 : 9}/>}
+          <feGaussianBlur stdDeviation={image.outline ? detailedEdge ? 1 : 4 : feather}/>
         </filter>
         <mask id={`${id}-edge`} maskUnits="userSpaceOnUse" x={x} y={y} width={width} height={height}>
           {image.outline
-            ? <path d={image.outline} fill="white" filter={`url(#${id}-soft)`}/>
+            ? <><g clipPath={`url(#${id}-contour)`}><image href={image.src} width="480" height={image.frame.height} filter={`url(#${id}-matte)`}/></g><path d={image.outline} fill="white" filter={`url(#${id}-core)`}/></>
             : <rect x={x+inset} y={y+inset} width={width-inset*2} height={height-inset*2} rx={Math.min(width,height)*.2} fill="white" filter={`url(#${id}-soft)`}/>}
         </mask>
         {image.outline && <>
@@ -65,7 +76,7 @@ export default function MenuHeroPhoto({ product, image = menuHeroImage(product),
         </>}
       </defs>
       <g mask={image.outline ? `url(#${id}-bounds)` : undefined}>
-        <image href={image.src} width="480" height={image.frame.height} mask={`url(#${id}-edge)`} preserveAspectRatio="none"
+        <image className="menu-campaign__source" href={image.src} width="480" height={image.frame.height} mask={`url(#${id}-edge)`} preserveAspectRatio="none"
           onError={event => { if (event.currentTarget.dataset.fallback) return; event.currentTarget.dataset.fallback='true'; event.currentTarget.setAttribute('href',image.fallback); }}/>
       </g>
     </svg>;

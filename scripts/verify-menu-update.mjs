@@ -43,12 +43,12 @@ try {
     const bacon = modal.getByRole('button', { name: 'Agregar Extras de tu hamburguesa: Tocino', exact: true });
     for (let i = 0; i < 2; i++) await meat.click();
     for (let i = 0; i < 3; i++) await bacon.click();
-    await modal.getByRole('button', { name: 'Agregar MEJORA TUS PAPAS: Salsa cheddar', exact: true }).click();
-    assert.match(await modal.locator('.product-configurator__submit').innerText(), /20\.390/);
+    await modal.getByRole('button', { name: 'Agregar MEJORA TUS PAPAS: Cheddar y bacon', exact: true }).click();
+    assert.match(await modal.locator('.product-configurator__submit').innerText(), /21\.190/);
     for (let i = 0; i < 8; i++) await meat.click();
-    assert.match(await modal.locator('.product-configurator__submit').innerText(), /40\.390/);
+    assert.match(await modal.locator('.product-configurator__submit').innerText(), /41\.190/);
     for (let i = 0; i < 8; i++) await modal.getByRole('button', { name: 'Quitar Extras de tu hamburguesa: Extra carne y cheddar', exact: true }).click();
-    await modal.getByRole('button', { name: 'Quitar MEJORA TUS PAPAS: Salsa cheddar', exact: true }).click();
+    await modal.getByRole('button', { name: 'Quitar MEJORA TUS PAPAS: Cheddar y bacon', exact: true }).click();
     assert.match(await modal.locator('.product-configurator__submit').innerText(), /19\.390/);
     const submitRect = await modal.locator('.product-configurator__submit').boundingBox();
     assert.ok(submitRect.y >= 0 && submitRect.y + submitRect.height <= height);

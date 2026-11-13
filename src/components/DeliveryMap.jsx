@@ -97,8 +97,8 @@ export default function DeliveryMap({ zones, point, onPick, activeZoneId }) {
   };
 
   return <div className="delivery-map-wrap">
-    <div className="delivery-map" ref={containerRef} role="application" aria-label="Mapa de zonas de despacho. Toca el mapa para marcar tu casa."/>
-    <button type="button" className="delivery-map__locate" onClick={locate} disabled={locating}><LocateFixed aria-hidden="true"/> {locating ? 'BUSCANDO…' : 'USAR MI UBICACIÓN'}</button>
+    <button type="button" className="delivery-map__locate" onClick={locate} disabled={locating}><LocateFixed aria-hidden="true"/> {locating ? 'BUSCANDO TU UBICACIÓN…' : 'USAR MI UBICACIÓN'}</button>
     {locateError && <p className="delivery-map__error" role="alert">{locateError}</p>}
+    <div className="delivery-map" ref={containerRef} role="application" aria-label="Mapa de zonas de despacho. Toca el mapa para marcar tu casa."/>
   </div>;
 }

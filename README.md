@@ -22,7 +22,7 @@ La separación **INICIO / PEDIR / PUNTO DE RETIRO** está documentada en [HOME-D
 
 La actualización visual y el sistema de reseñas están documentados en [EDITORIAL.md](EDITORIAL.md): archivos, variables, migración Supabase, moderación, ubicación pendiente y despliegue en Cloudflare.
 
-Sitio de pedidos construido con React, Vite y Supabase. Incluye catálogo, carrito, transferencia con comprobante, seguimiento, acceso de clientes con Google y panel administrativo. Para el boceto, el panel conserva el acceso demo `shet.burger@gmail.com` / `shet2026`; reemplázalo por autenticación real antes de aceptar pedidos en producción.
+Sitio de pedidos construido con React, Vite y Supabase. Incluye catálogo, carrito, transferencia con comprobante, seguimiento, acceso de clientes con Google y panel administrativo. Para el boceto, el panel usa el acceso `shet.burger@gmail.com` con una contraseña privada que el dueño cambia desde el panel (botón CONTRASEÑA, requiere `supabase/admin-password.sql`).
 
 ## Desarrollo
 

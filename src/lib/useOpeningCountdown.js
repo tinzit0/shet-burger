@@ -10,6 +10,9 @@ export function minutesUntilOpening(now = new Date(), time = openingTime) {
   return Math.ceil((next - now) / 60000);
 }
 
+/** "18:00" → "PM", "09:30" → "AM". */
+export const meridiem = (time = openingTime) => Number(String(time).split(':')[0]) >= 12 ? 'PM' : 'AM';
+
 export function formatCountdown(total) {
   const hours = Math.floor(total / 60), minutes = total % 60;
   if (!hours) return `${minutes} MIN`;
@@ -24,5 +27,5 @@ export default function useOpeningCountdown(active = true) {
     const timer = window.setInterval(() => setMinutes(minutesUntilOpening()), 30000);
     return () => window.clearInterval(timer);
   }, [active]);
-  return { time: openingTime, minutes, countdown: formatCountdown(minutes) };
+  return { time: openingTime, meridiem: meridiem(openingTime), minutes, countdown: formatCountdown(minutes) };
 }

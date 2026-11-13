@@ -9,13 +9,13 @@ export function ClosedTape() {
 
 // Big in-page notice for /delivery while the store switch is off.
 export default function StoreClosed({ content = {} }) {
-  const { time, countdown } = useOpeningCountdown();
+  const { time, meridiem, countdown } = useOpeningCountdown();
   return <section className="store-closed" role="status" aria-labelledby="store-closed-title">
     <ClosedTape/>
     <div className="store-closed__inner">
       <div className="store-closed__copy">
         <span className="store-closed__pill"><i/>PLANCHA APAGADA</span>
-        <h2 id="store-closed-title">ABRIMOS<br/>A LAS <em>{time}</em></h2>
+        <h2 id="store-closed-title">ABRIMOS<br/>A LAS <em>{time}<small className="closed-meridiem">{meridiem}</small></em></h2>
         <p className="store-closed__countdown">FALTAN <b>{countdown}</b></p>
       </div>
       <div className="store-closed__side">

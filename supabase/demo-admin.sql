@@ -64,7 +64,10 @@ revoke all on table public.demo_admin_credentials from anon, authenticated;
 revoke all on table public.demo_admin_sessions from anon, authenticated;
 
 insert into public.demo_admin_credentials (id, email, password_hash)
-values (1, 'shet.burger@gmail.com', extensions.crypt('shet2026', extensions.gen_salt('bf')))
+-- Contraseña inicial aleatoria: definirla con supabase/admin-password.sql o desde el SQL Editor
+-- (update public.demo_admin_credentials set password_hash = extensions.crypt('NUEVA', extensions.gen_salt('bf')) where id = 1).
+-- Después se cambia desde el panel, botón CONTRASEÑA.
+values (1, 'shet.burger@gmail.com', extensions.crypt(gen_random_uuid()::text, extensions.gen_salt('bf')))
 on conflict (id) do nothing;
 
 create or replace function public.demo_admin_login(p_email text, p_password text)

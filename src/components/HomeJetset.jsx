@@ -21,7 +21,7 @@ export function TapeVideo() {
     </div>
     <div className="tape-video__media">
       <AutoVideo src={planchaVideo} className="tape-video__main" poster="/assets/campaign/hero-poster-960.webp" label="Hamburguesa SHET doble con cheddar recién hecha"/>
-      <p className="tape-video__caption" aria-hidden="true">DIRECTO DE<br/><em>LA PLANCHA</em></p>
+      <p className="tape-video__caption" aria-hidden="true">#MUERDE<br/><em>LA TENTACIÓN</em></p>
     </div>
   </section>;
 }
@@ -45,7 +45,7 @@ export function ScrollMarquee({ rows = marqueeRows }) {
 const crew = [
   { src: '/assets/caricaturas/abrazo.gif', still: '/assets/caricaturas/abrazo-still.png', name: 'BFF', alt: 'Lata y hamburguesa SHET abrazándose' },
   { src: '/assets/caricaturas/tocino.gif', still: '/assets/caricaturas/tocino-still.png', name: 'BACON LOVERS', alt: 'Hamburguesa SHET comiendo tocino' },
-  { src: '/assets/caricaturas/pepinillo.gif', still: '/assets/caricaturas/pepinillo-still.png', name: 'AJÍ PEPINILLO', alt: 'Hamburguesa SHET de la mano con un pepinillo que sostiene un ají' },
+  { src: '/assets/caricaturas/pepinillo.gif', still: '/assets/caricaturas/pepinillo-still.png', name: 'AJÍ PEPINILLO', alt: 'Hamburguesa SHET se come un ají y arde por lo picante' },
 ];
 const loop = [0, 1, 2, 3].flatMap(round => crew.map(member => ({ ...member, key: `${member.name}-${round}`, hidden: round > 0 })));
 

@@ -6,7 +6,7 @@ import useOpeningCountdown from '../lib/useOpeningCountdown';
 export default function ClosedPopup({ storeOpen, content }) {
   const [dismissed, setDismissed] = useState(false);
   const close = useRef(null);
-  const { time, countdown } = useOpeningCountdown(!storeOpen && !dismissed);
+  const { time, meridiem, countdown } = useOpeningCountdown(!storeOpen && !dismissed);
   useEffect(() => { setDismissed(false); }, [storeOpen]);
   useEffect(() => {
     if (storeOpen || dismissed) return;
@@ -32,7 +32,7 @@ export default function ClosedPopup({ storeOpen, content }) {
       <button ref={close} type="button" className="closed-popup__close" onClick={() => setDismissed(true)} aria-label="Cerrar aviso"><X/></button>
       <div className="closed-popup__tape" aria-hidden="true">CERRADO <Asterisk/> CERRADO <Asterisk/> CERRADO</div>
       <img src="/assets/logo shet burger.png" alt="SHET BURGER"/>
-      <h2 id="closed-title">ABRIMOS<br/>A LAS <em>{time}</em></h2>
+      <h2 id="closed-title">ABRIMOS<br/>A LAS <em>{time}<small className="closed-meridiem">{meridiem}</small></em></h2>
       <p className="closed-popup__countdown">FALTAN <b>{countdown}</b></p>
       <p>{content.closedMessage || 'Por ahora la plancha está apagada. Puedes recorrer la carta y elegir tu SHET: los pedidos se habilitan al abrir.'}</p>
       {content.openingHours && <p className="closed-popup__hours">{content.openingHours}</p>}

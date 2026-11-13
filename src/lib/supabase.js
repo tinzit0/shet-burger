@@ -40,3 +40,10 @@ export async function signOutCustomer() {
   if (!supabase) return;
   return supabase.auth.signOut();
 }
+
+/** Changes the admin panel password; requires the current session token and the current password. */
+export async function changeAdminPassword(token, currentPassword, newPassword) {
+  if (!supabase) return { error: new Error('Supabase no configurado') };
+  const { error } = await supabase.rpc('demo_admin_change_password', { p_token: token, p_current: currentPassword, p_new: newPassword });
+  return { error };
+}

@@ -1,9 +1,10 @@
+import Asterisk from './Asterisk';
 import { ArrowDown } from 'lucide-react';
 import useOpeningCountdown from '../lib/useOpeningCountdown';
 
 /** Moving black tape that says the store is closed. */
 export function ClosedTape() {
-  return <div className="closed-tape" aria-hidden="true">{[0, 1].map(track => <div key={track}>{Array.from({ length: 4 }, (_, i) => <span key={i}>CERRADO<i>✳</i>VOLVEMOS A LAS 18:00<i>✳</i></span>)}</div>)}</div>;
+  return <div className="closed-tape" aria-hidden="true">{[0, 1].map(track => <div key={track}>{Array.from({ length: 4 }, (_, i) => <span key={i}>CERRADO<i><Asterisk/></i>VOLVEMOS A LAS 18:00<i><Asterisk/></i></span>)}</div>)}</div>;
 }
 
 // Big in-page notice for /delivery while the store switch is off.

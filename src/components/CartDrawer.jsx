@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Copy, MapPin, Minus, Plus, ShoppingBag, Trash2, Upload, X } from 'lucide-react';
 import { business, directionsUrl } from '../config';
-import { calculateOrderTotal, composeDeliveryAddress, detectDeliveryZone, getDeliveryFee, getDeliveryZone, DELIVERY_ZONES } from '../lib/delivery';
+import { calculateOrderTotal, composeDeliveryAddress, getDeliveryFee, getDeliveryZone, DELIVERY_UNAVAILABLE_MESSAGE, DELIVERY_ZONES } from '../lib/delivery';
+import { zoneForPoint } from '../lib/geo';
+const DeliveryMap = lazy(() => import('./DeliveryMap'));
 import { lookupDeliveryAddress } from '../lib/addressLookup';
 import { customizationUnavailable } from '../lib/customization';
 import BurgerPhoto from './BurgerPhoto';
@@ -14,14 +16,14 @@ const priceOf=item=>item.variant?.price??Number(item.product.prices[0][1].replac
 const allowedReceipts=['image/jpeg','image/png','image/webp','application/pdf'];
 const upsellCategories=[['fritos','Fritos'],['bebidas','Bebidas'],['extras','Extras']];
 
-export default function CartDrawer({cart,onClose,onChange,onClear,onConfirm,onTrack,products=[],stock={},storeOpen=true,onAdd,onExplore}){
- const[step,setStep]=useState('cart'),[mode,setMode]=useState('delivery'),[sent,setSent]=useState(false),[receipt,setReceipt]=useState(null),[form,setForm]=useState({name:'',phone:'',zone:'',address:''}),[copied,setCopied]=useState(false),[saving,setSaving]=useState(false),[error,setError]=useState(''),[upsellCategory,setUpsellCategory]=useState('fritos');
+export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,onClear,onConfirm,onTrack,products=[],stock={},storeOpen=true,onAdd,onExplore}){
+ const[step,setStep]=useState('cart'),[mode,setMode]=useState('delivery'),[sent,setSent]=useState(false),[receipt,setReceipt]=useState(null),[form,setForm]=useState({name:'',phone:'',zone:'',address:'',point:null}),[copied,setCopied]=useState(false),[saving,setSaving]=useState(false),[error,setError]=useState(''),[upsellCategory,setUpsellCategory]=useState('fritos');
  const[coupon,setCoupon]=useState(null),[couponCode,setCouponCode]=useState(''),[couponMessage,setCouponMessage]=useState(''),[couponBusy,setCouponBusy]=useState(false);
  const subtotal=cart.reduce((sum,item)=>sum+priceOf(item)*item.quantity,0);
- const deliveryFee=getDeliveryFee(mode,form.zone);
+ const deliveryFee=getDeliveryFee(mode,form.zone,zones);
  const couponContext={items:cart,mode,deliveryFee};
  const discount=couponDiscount(coupon,subtotal,Date.now(),couponContext);
- const total=calculateOrderTotal(subtotal,mode,form.zone)-discount;
+ const total=calculateOrderTotal(subtotal,mode,form.zone,zones)-discount;
  const [addressLookup, setAddressLookup] = useState({ status: 'idle', message: '', formattedAddress: '' });
  const [lookupAttempt, setLookupAttempt] = useState(0);
  const paymentReady=mode==='pickup'||Boolean(form.zone && addressLookup.status === 'ready');
@@ -29,7 +31,7 @@ export default function CartDrawer({cart,onClose,onChange,onClear,onConfirm,onTr
  const updateAddress = (field, value) => {
    const fields = { ...addressFields, [field]: value };
    setAddressFields(fields);
-   setForm(current => ({ ...current, address: composeDeliveryAddress(fields), zone: '' }));
+   setForm(current => ({ ...current, address: composeDeliveryAddress(fields), zone: '', point: null }));
    setAddressLookup({ status: 'idle', message: '', formattedAddress: '' });
    setError('');
  };
@@ -40,19 +42,27 @@ export default function CartDrawer({cart,onClose,onChange,onClear,onConfirm,onTr
    let cancelled = false;
    const controller = new AbortController();
    const timer = window.setTimeout(async () => {
-     setForm(current => ({ ...current, zone: '' }));
+     setForm(current => ({ ...current, zone: '', point: null }));
      setAddressLookup({ status: 'loading', message: '', formattedAddress: '' });
      try {
-       const result = await lookupDeliveryAddress(address, { signal: controller.signal });
+       const result = await lookupDeliveryAddress(address, { signal: controller.signal, zones });
        if (cancelled) return;
-       setForm(current => ({ ...current, zone: result.zone.id }));
-       setAddressLookup({ status: 'ready', message: '', formattedAddress: result.formattedAddress });
+       setForm(current => ({ ...current, zone: result.zone.id, point: result.point }));
+       setAddressLookup({ status: 'ready', message: result.precise ? '' : 'Ubicación aproximada: mueve el pin a tu casa para confirmar la zona.', formattedAddress: address });
      } catch (error) {
-       if (!cancelled) setAddressLookup({ status: error.code === 'DELIVERY_UNAVAILABLE' ? 'unavailable' : 'error', message: error.message, formattedAddress: '' });
+       if (cancelled) return;
+       setForm(current => ({ ...current, point: error.point || null }));
+       setAddressLookup({ status: error.code === 'DELIVERY_UNAVAILABLE' ? 'unavailable' : 'error', message: error.message, formattedAddress: '' });
      }
-   }, detectDeliveryZone(address) ? 0 : 1500);
+   }, 900);
    return () => { cancelled = true; controller.abort(); window.clearTimeout(timer); };
- }, [form.address, addressFields.street, addressFields.number, mode, lookupAttempt]);
+ }, [form.address, addressFields.street, addressFields.number, mode, lookupAttempt, zones]);
+ const pickPoint = point => {
+   const zone = zoneForPoint(point, zones);
+   setForm(current => ({ ...current, point, zone: zone?.id || '' }));
+   setAddressLookup(zone ? { status: 'ready', message: '', formattedAddress: form.address } : { status: 'unavailable', message: DELIVERY_UNAVAILABLE_MESSAGE, formattedAddress: '' });
+   setError('');
+ };
  const unavailableItems=cart.filter(item=>stock[item.product.id]===false||customizationUnavailable(item.customization,stock));
  const suggestions=storeOpen?products.filter(product=>product.category===upsellCategory&&stock[product.id]!==false&&!product.optionGroup).slice(0,4):[];
  useEffect(()=>{document.body.style.overflow='hidden';const escape=event=>{if(event.key==='Escape')onClose()};window.addEventListener('keydown',escape);return()=>{document.body.style.overflow='';window.removeEventListener('keydown',escape)}},[onClose]);
@@ -71,13 +81,13 @@ export default function CartDrawer({cart,onClose,onChange,onClear,onConfirm,onTr
        <label htmlFor="order-delivery-number">Número<input id="order-delivery-number" required maxLength="10" placeholder="50" pattern=".*[0-9].*" value={addressFields.number} onChange={event=>updateAddress('number',event.target.value)}/></label>
        <label className="delivery-address-fields__population" htmlFor="order-delivery-population">Población o sector <span>(opcional)</span><input id="order-delivery-population" maxLength="60" list="delivery-populations" placeholder="Ej.: Nonguén o Concepción Centro" aria-describedby="delivery-address-help" value={addressFields.population} onChange={event=>updateAddress('population',event.target.value)}/></label>
      </div>
-     <datalist id="delivery-populations">{DELIVERY_ZONES.map(zone=><option key={zone.id} value={zone.label}/>)}</datalist>
-     <small id="delivery-address-help">Escribe tu dirección en Concepción. Si conoces la población, puedes agregarla para calcular el despacho directamente.</small>
-     <small>Mapas: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a></small>
-     <details className="delivery-coverage"><summary>Consultar zonas de reparto y tarifas</summary><ul>{DELIVERY_ZONES.map(zone=><li key={zone.id}><span>{zone.label}</span><b>{money(zone.fee)}</b></li>)}</ul></details>
-     <div className={`delivery-quote${paymentReady?' is-ready':''}${addressLookup.status==='unavailable'?' is-unavailable':''}`} role="status" aria-live="polite" aria-busy={addressLookup.status==='loading'}><MapPin aria-hidden="true"/><div><strong>{paymentReady ? `Delivery: ${money(deliveryFee)}` : addressLookup.status==='unavailable' ? 'Fuera de cobertura' : addressLookup.status==='loading' ? 'Buscando tu dirección…' : 'Tu dirección de entrega'}</strong>{addressFields.street&&<span className="delivery-quote__address">{form.address}</span>}<span>{paymentReady ? `${getDeliveryZone(form.zone)?.label} · Productos ${money(subtotal)}` : ['error','unavailable'].includes(addressLookup.status) ? addressLookup.message : addressLookup.status==='loading' ? 'Estamos calculando el despacho para esta dirección.' : 'Completa calle y número para conocer el valor de entrega.'}</span>{paymentReady&&<b className="delivery-quote__total">Total a pagar <strong>{money(total)}</strong></b>}</div></div>
+     <datalist id="delivery-populations">{zones.map(zone=><option key={zone.id} value={zone.label}/>)}</datalist>
+     <small id="delivery-address-help">Escribe tu dirección en Concepción. La ubicamos en el mapa y el despacho se cobra según la zona donde cae tu casa. Si el pin no quedó justo, tócalo o arrástralo.</small>
+     <Suspense fallback={<div className="delivery-map delivery-map--loading">Cargando mapa…</div>}><DeliveryMap zones={zones} point={form.point} activeZoneId={form.zone} onPick={pickPoint}/></Suspense>
+     <details className="delivery-coverage"><summary>Consultar zonas de reparto y tarifas</summary><ul>{zones.map(zone=><li key={zone.id}><span>{zone.label}</span><b>{money(zone.fee)}</b></li>)}</ul></details>
+     <div className={`delivery-quote${paymentReady?' is-ready':''}${addressLookup.status==='unavailable'?' is-unavailable':''}`} role="status" aria-live="polite" aria-busy={addressLookup.status==='loading'}><MapPin aria-hidden="true"/><div><strong>{paymentReady ? `Delivery: ${money(deliveryFee)}` : addressLookup.status==='unavailable' ? 'Fuera de cobertura' : addressLookup.status==='loading' ? 'Buscando tu dirección…' : 'Tu dirección de entrega'}</strong>{addressFields.street&&<span className="delivery-quote__address">{form.address}</span>}<span>{paymentReady ? `${getDeliveryZone(form.zone,zones)?.label} · Productos ${money(subtotal)}${addressLookup.message?` · ${addressLookup.message}`:''}` : ['error','unavailable'].includes(addressLookup.status) ? addressLookup.message : addressLookup.status==='loading' ? 'Estamos calculando el despacho para esta dirección.' : 'Completa calle y número para conocer el valor de entrega.'}</span>{paymentReady&&<b className="delivery-quote__total">Total a pagar <strong>{money(total)}</strong></b>}</div></div>
      {addressLookup.status==='error'&&<button className="cart-address-retry" type="button" onClick={()=>setLookupAttempt(value=>value+1)}>Volver a buscar dirección</button>}
-   </>:<aside className="pickup-note"><MapPin/><div><strong>RETIRA EN EL CARRITO SHET</strong><span>{business.pickupAddress}</span><a href={directionsUrl} target="_blank" rel="noreferrer">VER CÓMO LLEGAR ↗</a></div></aside>}
+   </>:<aside className="pickup-note"><MapPin/><div><strong>RETIRA EN EL CARRITO SHET</strong><span>{business.pickupAddress}</span><a href={directionsUrl} target="_blank" rel="noreferrer">VER CÓMO LLEGAR ↗︎</a></div></aside>}
  </section>;
 
  return <div className="cart-overlay" role="dialog" aria-modal="true" aria-label="Tu pedido">

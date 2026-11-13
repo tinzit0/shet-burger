@@ -10,7 +10,8 @@ import { usePublicRoute, navigate } from './lib/navigation';
 import ScrollReveals from './components/ScrollReveals';
 import { products as defaultProducts, defaultSiteContent } from './data';
 import { couponDiscount, couponError } from './lib/couponRules';
-import { getDeliveryFee, calculateOrderTotal, formatDeliveryAddress, getDeliveryZone } from './lib/delivery';
+import { getDeliveryFee, calculateOrderTotal, formatDeliveryAddress, getDeliveryZone, DELIVERY_ZONES } from './lib/delivery';
+import { loadDeliveryZones } from './lib/deliveryZones';
 
 const CartDrawer = lazy(() => import('./components/CartDrawer'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
@@ -35,6 +36,8 @@ export default function App(){
  const[products,setProducts]=useState(()=>{const saved=readStoredJSON('shet-managed-products',defaultProducts),catalog=Array.isArray(saved)&&saved.length?saved:defaultProducts,required=defaultProducts.filter(product=>product.requiredCatalogEntry&&!catalog.some(item=>item.id===product.id));return [...catalog,...required]});
  const[siteContent,setSiteContent]=useState(()=>({...defaultSiteContent,...readStoredJSON('shet-site-content',{})}));
  const[storeSyncState,setStoreSyncState]=useState('connecting');
+ const[deliveryZones,setDeliveryZones]=useState(DELIVERY_ZONES);
+ useEffect(()=>{let live=true;loadDeliveryZones().then(result=>{if(live)setDeliveryZones(result.zones)}).catch(()=>{});return()=>{live=false}},[]);
  const latestOrder=user?(customerOrders[0]||null):(orders[0]||null);
  useEffect(()=>{localStorage.setItem('shet-demo-orders',JSON.stringify(orders))},[orders]);
  useEffect(()=>{localStorage.setItem('shet-demo-stock',JSON.stringify(stock))},[stock]);
@@ -131,18 +134,19 @@ export default function App(){
   if(cart.some(item=>item.customization?.burgerChoiceIds?.some(id=>stock[id]===false)))throw new Error('Una hamburguesa elegida dentro de una promoción se agotó. Vuelve a elegir la promoción.');
  if(!details.form.name.trim()||details.form.name.trim().length>80)throw new Error('Revisa el nombre ingresado.');
  if(!/^\+569\d{8}$/.test(details.form.phone))throw new Error('El teléfono debe tener el formato +569 seguido de 8 números.');
-  const deliveryZone=details.mode==='delivery'?getDeliveryZone(details.form.zone):null;
+  const deliveryZone=details.mode==='delivery'?getDeliveryZone(details.form.zone,deliveryZones):null;
   if(details.mode==='delivery'&&!deliveryZone)throw new Error('Espera a que se confirme tu dirección y el valor del delivery.');
   if(details.mode==='delivery'&&(!details.form.address.trim()||details.form.address.trim().length>180))throw new Error('Ingresa una dirección válida.');
   if(!details.receipt)throw new Error('Debes adjuntar el comprobante.');
   if(details.receipt.size>8*1024*1024)throw new Error('El comprobante no puede superar los 8 MB.');
   if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(details.receipt.type))throw new Error('Usa un comprobante JPG, PNG, WEBP o PDF.');
   const subtotal=cart.reduce((sum,item)=>sum+item.variant.price*item.quantity,0);
-  const couponContext={items:cart,mode:details.mode,deliveryFee:getDeliveryFee(details.mode,details.form.zone)};
+  const couponContext={items:cart,mode:details.mode,deliveryFee:getDeliveryFee(details.mode,details.form.zone,deliveryZones)};
   if(details.coupon&&couponError(details.coupon,subtotal,Date.now(),couponContext))throw new Error(couponError(details.coupon,subtotal,Date.now(),couponContext));
   const discount=couponDiscount(details.coupon,subtotal,Date.now(),couponContext);
-  const total=calculateOrderTotal(subtotal,details.mode,details.form.zone)-discount;
-  const address=details.mode==='delivery'?formatDeliveryAddress(details.form.zone,details.form.address):'';
+  const total=calculateOrderTotal(subtotal,details.mode,details.form.zone,deliveryZones)-discount;
+  const address=details.mode==='delivery'?formatDeliveryAddress(details.form.zone,details.form.address,deliveryZones,details.form.point):'';
+  if(address.length>180)throw new Error('La dirección es demasiado larga. Abrevia la calle o el detalle.');
   const preview=await fileData(details.receipt),order={order_number:`SHET-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0,4).toUpperCase()}`,user_id:user?.id||null,items:cart.map(item=>({product:item.product,quantity:item.quantity,price:item.variant.price,variant:item.variant.label,note:item.customization?.note||'',burger_choices:item.customization?.burgerChoices||[],customization:item.customization||{},selections:item.customization?.selections||[]})),coupon_code:details.coupon?.code||null,discount_amount:discount,total,fulfillment:details.mode,customer_name:details.form.name.trim(),customer_phone:details.form.phone,address,status:'Pedido recibido',stage:0,receipt_name:details.receipt?.name||'',receipt_preview:preview,created_at:new Date().toISOString()};
   const{saveOrder,normalizeOrder}=await ordersApi();const result=await saveOrder(order,details.receipt);
   if(result.error&&result.error.message!=='Supabase no configurado')throw result.error;
@@ -152,5 +156,5 @@ export default function App(){
   setCart([]);
  };
  const count=cart.reduce((sum,item)=>sum+item.quantity,0);
- return <><Header path={path} cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><a className="skip-link" href="#main-content">Ir al contenido</a><main id="main-content" tabIndex={-1} className={path==='/delivery'?'delivery-page':'home-page'}>{path==='/delivery'?<DeliveryPage onAdd={add} stock={stock} storeOpen={storeOpen} products={products} content={siteContent}/>:<HomePage content={siteContent} products={products}/>}</main>{!storeOpen&&<div className="global-store-alert" role="status"><strong>CERRADO</strong><span>Abrimos a las {openingTime} hrs · puedes ver la carta</span></div>}{shopNotice&&<div className="shop-notice" role="alert">{shopNotice}</div>}<ClosedPopup storeOpen={storeOpen} content={siteContent}/><WhatsAppButton/><ScrollReveals key={path}/><Suspense fallback={<div className="overlay-loading" role="status">Cargando…</div>}>{open&&<CartDrawer cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm} onTrack={()=>setTrackOpen(true)} products={products.filter(product=>!['extras','salsas'].includes(product.category)||standaloneExtra(product))} stock={stock} storeOpen={storeOpen} onAdd={add} onExplore={()=>{setOpen(false);navigate('/delivery')}}/>} {trackOpen&&<OrderTracker order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</Suspense></>;
+ return <><Header path={path} cartCount={count} onCart={()=>setOpen(true)} latestOrder={latestOrder} onTrack={()=>setTrackOpen(true)} user={user} onAccount={openAccount}/><a className="skip-link" href="#main-content">Ir al contenido</a><main id="main-content" tabIndex={-1} className={path==='/delivery'?'delivery-page':'home-page'}>{path==='/delivery'?<DeliveryPage onAdd={add} stock={stock} storeOpen={storeOpen} products={products} content={siteContent}/>:<HomePage content={siteContent} products={products}/>}</main>{!storeOpen&&<div className="global-store-alert" role="status"><strong>CERRADO</strong><span>Abrimos a las {openingTime} hrs · puedes ver la carta</span></div>}{shopNotice&&<div className="shop-notice" role="alert">{shopNotice}</div>}<ClosedPopup storeOpen={storeOpen} content={siteContent}/><WhatsAppButton/><ScrollReveals key={path}/><Suspense fallback={<div className="overlay-loading" role="status">Cargando…</div>}>{open&&<CartDrawer zones={deliveryZones} cart={cart} onClose={()=>setOpen(false)} onChange={change} onClear={()=>setCart([])} onConfirm={confirm} onTrack={()=>setTrackOpen(true)} products={products.filter(product=>!['extras','salsas'].includes(product.category)||standaloneExtra(product))} stock={stock} storeOpen={storeOpen} onAdd={add} onExplore={()=>{setOpen(false);navigate('/delivery')}}/>} {trackOpen&&<OrderTracker zones={deliveryZones} order={latestOrder} onClose={()=>setTrackOpen(false)}/>} {authOpen&&!user&&<CustomerAuth onClose={()=>setAuthOpen(false)}/>} {accountOpen&&user&&<CustomerAccount user={user} orders={customerOrders} loading={customerLoading} onClose={()=>setAccountOpen(false)} onSignOut={closeCustomerSession}/>}</Suspense></>;
 }

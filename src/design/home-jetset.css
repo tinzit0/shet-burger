@@ -15,30 +15,14 @@
 .tape-video__tape i { color:var(--rosa); font-style:normal; }
 .tape-video__media { position:relative; z-index:2; width:min(100% - 2.5rem,38rem,calc(82vh * 3 / 4)); margin:0 auto; aspect-ratio:3 / 4; overflow:hidden; border:2px solid var(--negro); background:var(--negro); box-shadow:10px 10px 0 var(--rosa); }
 .tape-video__media video { position:absolute; inset:0; display:block; width:100%; height:100%; }
-.tape-video__main { object-fit:cover; object-position:50% 58%; }
+.tape-video__main { object-fit:cover; object-position:50% 58%; filter:contrast(1.06) saturate(1.08); }
 .tape-video__caption { position:absolute; z-index:2; right:1rem; bottom:.9rem; margin:0; color:var(--blanco); font:400 clamp(2.2rem,4vw,3.4rem)/.85 var(--font-street); text-align:right; text-shadow:0 3px 18px rgb(0 0 0 / 55%); }
 .tape-video__caption em { color:var(--rosa); font-style:normal; }
 
-/* ── Three community panels: swipe row on phones, three columns on desktop ── */
-.community { display:flex; gap:0; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; background:var(--negro); color:var(--blanco); }
-.community::-webkit-scrollbar { display:none; }
-.community__panel { position:relative; isolation:isolate; display:flex; flex:0 0 84%; flex-direction:column; min-width:0; aspect-ratio:4 / 5.4; max-height:620px; padding:1.75rem 1.5rem; overflow:hidden; scroll-snap-align:start; }
-.community__panel > :is(video,img) { position:absolute; z-index:-2; inset:0; width:100%; height:100%; object-fit:cover; }
-.community__panel--vibe::after { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(180deg,rgb(10 10 10 / 58%) 0%,transparent 42%,rgb(10 10 10 / 50%) 100%); }
-.home-page .community h2 { margin:0; font:400 clamp(2.5rem,3.6vw,3.75rem)/.9 var(--font-street); letter-spacing:.005em; }
-.community__panel--photo { align-items:center; text-align:center; background:var(--rosa); }
-.community__panel--photo > img { object-position:50% 64%; }
-.community__panel--photo::after { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(180deg,rgb(240 154 196 / 92%) 0%,rgb(240 154 196 / 30%) 36%,transparent 58%); }
-.home-page .community__panel--photo h2 { color:var(--negro); }
-.community__pill { display:inline-flex; align-items:center; align-self:flex-start; gap:.65rem; margin-top:auto; padding:.55rem 1.1rem .45rem; border-radius:10px; background:var(--blanco); color:var(--negro); font:400 clamp(1.35rem,1.9vw,1.85rem)/1 var(--font-street); letter-spacing:.03em; transition:scale .25s var(--ease-out); }
-.community__pill svg { width:1.3rem; height:1.3rem; }
-.community__pill:hover { scale:1.08; }
 
 @media (min-width:900px) {
-  .tape-video__media { width:min(100% - 4rem,58rem,calc(80vh * 4 / 3)); aspect-ratio:4 / 3; }
+  .tape-video__media { width:min(100% - 4rem,45rem,calc(80vh * 4 / 3)); aspect-ratio:4 / 3; }
   .tape-video__main { object-position:50% 50%; }
-  .community { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); overflow:visible; }
-  .community__panel { aspect-ratio:auto; height:clamp(600px,50vw,780px); max-height:none; padding:2rem; }
 }
 
 @media (prefers-reduced-motion:reduce) {
@@ -47,10 +31,8 @@
 
 
 /* ── Instagram panel: brand gradient + a real-looking post card with the feed scroll video ── */
-.community__panel--follow { align-items:center; gap:.85rem; padding-bottom:1.25rem; background:radial-gradient(circle at 15% 105%,#feda75 0%,#fa7e1e 22%,#d62976 48%,#962fbf 72%,#4f5bd5 100%); }
-.community__panel--follow h2 { align-self:flex-start; }
-.ig-post { display:flex; flex:1; flex-direction:column; width:100%; min-height:0; overflow:hidden; border-radius:14px; background:var(--blanco); color:#111; box-shadow:0 1.2rem 2.5rem rgb(40 0 40 / 35%); transition:transform .3s var(--ease-out); }
-.ig-post:hover { transform:translateY(-4px) rotate(-.6deg); }
+.ig-post { display:flex; flex-direction:column; width:100%; min-height:0; overflow:hidden; border:3px solid var(--blanco); border-radius:18px; background:var(--blanco); color:#111; box-shadow:0 0 0 6px var(--negro),0 0 0 8px rgb(255 255 255 / 22%),0 2rem 4rem rgb(240 154 196 / 18%); transition:transform .3s var(--ease-out); }
+@media (hover:hover) { .ig-post:hover { transform:translateY(-4px) rotate(-.6deg); } }
 .ig-post:focus-visible { outline:3px solid var(--blanco); outline-offset:4px; }
 .ig-post__header { display:flex; flex:none; align-items:center; gap:.6rem; padding:.55rem .7rem; }
 .ig-post__header > svg { width:1.35rem; height:1.35rem; margin-left:auto; }
@@ -66,7 +48,6 @@
 .ig-post__actions svg:last-child { margin-left:auto; }
 .ig-post__follow { display:flex; flex:none; align-items:center; justify-content:center; gap:.5rem; margin:.4rem .75rem .75rem; padding:.65rem .8rem; border-radius:8px; background:linear-gradient(90deg,#d62976,#962fbf 55%,#4f5bd5); color:var(--blanco); font:700 .72rem/1 var(--font-body); letter-spacing:.06em; }
 .ig-post__follow svg { width:1rem; height:1rem; }
-@media (max-width:899px) { .ig-post__media { flex:none; aspect-ratio:9 / 14; } .community__panel--follow { aspect-ratio:auto; max-height:none; } }
 @media (prefers-reduced-motion:reduce) { .ig-post { transition:none; } }
 
 /* ── Info strip: plain, verifiable facts under the cover ── */
@@ -77,8 +58,8 @@
 .info-strip b { font:400 clamp(1.05rem,1.6vw,1.45rem)/1.05 var(--font-street); letter-spacing:.03em; }
 .info-strip > a { display:flex; align-items:center; justify-content:center; gap:.6rem; padding:1rem; border-top:1px solid rgb(255 255 255 / 12%); background:var(--rosa); color:var(--negro); font:400 clamp(1.15rem,1.7vw,1.6rem)/1 var(--font-street); letter-spacing:.04em; transition:background .2s,color .2s; }
 .info-strip > a svg { width:1.1rem; height:1.1rem; transition:transform .2s; }
-.info-strip > a:hover { background:var(--blanco); }
-.info-strip > a:hover svg { transform:translate(3px,-3px); }
+@media (hover:hover) { .info-strip > a:hover { background:var(--blanco); } }
+@media (hover:hover) { .info-strip > a:hover svg { transform:translate(3px,-3px); } }
 .info-strip > a:focus-visible { outline:3px solid var(--blanco); outline-offset:-5px; }
 
 /* ── Crew carousel: endless row of sticker cards on black ── */
@@ -90,11 +71,11 @@
 .home-page .crew h2 em { color:var(--rosa); font:inherit; }
 .crew__viewport { -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent); mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent); }
 .crew__track { display:flex; width:max-content; gap:clamp(.9rem,1.6vw,1.4rem); margin:0; padding:.75rem 0 1.25rem; list-style:none; animation:crew-scroll 32s linear infinite; }
-.crew__viewport:hover .crew__track { animation-play-state:paused; }
+@media (hover:hover) { .crew__viewport:hover .crew__track { animation-play-state:paused; } }
 .crew__card { position:relative; flex:none; display:grid; place-items:center; width:clamp(7.5rem,11vw,9.5rem); aspect-ratio:1 / 1.12; padding:.5rem .5rem 1.9rem; border:2px solid var(--rosa); border-radius:1rem; background:var(--blanco); box-shadow:4px 4px 0 var(--magenta); transition:transform .35s var(--ease-out); }
 .crew__card:nth-child(odd) { transform:rotate(-2.5deg); }
 .crew__card:nth-child(even) { transform:rotate(2deg) translateY(.75rem); }
-.crew__card:hover { transform:rotate(0) translateY(-.4rem) scale(1.04); }
+@media (hover:hover) { .crew__card:hover { transform:rotate(0) translateY(-.4rem) scale(1.04); } }
 .crew__card picture,.crew__card img { display:block; width:100%; height:100%; }
 .crew__card img { object-fit:contain; }
 .crew__card > span { position:absolute; left:50%; bottom:.5rem; padding:.28rem .55rem .2rem; border-radius:999px; background:var(--negro); color:var(--rosa); font:400 .95rem/1 var(--font-street); letter-spacing:.06em; white-space:nowrap; transform:translateX(-50%); font-size:.78rem; }
@@ -106,7 +87,7 @@
   .crew__head { grid-template-columns:auto 1fr; align-items:end; column-gap:3rem; }
   .crew__head > span { grid-column:1 / -1; }
 }
-@media (max-width:899px) { .info-strip > a, .info-strip > div:nth-child(3) { grid-column:1 / -1; } .info-strip > div:nth-child(3) { border-right:0; } .community__panel { aspect-ratio:auto; max-height:none; min-height:min(620px,138vw); } }
+@media (max-width:899px) { .info-strip > a, .info-strip > div:nth-child(3) { grid-column:1 / -1; } .info-strip > div:nth-child(3) { border-right:0; } }
 @media (prefers-reduced-motion:reduce) {
   .crew__viewport { overflow-x:auto; -webkit-mask-image:none; mask-image:none; }
   .crew__track { animation:none; padding-inline:1rem; }
@@ -128,18 +109,6 @@
 .tape-video__tape,.tape-video__media { z-index:2; }
 @media (prefers-reduced-motion:reduce) { .tape-video__bg-row { translate:-20% 0; transition:none; } }
 
-/* ── Swipe hint under the community panels (phones only) ── */
-.community__hint { display:flex; align-items:center; justify-content:flex-start; gap:1.25rem; padding:.85rem 1.25rem 1.1rem; background:var(--negro); color:var(--blanco); }
-.community__hint-label { display:inline-flex; align-items:center; gap:.55rem; padding:0; border:0; background:none; color:var(--rosa); font:400 1.15rem/1 var(--font-street); letter-spacing:.06em; cursor:pointer; }
-.community__hint-label svg { width:1.1rem; height:1.1rem; animation:hint-nudge 1.2s var(--ease-out) infinite; }
-.community__hint-label.is-back svg { rotate:180deg; animation:none; }
-.community__dots { display:flex; gap:.4rem; }
-.community__dots button { width:.55rem; height:.55rem; padding:0; border:0; border-radius:999px; background:rgb(255 255 255 / 30%); cursor:pointer; transition:width .3s var(--ease-out),background .3s; }
-.community__dots button.is-active { width:1.6rem; background:var(--rosa); }
-.community__hint :focus-visible { outline:3px solid var(--rosa); outline-offset:3px; }
-@keyframes hint-nudge { 0%,100% { translate:0 0; } 50% { translate:.35rem 0; } }
-@media (min-width:900px) { .community__hint { display:none; } }
-@media (prefers-reduced-motion:reduce) { .community__hint-label svg { animation:none; } }
 
 /* ── Premium pass: every section shares the header's side gutter, roomier rhythm on desktop ── */
 .home-page :is(.mood-board,.location,.site-footer) { padding-inline:var(--gutter); }
@@ -147,7 +116,7 @@
 .info-strip > div:first-child { padding-left:var(--gutter); }
 .home-page .mood-board__photo { overflow:hidden; }
 .mood-board__photo > img { transition:scale .9s var(--ease-out); }
-.home-page .mood-board__photo:hover > img { scale:1.045; }
+@media (hover:hover) { .home-page .mood-board__photo:hover > img { scale:1.045; } }
 .home-page .location__grid { box-shadow:0 30px 60px -30px rgb(240 154 196 / 35%); }
 @media (min-width:900px) {
   .home-page .mood-board { padding-top:clamp(4.5rem,7vw,7rem); }
@@ -156,3 +125,40 @@
   .home-page .site-footer { padding-block:2.5rem; }
 }
 @media (prefers-reduced-motion:reduce) { .mood-board__photo > img { transition:none; } .home-page .mood-board__photo:hover > img { scale:1; } }
+
+/* ── Instagram band: black, one big post outlined in white ── */
+.community { display:grid; gap:2rem; padding:clamp(3rem,7vw,6.5rem) var(--gutter); background:var(--negro); color:var(--blanco); }
+.community__intro { display:grid; align-content:center; justify-items:start; gap:1.1rem; }
+.community__eyebrow { display:inline-flex; align-items:center; gap:.5rem; color:var(--rosa); font:700 .7rem/1 var(--font-body); letter-spacing:.18em; }
+.community__eyebrow svg { width:1rem; height:1rem; }
+.home-page .community h2 { margin:0; padding-top:.18em; color:var(--blanco); font:400 clamp(3.25rem,8vw,7.5rem)/.88 var(--font-street); letter-spacing:.005em; }
+.home-page .community h2 em { color:var(--rosa); font-style:normal; }
+.community__intro > p { max-width:26rem; margin:0; color:rgb(255 255 255 / 72%); font:400 .95rem/1.55 var(--font-body); }
+.community__cta { display:inline-flex; align-items:center; gap:.6rem; margin-top:.4rem; padding:.85rem 1.3rem .75rem; border:2px solid var(--blanco); border-radius:999px; color:var(--blanco); font:400 1.25rem/1 var(--font-street); letter-spacing:.05em; transition:background .2s,color .2s; }
+.community__cta svg { width:1.1rem; height:1.1rem; }
+@media (hover:hover) { .community__cta:hover { background:var(--blanco); color:var(--negro); } }
+.community__cta:focus-visible { outline:3px solid var(--rosa); outline-offset:4px; }
+.community .ig-post { justify-self:center; max-width:27rem; }
+.community .ig-post__media { flex:none; aspect-ratio:9 / 14; }
+@media (min-width:900px) {
+  .community { grid-template-columns:minmax(0,1fr) minmax(0,25rem); align-items:center; column-gap:clamp(3rem,8vw,8rem); padding-inline:max(var(--gutter), calc((100% - 84rem) / 2)); }
+  .community .ig-post { justify-self:end; width:min(100%,25rem); max-width:none; }
+  .community .ig-post__media { aspect-ratio:9 / 12; }
+}
+
+/* ── SHET MOOD on black with soft pink light, matching the rest of the home ── */
+.home-page .mood-board { position:relative; isolation:isolate; border-top:1px solid rgb(255 255 255 / 8%); background:#0d0b0c; color:var(--blanco); }
+.home-page .mood-board::before { content:''; position:absolute; z-index:-1; inset:0; background:radial-gradient(60% 55% at 12% 18%,rgb(240 154 196 / 22%),transparent 70%),radial-gradient(45% 50% at 92% 85%,rgb(194 24 91 / 22%),transparent 70%); pointer-events:none; }
+.home-page .mood-board h2, .home-page .mood-board h2 strong { color:var(--blanco); }
+.home-page .mood-board h2 em { color:var(--rosa); text-shadow:none; }
+.home-page .mood-board__photo { box-shadow:none; background:#1a1618; }
+.mood-board__side p { color:var(--blanco); }
+.mood-board__side p::first-line { color:var(--rosa); }
+.mood-board__photo--table > img { object-position:50% 72%; }
+.home-page .mood-board__photo--table { height:clamp(360px,100vw,520px); }
+@media (min-width:900px) {
+  .mood-board__collage { grid-template-rows:auto 300px; }
+  .home-page .mood-board__photo--outside, .home-page .mood-board__photo--people, .mood-board__side .mood-board__photo { height:300px; }
+  .home-page .mood-board__photo--table { height:clamp(560px,46vw,680px); }
+  .mood-board__photo--table > img { object-position:50% 70%; }
+}

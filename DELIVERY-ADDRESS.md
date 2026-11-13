@@ -1,4 +1,31 @@
-# Cálculo automático por dirección
+# Zonas de despacho por polígonos
+
+## Cómo funciona ahora
+
+1. **Zonas dibujadas en el mapa.** Cada zona (Nonguén, Collao, Valle Noble, San Guillermo, Palomares, Km 10 y Concepción Centro) es un polígono con su tarifa, guardado en la tabla `delivery_zones` de Supabase.
+2. **El cliente escribe calle y número.** El carrito ubica la dirección en el mapa (Google si hay clave, si no Photon/OpenStreetMap), pone un pin y cobra la tarifa del polígono donde cae. Si la ubicación es aproximada, se le pide mover el pin a su casa; tocar o arrastrar el pin recalcula la zona al instante.
+3. **Fuera de las zonas** se muestra «No llegamos a esa zona por el momento…» y no se puede pagar el delivery.
+4. **Respaldo:** si el mapa no responde o no encuentra la calle, se usa la población escrita (como antes) y el pin parte en el centro de esa zona.
+5. **El pedido guarda la ubicación:** la dirección queda como `Zona · calle · lat,lng`. En el admin, el detalle del pedido tiene el botón «ABRIR UBICACIÓN EN MAPS» para el repartidor.
+6. **El servidor valida la tarifa** leyendo la zona en la tabla `delivery_zones` (ya no hay tarifas fijas en el SQL), también para cupones de despacho gratis.
+
+## Instalar (una vez)
+
+Ejecutar `supabase/delivery-polygons.sql` en Supabase › SQL Editor. Crea la tabla con las 7 zonas iniciales, la función de guardado del admin y reemplaza las tarifas fijas de las funciones de pedido. Se puede volver a ejecutar sin problema. Mientras no se ejecute, el sitio usa los mismos contornos iniciales desde el código y el admin avisa que falta instalarlo al guardar.
+
+## Editar zonas (admin › ZONAS DE DESPACHO)
+
+- Elegir la zona en la lista (botón EDITAR).
+- **Clic en el mapa** agrega un punto en el borde más cercano; **arrastrar** un punto lo mueve; **doble clic** sobre un punto lo borra; los **puntos chicos** de cada borde agregan un punto nuevo.
+- Nombre, tarifa, color y «Activa» se editan en la tarjeta; las flechas cambian la prioridad (si dos zonas se cruzan, se cobra la de más arriba y el panel lo advierte).
+- «NUEVA ZONA» crea un cuadrado en el centro del mapa para redibujarlo. «GUARDAR CAMBIOS» aplica todo; el carrito cobra con los nuevos polígonos de inmediato.
+
+> **Importante:** los contornos iniciales se trazaron alrededor de la ubicación pública de cada sector en OpenStreetMap; no son los límites oficiales del reparto. Revisarlos y ajustarlos en el admin antes de confiar en ellos (por ejemplo, Km 10 se ubicó cerca de San José de Palomares).
+
+---
+
+# Historial: cálculo por nombre de población (versión anterior)
+
 
 ## Formulario de entrega
 

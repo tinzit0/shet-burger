@@ -9,6 +9,12 @@ export default function useVideoPlayback({ src, lazy = false }) {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    // iOS Safari only autoplays inline when muted/playsinline are real attributes; React sets muted as a property only.
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     let visible = false, nearby = !lazy, userPaused = false, manual = false, disposed = false;
     const allowed = () => manual || (!reduced.matches && !navigator.connection?.saveData);

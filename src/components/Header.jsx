@@ -57,7 +57,7 @@ export default function Header({ cartCount = 0, onCart, latestOrder, onTrack, us
     <nav id="main-navigation" className={`brand-header__nav${open ? ' is-open' : ''}`} aria-label="Navegación principal">
       <a href="/" data-route onClick={close} aria-current={path === '/' ? 'page' : undefined}>INICIO</a>
       <a href="/delivery" data-route onClick={close} aria-current={path === '/delivery' ? 'page' : undefined}>PEDIR</a>
-      <a href={directionsUrl} target="_blank" rel="noreferrer" onClick={close}>PUNTO DE RETIRO ↗</a>
+      <a href={directionsUrl} target="_blank" rel="noreferrer" onClick={close}>PUNTO DE RETIRO ↗︎</a>
       <button className="brand-header__mobile-account" type="button" onClick={()=>{close();onAccount()}}><UserRound/> MIS PEDIDOS</button>
       {latestOrder&&<button className="brand-header__mobile-track" type="button" onClick={()=>{close();onTrack()}}>SEGUIR PEDIDO <ShoppingBag/></button>}
       <button className="brand-header__mobile-order" type="button" onClick={startOrder}>{cartCount ? `VER MI PEDIDO (${cartCount})` : 'PEDIR AHORA'} <ArrowUpRight /></button>

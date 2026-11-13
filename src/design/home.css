@@ -9,7 +9,7 @@
 .brand-tape > div { display:flex; flex:0 0 auto; min-width:100%; align-items:center; justify-content:space-around; gap:2rem; padding:1.15rem 2rem; white-space:nowrap; animation:brand-tape 24s linear infinite; }
 .brand-tape span { font:400 clamp(1.4rem,2.5vw,2.15rem)/1 var(--font-street); letter-spacing:.025em; }
 .brand-tape i { color:var(--rosa); font-style:normal; font-size:1.6rem; }
-.brand-tape:hover > div { animation-play-state:paused; }
+@media (hover:hover) { .brand-tape:hover > div { animation-play-state:paused; } }
 @keyframes brand-tape { to { transform:translateX(-100%); } }
 
 

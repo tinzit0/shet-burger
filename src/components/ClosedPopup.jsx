@@ -1,3 +1,4 @@
+import Asterisk from './Asterisk';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, X } from 'lucide-react';
 import useOpeningCountdown from '../lib/useOpeningCountdown';
@@ -29,7 +30,7 @@ export default function ClosedPopup({ storeOpen, content }) {
   return <div className="closed-popup" role="dialog" aria-modal="true" aria-labelledby="closed-title">
     <div className="closed-popup__card">
       <button ref={close} type="button" className="closed-popup__close" onClick={() => setDismissed(true)} aria-label="Cerrar aviso"><X/></button>
-      <div className="closed-popup__tape" aria-hidden="true">CERRADO ✳ CERRADO ✳ CERRADO</div>
+      <div className="closed-popup__tape" aria-hidden="true">CERRADO <Asterisk/> CERRADO <Asterisk/> CERRADO</div>
       <img src="/assets/logo shet burger.png" alt="SHET BURGER"/>
       <h2 id="closed-title">ABRIMOS<br/>A LAS <em>{time}</em></h2>
       <p className="closed-popup__countdown">FALTAN <b>{countdown}</b></p>

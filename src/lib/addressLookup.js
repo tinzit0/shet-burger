@@ -1,4 +1,5 @@
-import { detectDeliveryZone, getDeliveryZone, DELIVERY_UNAVAILABLE_MESSAGE } from './delivery.js';
+import { detectDeliveryZone, DELIVERY_UNAVAILABLE_MESSAGE, DELIVERY_ZONES } from './delivery.js';
+import { polygonCenter, zoneForPoint } from './geo.js';
 
 let mapsReady;
 
@@ -32,66 +33,57 @@ function loadMaps() {
   return mapsReady;
 }
 
-const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+const normalize = value => String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const normalizeStreet = text => normalize(text).replace(/\b(avenida|av\.?|calle|pasaje|pje\.?)\b/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
 
-export function zoneFromGeocode(result) {
-  if (result.partial_match) return null;
+/** Google result → map point, only for a precise street address in Concepción. */
+export function pointFromGeocode(result) {
+  if (!result || result.partial_match) return null;
   const components = result.address_components || [];
-  const names = type => components.filter(component => component.types.includes(type)).map(component => normalize(component.long_name));
+  const has = type => components.some(component => component.types.includes(type));
   const country = components.find(component => component.types.includes('country'));
-  if (country?.short_name !== 'CL' || !names('locality').includes('concepcion')) return null;
-  if (!names('route').length || !names('street_number').length) return null;
-  // Do not classify a street name or the entire city as a delivery sector.
-  const sectors = components.filter(component => component.types.some(type => type === 'neighborhood' || type === 'sublocality' || type.startsWith('sublocality_level_')));
-  const matches = sectors.map(component => {
-    const name = normalize(component.long_name);
-    return name === 'centro' ? getDeliveryZone('concepcion-centro') : detectDeliveryZone(name);
-  }).filter(Boolean);
-  return new Set(matches.map(zone => zone.id)).size === 1 ? matches[0] : null;
+  const city = components.filter(component => component.types.includes('locality')).map(component => normalize(component.long_name));
+  if (country?.short_name !== 'CL' || !city.includes('concepcion') || !has('route') || !has('street_number')) return null;
+  const location = result.geometry?.location;
+  const lat = typeof location?.lat === 'function' ? location.lat() : location?.lat;
+  const lng = typeof location?.lng === 'function' ? location.lng() : location?.lng;
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { point: [lat, lng], precise: true } : null;
 }
 
-async function lookupGoogleAddress(address) {
+async function geocodeWithGoogle(address) {
   const maps = await loadMaps();
-  let results;
-  try {
-    ({ results } = await new maps.Geocoder().geocode({
-      address,
-      componentRestrictions: { country: 'CL', locality: 'Concepción' },
-      region: 'CL',
-    }));
-  } catch (error) {
-    if (error.code === 'ZERO_RESULTS') throw new Error('No encontramos esa dirección. Revisa la calle y el número.');
-    throw new Error('No pudimos consultar la dirección. Intenta nuevamente en unos momentos.');
-  }
-  if (results.length !== 1 || results[0].partial_match) throw new Error('La dirección no es precisa. Agrega el número y la ciudad para ubicarla.');
-  const result = results[0];
-  const zone = zoneFromGeocode(result);
-  if (!zone) throw new Error('No pudimos confirmar cobertura para esta dirección. Revisa la dirección completa; aún no se ha calculado un cobro.');
-  return { zone, formattedAddress: result.formatted_address };
+  const { results } = await new maps.Geocoder().geocode({ address, componentRestrictions: { country: 'CL', locality: 'Concepción' }, region: 'CL' });
+  return results.length === 1 ? pointFromGeocode(results[0]) : null;
 }
 
-export function zoneFromPhoton(feature) {
-  const place = feature?.properties || {};
-  if (place.countrycode?.toUpperCase() !== 'CL' || normalize(place.city) !== 'concepcion') return null;
-  const sectors = [place.district, place.locality, place.suburb, place.neighbourhood].filter(Boolean);
-  const zones = sectors.map(sector => normalize(sector) === 'centro' ? getDeliveryZone('concepcion-centro') : detectDeliveryZone(sector)).filter(Boolean);
-  return new Set(zones.map(zone => zone.id)).size === 1 ? zones[0] : null;
+/**
+ * Photon (OpenStreetMap) features → the best point on the street the customer typed.
+ * A feature on another street or in another city is never used.
+ */
+export function pointFromPhoton(features, address) {
+  const entered = normalizeStreet(address);
+  const candidates = (features || []).filter(feature => {
+    const place = feature?.properties || {};
+    const coordinates = feature?.geometry?.coordinates;
+    if (place.countrycode?.toUpperCase() !== 'CL' || normalize(place.city) !== 'concepcion') return false;
+    if (!Array.isArray(coordinates) || !coordinates.every(Number.isFinite)) return false;
+    const street = normalizeStreet(place.street || (place.type === 'street' ? place.name : ''));
+    return street && ` ${entered} `.includes(` ${street} `);
+  });
+  const withNumber = candidates.find(feature => {
+    const number = String(feature.properties.housenumber || '').replace(/[^0-9]/g, '');
+    return number && new RegExp(`\\b${number}\\b`).test(address);
+  });
+  const best = withNumber || candidates[0];
+  if (!best) return null;
+  const [lng, lat] = best.geometry.coordinates;
+  return { point: [lat, lng], precise: Boolean(withNumber) };
 }
 
-export async function lookupDeliveryAddress(address, { signal, fetcher = globalThis.fetch, googleKey = import.meta.env?.VITE_GOOGLE_MAPS_API_KEY } = {}) {
-  const value = String(address || '').trim();
-  if (value.length < 6 || !/\d/.test(value)) throw new Error('Escribe la calle y el número de tu dirección.');
-  // A written delivery sector is sufficient to quote the existing flat rate.
-  // This is a tariff lookup, not a claim that the house was verified by a map.
-  const explicitZone = detectDeliveryZone(value);
-  if (explicitZone) return { zone: explicitZone, formattedAddress: value, source: 'sector' };
-  if (googleKey?.trim()) {
-    try { return await lookupGoogleAddress(value); } catch { /* Try the keyless provider as well. */ }
-  }
+async function geocodeWithPhoton(address, { signal, fetcher }) {
   const endpoint = import.meta.env?.VITE_PHOTON_URL?.trim() || 'https://photon.komoot.io/api/';
   const url = new URL(endpoint);
-  url.search = new URLSearchParams({ q: value, limit: '5', lat: '-36.827', lon: '-73.014', countrycode: 'CL' }).toString();
-  let features;
+  url.search = new URLSearchParams({ q: address, limit: '6', lat: '-36.827', lon: '-73.014', countrycode: 'CL' }).toString();
   const controller = new AbortController();
   const cancel = () => controller.abort();
   if (signal?.aborted) controller.abort();
@@ -100,26 +92,42 @@ export async function lookupDeliveryAddress(address, { signal, fetcher = globalT
   try {
     const response = await fetcher(url.toString(), { signal: controller.signal });
     if (!response.ok) throw new Error('lookup unavailable');
-    ({ features } = await response.json());
+    const { features } = await response.json();
     if (!Array.isArray(features)) throw new Error('invalid response');
-  } catch {
-    throw new Error('No pudimos consultar el mapa. Incluye tu sector en la dirección (ej.: Los Boldos 123, Nonguén) para calcular la tarifa automáticamente.');
+    return pointFromPhoton(features, address);
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', cancel);
   }
-  // A search may return a nearby POI or another street. Never quote those results.
-  const candidates = features.filter(feature => {
-    const place = feature.properties || {};
-    const street = place.street || (place.type === 'street' ? place.name : '');
-    const normalizeStreet = text => normalize(text).replace(/\b(avenida|av\.?|calle|pasaje|pje\.?)\b/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
-    const streetName = normalizeStreet(street);
-    const entered = normalizeStreet(value);
-    return streetName && ` ${entered} `.includes(` ${streetName} `) && (!place.housenumber || new RegExp(`\\b${String(place.housenumber).replace(/[^0-9]/g, '')}\\b`).test(value));
-  });
-  const zones = candidates.map(zoneFromPhoton);
-  if (!zones.length || zones.some(zone => !zone) || new Set(zones.map(zone => zone.id)).size !== 1) {
-    throw Object.assign(new Error(DELIVERY_UNAVAILABLE_MESSAGE), { code: 'DELIVERY_UNAVAILABLE' });
+}
+
+const unavailable = point => Object.assign(new Error(DELIVERY_UNAVAILABLE_MESSAGE), { code: 'DELIVERY_UNAVAILABLE', point });
+
+/**
+ * Finds where the address is on the map and which delivery polygon contains it.
+ * Returns { zone, point, precise, source }. When the map cannot place the address but the
+ * customer wrote a known sector, the sector is used and the pin starts in its center so the
+ * customer can drop it on their house.
+ */
+export async function lookupDeliveryAddress(address, { signal, fetcher = globalThis.fetch, googleKey = import.meta.env?.VITE_GOOGLE_MAPS_API_KEY, zones = DELIVERY_ZONES } = {}) {
+  const value = String(address || '').trim();
+  if (value.length < 6 || !/\d/.test(value)) throw new Error('Escribe la calle y el número de tu dirección.');
+  let located = null, networkFailed = false;
+  if (googleKey?.trim()) {
+    try { located = await geocodeWithGoogle(value); } catch { /* Try the keyless provider as well. */ }
   }
-  return { zone: zones[0], formattedAddress: value, source: 'photon' };
+  if (!located) {
+    try { located = await geocodeWithPhoton(value, { signal, fetcher }); } catch { networkFailed = true; }
+  }
+  if (located) {
+    const zone = zoneForPoint(located.point, zones);
+    if (zone) return { zone, point: located.point, precise: located.precise, source: 'map' };
+    // An exact house outside every polygon is out of coverage, whatever sector was typed.
+    if (located.precise) throw unavailable(located.point);
+  }
+  const sectorZone = detectDeliveryZone(value, zones);
+  if (sectorZone) return { zone: sectorZone, point: polygonCenter(sectorZone.polygon), precise: false, source: 'sector' };
+  if (located) throw unavailable(located.point);
+  if (networkFailed) throw new Error('No pudimos consultar el mapa. Marca tu casa en el mapa o incluye tu sector (ej.: Los Boldos 123, Nonguén).');
+  throw unavailable(null);
 }

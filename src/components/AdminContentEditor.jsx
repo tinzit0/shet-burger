@@ -44,7 +44,7 @@ async function prepareImage(file) {
 }
 
 const productToForm = product => ({
-  standalone: standaloneExtra(product), burgerExtra: product.burgerExtra !== false, friesExtra: product.friesExtra ?? ['extra-4','extra-6'].includes(product.id), drinkChoiceCount: product.drinkChoiceCount ?? ({'triple-shet':3,vicio:1,tentacion:2}[product.id]||0), allowBurgerVariants: product.allowBurgerVariants !== false, allowedBurgerIds: product.allowedBurgerIds || [], allowedExtraIds: product.allowedExtraIds || [], promotionSlots: product.promotionSlots || [],
+  standalone: standaloneExtra(product), burgerExtra: product.burgerExtra !== false, friesExtra: product.friesExtra ?? product.id === 'papas-cheddar-bacon', drinkChoiceCount: product.drinkChoiceCount ?? ({'triple-shet':3,vicio:1,tentacion:2}[product.id]||0), allowBurgerVariants: product.allowBurgerVariants !== false, allowedBurgerIds: product.allowedBurgerIds || [], allowedExtraIds: product.allowedExtraIds || [], promotionSlots: product.promotionSlots || [],
   id: product.id,
   category: product.category,
   name: product.name,

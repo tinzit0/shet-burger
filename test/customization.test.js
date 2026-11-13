@@ -10,9 +10,10 @@ test('dos carnes extra convierten una doble en cuadruple y calculan su costo', (
   assert.equal(11990 + customizationTotal({ extras }), 19390);
 });
 test('cantidades diez, cinco y cero, separando papas de hamburguesa', () => {
-  const entry = { extras: selectedAddons({ 'extra-0': 10, 'extra-6': 0 }, products, 'burger'), friesExtras: selectedAddons({ 'extra-4': 5 }, products, 'fries') };
+  const entry = { extras: selectedAddons({ 'extra-0': 10, 'extra-6': 0 }, products, 'burger'), friesExtras: selectedAddons({ 'extra-4': 5, 'papas-cheddar-bacon': 5 }, products, 'fries') };
   assert.equal(entry.extras.length, 1);
-  assert.equal(customizationTotal(entry), 30000);
+  assert.deepEqual(entry.friesExtras.map(item => [item.product_id, item.quantity]), [['papas-cheddar-bacon', 1]]);
+  assert.equal(customizationTotal(entry), 26800);
   assert.match(customizationLines(entry)[1].label, /papas/);
 });
 test('promociones mantienen cantidades y extras propios de cada hamburguesa', () => {

@@ -127,3 +127,16 @@
 .tape-video__bg-row i { font-size:.4em; font-style:normal; color:rgb(194 24 91 / 40%); -webkit-text-stroke:0; }
 .tape-video__tape,.tape-video__media { z-index:2; }
 @media (prefers-reduced-motion:reduce) { .tape-video__bg-row { translate:-20% 0; transition:none; } }
+
+/* ── Swipe hint under the community panels (phones only) ── */
+.community__hint { display:flex; align-items:center; justify-content:flex-start; gap:1.25rem; padding:.85rem 1.25rem 1.1rem; background:var(--negro); color:var(--blanco); }
+.community__hint-label { display:inline-flex; align-items:center; gap:.55rem; padding:0; border:0; background:none; color:var(--rosa); font:400 1.15rem/1 var(--font-street); letter-spacing:.06em; cursor:pointer; }
+.community__hint-label svg { width:1.1rem; height:1.1rem; animation:hint-nudge 1.2s var(--ease-out) infinite; }
+.community__hint-label.is-back svg { rotate:180deg; animation:none; }
+.community__dots { display:flex; gap:.4rem; }
+.community__dots button { width:.55rem; height:.55rem; padding:0; border:0; border-radius:999px; background:rgb(255 255 255 / 30%); cursor:pointer; transition:width .3s var(--ease-out),background .3s; }
+.community__dots button.is-active { width:1.6rem; background:var(--rosa); }
+.community__hint :focus-visible { outline:3px solid var(--rosa); outline-offset:3px; }
+@keyframes hint-nudge { 0%,100% { translate:0 0; } 50% { translate:.35rem 0; } }
+@media (min-width:900px) { .community__hint { display:none; } }
+@media (prefers-reduced-motion:reduce) { .community__hint-label svg { animation:none; } }

@@ -86,6 +86,55 @@ export function pointFromPhoton(features, address) {
   return { point: toPoint(candidates[0]), precise: false, alternatives: candidates.map(toPoint) };
 }
 
+// ── Esri / ArcGIS World Geocoding: has house numbers across Concepción, including Nonguén. ──
+const ESRI_URL = 'https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer';
+const ESRI_TYPES = new Set(['PointAddress', 'StreetAddress', 'StreetAddressExt', 'Subaddress']);
+const esriParams = params => {
+  const key = import.meta.env?.VITE_ARCGIS_API_KEY?.trim();
+  return new URLSearchParams({ f: 'json', langCode: 'es', ...params, ...(key ? { token: key, forStorage: 'true' } : {}) }).toString();
+};
+
+/** Esri candidates → best house in the city of Concepción (other comunas share street names). */
+export function pointFromEsri(candidates = []) {
+  const best = candidates.find(candidate => {
+    const attributes = candidate?.attributes || {};
+    return ESRI_TYPES.has(attributes.Addr_type) && normalize(attributes.City) === 'concepcion' && Number(candidate.score) >= 90
+      && Number.isFinite(candidate.location?.x) && Number.isFinite(candidate.location?.y);
+  });
+  if (!best) return null;
+  return { point: [best.location.y, best.location.x], precise: ['PointAddress', 'Subaddress', 'StreetAddress'].includes(best.attributes.Addr_type) };
+}
+
+async function geocodeWithEsri(address, { signal, fetcher }) {
+  const controller = new AbortController(), stop = () => controller.abort();
+  signal?.addEventListener('abort', stop, { once: true });
+  const timer = setTimeout(stop, 6000);
+  try { return await esriCandidates(address, { signal: controller.signal, fetcher }); } finally { clearTimeout(timer); signal?.removeEventListener('abort', stop); }
+}
+
+async function esriCandidates(address, { signal, fetcher }) {
+  const query = /concepci[oó]n/i.test(address) ? address + ', Chile' : address + ', Concepción, Chile';
+  const response = await fetcher(ESRI_URL + '/findAddressCandidates?' + esriParams({ SingleLine: query, outFields: 'Addr_type,City', maxLocations: '5', countryCode: 'CHL', location: '-73.01,-36.83' }), { signal });
+  if (!response.ok) throw new Error('esri unavailable');
+  const { candidates } = await response.json();
+  return pointFromEsri(candidates);
+}
+
+/** "Calle Rio Loa 134" → { street: 'Rio Loa', number: '134' } when it is in Concepción. */
+export function addressFromEsri(result) {
+  const place = result?.address;
+  if (!place || normalize(place.City) !== 'concepcion' || !ESRI_TYPES.has(place.Addr_type)) return null;
+  const number = String(place.AddNum || '').trim();
+  const street = String(place.Address || '').replace(new RegExp('\s*' + number + '\s*$'), '').replace(/^calle\s+/i, '').trim();
+  return street ? { street, number } : null;
+}
+
+async function reverseWithEsri([lat, lng], { signal, fetcher }) {
+  const response = await fetcher(ESRI_URL + '/reverseGeocode?' + esriParams({ location: lng + ',' + lat, featureTypes: 'PointAddress,StreetAddress' }), { signal });
+  if (!response.ok) return null;
+  return addressFromEsri(await response.json());
+}
+
 async function geocodeWithPhoton(address, { signal, fetcher }) {
   const endpoint = import.meta.env?.VITE_PHOTON_URL?.trim() || 'https://photon.komoot.io/api/';
   const url = new URL(endpoint);
@@ -94,7 +143,7 @@ async function geocodeWithPhoton(address, { signal, fetcher }) {
   const cancel = () => controller.abort();
   if (signal?.aborted) controller.abort();
   signal?.addEventListener('abort', cancel, { once: true });
-  const timer = setTimeout(cancel, 12000);
+  const timer = setTimeout(cancel, 6000);
   try {
     const response = await fetcher(url.toString(), { signal: controller.signal });
     if (!response.ok) throw new Error('lookup unavailable');
@@ -119,9 +168,12 @@ const needsPin = point => Object.assign(new Error('No encontramos tu número exa
 export async function lookupDeliveryAddress(address, { signal, fetcher = globalThis.fetch, googleKey = import.meta.env?.VITE_GOOGLE_MAPS_API_KEY, zones = DELIVERY_ZONES } = {}) {
   const value = String(address || '').trim();
   if (value.length < 6 || !/\d/.test(value)) throw new Error('Escribe la calle y el número de tu dirección.');
-  let located = null, networkFailed = false;
+  let located = null, networkFailed = false, esriAnswered = false;
   if (googleKey?.trim()) {
     try { located = await geocodeWithGoogle(value); } catch { /* Try the keyless provider as well. */ }
+  }
+  if (!located) {
+    try { located = await geocodeWithEsri(value, { signal, fetcher }); esriAnswered = true; } catch { /* OpenStreetMap next */ }
   }
   if (!located) {
     try { located = await geocodeWithPhoton(value, { signal, fetcher }); } catch { networkFailed = true; }
@@ -144,7 +196,8 @@ export async function lookupDeliveryAddress(address, { signal, fetcher = globalT
   if (sectorZone) return { zone: sectorZone, point: polygonCenter(sectorZone.polygon), precise: false, source: 'sector' };
   // Only an exact house can be declared out of coverage; a street-level guess needs the customer's pin.
   if (located) throw located.precise ? unavailable(located.point) : needsPin(located.point);
-  if (networkFailed) throw new Error('No pudimos consultar el mapa. Marca tu casa en el mapa o incluye tu sector (ej.: Los Boldos 123, Nonguén).');
+  // Only a network problem if no map service answered at all.
+  if (networkFailed && !esriAnswered) throw new Error('No pudimos consultar el mapa. Marca tu casa en el mapa o incluye tu sector (ej.: Los Boldos 123, Nonguén).');
   // Another municipality is out of coverage; an address the map simply can't find needs the pin.
   if (/\b(talcahuano|hualpen|san pedro de la paz|chiguayante|penco|tome|coronel|lota|hualqui)\b/.test(normalize(value))) throw unavailable(null);
   throw Object.assign(new Error('No encontramos esa dirección. Revisa la calle y el número, o marca tu casa en el mapa.'), { code: 'NEEDS_PIN', point: null });
@@ -188,10 +241,15 @@ export async function reverseGeocode([lat, lng], { signal, fetcher = globalThis.
   const endpoint = (import.meta.env?.VITE_PHOTON_URL?.trim() || 'https://photon.komoot.io/api/').replace(/\/api\/?$/, '/reverse');
   const url = new URL(endpoint);
   url.search = new URLSearchParams({ lat: String(lat), lon: String(lng), limit: '5', radius: '0.15' }).toString();
-  try {
-    const response = await fetcher(url.toString(), { signal });
-    if (!response.ok) return null;
-    const { features } = await response.json();
-    return addressFromReverse(features);
-  } catch { return null; }
+  // Each provider gets a short time limit: a slow one must never block filling the form.
+  const limited = (ms, run) => { const controller = new AbortController(); const stop = () => controller.abort(); signal?.addEventListener('abort', stop, { once: true }); const timer = setTimeout(stop, ms); return run(controller.signal).finally(() => { clearTimeout(timer); signal?.removeEventListener('abort', stop); }); };
+  const photon = limited(2500, limit => fetcher(url.toString(), { signal: limit })).then(response => response.ok ? response.json() : null).then(data => addressFromReverse(data?.features)).catch(() => null);
+  const esri = limited(6000, limit => reverseWithEsri([lat, lng], { signal: limit, fetcher })).catch(() => null);
+  const [fromOsm, fromEsri] = await Promise.all([photon, esri]);
+  if (fromEsri?.number) {
+    // Esri knows the number; OpenStreetMap spells the street with accents ("Río Loa" vs "Rio Loa").
+    const sameName = fromOsm && sameStreet(streetTokens(fromOsm.street), streetTokens(fromEsri.street));
+    return { street: sameName ? fromOsm.street : fromEsri.street, number: fromEsri.number, approximate: true };
+  }
+  return fromOsm || fromEsri;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { LocateFixed } from 'lucide-react';
 
 // Leaflet only loads when a map is shown, so the home page stays light.
 let leafletReady;
@@ -79,8 +80,25 @@ export default function DeliveryMap({ zones, point, onPick, activeZoneId }) {
         .on('dragend', event => { const { lat, lng } = event.target.getLatLng(); pickRef.current?.([lat, lng]); })
         .addTo(map);
     } else layersRef.current.pin.setLatLng(point);
+    // Searched address: center on it. Tapped from far away: zoom in so the customer can confirm the house.
     if (userPickRef.current !== point) map.setView(point, Math.max(map.getZoom(), 16), { animate: false });
+    else if (map.getZoom() < 15) map.setView(point, 16, { animate: false });
   }, [leaflet, point]);
 
-  return <div className="delivery-map" ref={containerRef} role="application" aria-label="Mapa de zonas de despacho. Toca el mapa para marcar tu casa."/>;
+  const [locating, setLocating] = useState(false), [locateError, setLocateError] = useState('');
+  const locate = () => {
+    if (!navigator.geolocation) { setLocateError('Tu navegador no permite usar la ubicación.'); return; }
+    setLocating(true); setLocateError('');
+    navigator.geolocation.getCurrentPosition(
+      position => { setLocating(false); const next = [position.coords.latitude, position.coords.longitude]; userPickRef.current = null; onPick?.(next); },
+      error => { setLocating(false); setLocateError(error.code === 1 ? 'Activa el permiso de ubicación o toca tu casa en el mapa.' : 'No pudimos obtener tu ubicación. Toca tu casa en el mapa.'); },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  };
+
+  return <div className="delivery-map-wrap">
+    <div className="delivery-map" ref={containerRef} role="application" aria-label="Mapa de zonas de despacho. Toca el mapa para marcar tu casa."/>
+    <button type="button" className="delivery-map__locate" onClick={locate} disabled={locating}><LocateFixed aria-hidden="true"/> {locating ? 'BUSCANDO…' : 'USAR MI UBICACIÓN'}</button>
+    {locateError && <p className="delivery-map__error" role="alert">{locateError}</p>}
+  </div>;
 }

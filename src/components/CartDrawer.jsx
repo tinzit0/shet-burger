@@ -29,10 +29,11 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
  const paymentReady=mode==='pickup'||Boolean(form.zone && addressLookup.status === 'ready');
  const [addressFields, setAddressFields] = useState({ street: '', number: '', population: '' });
  const skipLookupRef = useRef(false), reverseRef = useRef(0), numberRef = useRef(null), pinnedRef = useRef(false);
- const [numberMissing, setNumberMissing] = useState(false);
+ const [numberMissing, setNumberMissing] = useState(false), [numberFromMap, setNumberFromMap] = useState(false);
  const updateAddress = (field, value) => {
    reverseRef.current++;
-   if (field === 'number') setNumberMissing(false);
+   if (field === 'number') { setNumberMissing(false); setNumberFromMap(false); }
+   if (field === 'street') setNumberFromMap(false);
    const fields = { ...addressFields, [field]: value };
    setAddressFields(fields);
    // House number typed after choosing the spot on the map: keep that pin and its zone.
@@ -83,7 +84,7 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
      if (!found || request !== reverseRef.current) return;
      const sameStreetNow = found.street.trim().toLowerCase() === addressFields.street.trim().toLowerCase();
      // The map has no house number here: ask for it instead of leaving it blank.
-     if (!found.number && !(sameStreetNow && addressFields.number.trim())) { setNumberMissing(true); window.setTimeout(() => numberRef.current?.focus({ preventScroll: false }), 50); } else setNumberMissing(false);
+     if (!found.number && !(sameStreetNow && addressFields.number.trim())) { setNumberMissing(true); setNumberFromMap(false); window.setTimeout(() => numberRef.current?.focus({ preventScroll: false }), 50); } else { setNumberMissing(false); setNumberFromMap(Boolean(found.number)); }
      setAddressFields(current => {
        // Same street without a mapped number: keep what they typed. Another street: the old number no longer applies.
        const sameStreet = found.street.trim().toLowerCase() === current.street.trim().toLowerCase();
@@ -112,6 +113,7 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
        <label htmlFor="order-delivery-street">Calle<input id="order-delivery-street" aria-describedby="delivery-address-help" required maxLength="80" autoComplete="address-line1" placeholder="Ej.: Río Itata" value={addressFields.street} onChange={event=>updateAddress('street',event.target.value)}/></label>
        <label htmlFor="order-delivery-number" className={numberMissing?'is-missing':''}>Número<input ref={numberRef} id="order-delivery-number" aria-invalid={numberMissing||undefined} aria-describedby={numberMissing?'delivery-number-missing':undefined} required maxLength="10" placeholder={numberMissing?'N° casa':'50'} pattern=".*[0-9].*" value={addressFields.number} onChange={event=>updateAddress('number',event.target.value)}/></label>
      </div>
+     {numberFromMap&&!numberMissing&&<p className="delivery-number-check" role="status">Completamos la dirección desde el mapa. Revisa que el número sea el de tu casa.</p>}
      {numberMissing&&<p id="delivery-number-missing" className="delivery-number-missing" role="status">Ya marcamos tu calle en el mapa. <b>Escribe el número de tu casa</b> para que el repartidor la encuentre.</p>}
      <small id="delivery-address-help">Escribe tu calle y número; no hace falta la población. La ubicamos en el mapa y el despacho se cobra según la zona donde cae tu casa. Si el pin no quedó justo, tócalo o arrástralo.</small>
      <Suspense fallback={<div className="delivery-map delivery-map--loading">Cargando mapa…</div>}><DeliveryMap zones={zones} point={form.point} activeZoneId={form.zone} onPick={pickPoint}/></Suspense>

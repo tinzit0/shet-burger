@@ -130,3 +130,29 @@ test('con Google toma calle y número del punto en Concepción', async () => {
   assert.deepEqual(addressFromGoogle([{ address_components: [part('152', 'street_number'), part('Río Loa', 'route'), part('Concepción', 'locality')] }]), { street: 'Río Loa', number: '152' });
   assert.equal(addressFromGoogle([{ address_components: [part('Colón', 'route'), part('Talcahuano', 'locality')] }]), null);
 });
+
+test('Esri: usa solo casas de la comuna de Concepción', async () => {
+  const { pointFromEsri, addressFromEsri } = await import('../src/lib/addressLookup.js');
+  const candidate = (City, Addr_type, y, score = 98.7) => ({ score, location: { x: -73.008, y }, attributes: { City, Addr_type } });
+  assert.deepEqual(pointFromEsri([candidate('San Pedro de la Paz', 'StreetAddress', -36.865), candidate('Concepción', 'PointAddress', -36.8309)]), { point: [-36.8309, -73.008], precise: true });
+  assert.equal(pointFromEsri([candidate('Concepción', 'Locality', -36.82, 99)]), null);
+  assert.deepEqual(addressFromEsri({ address: { Address: 'Calle Rio Loa 134', AddNum: '134', City: 'Concepción', Addr_type: 'StreetAddress' } }), { street: 'Rio Loa', number: '134' });
+  assert.equal(addressFromEsri({ address: { Address: 'Calle Colón 3000', AddNum: '3000', City: 'Talcahuano', Addr_type: 'PointAddress' } }), null);
+});
+
+test('al tocar el mapa combina el número de Esri con el nombre con tildes de OpenStreetMap', async () => {
+  const { reverseGeocode } = await import('../src/lib/addressLookup.js');
+  const fetcher = async url => ({ ok: true, json: async () => url.includes('arcgis')
+    ? { address: { Address: 'Calle Rio Loa 134', AddNum: '134', City: 'Concepción', Addr_type: 'StreetAddress' } }
+    : { features: [{ properties: { type: 'street', name: 'Río Loa' } }] } });
+  assert.deepEqual(await reverseGeocode([-36.831, -73.0079], { fetcher, googleKey: '' }), { street: 'Río Loa', number: '134', approximate: true });
+});
+
+test('busca la casa en Esri antes que en OpenStreetMap', async () => {
+  const fetcher = async url => ({ ok: true, json: async () => url.includes('arcgis')
+    ? { candidates: [{ score: 100, location: { x: -73.0048, y: -36.8297 }, attributes: { City: 'Concepción', Addr_type: 'PointAddress' } }] }
+    : { features: [] } });
+  const result = await lookupDeliveryAddress('Pasaje 6 769', { googleKey: '', fetcher });
+  assert.equal(result.zone.id, 'nonguen');
+  assert.equal(result.precise, true);
+});

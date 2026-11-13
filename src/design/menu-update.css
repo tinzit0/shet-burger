@@ -130,3 +130,14 @@
 @media (prefers-reduced-motion:reduce) { .cart-bar, .cart-bar.is-added { animation:none; } }
 body.has-cart-bar .whatsapp-button { bottom:calc(max(.85rem, env(safe-area-inset-bottom) + .5rem) + 4.2rem); }
 body.has-cart-bar .site-footer { padding-bottom:6rem; }
+
+/* Phone: show the whole product in the "Arma tu pedido" sheet, like on desktop */
+@media (max-width:720px) {
+  .product-configurator__panel.has-photo { grid-template-rows:clamp(13rem,36svh,19rem) minmax(0,1fr); }
+  .product-configurator__panel.has-photo .product-configurator__photo { position:relative; display:block; height:100%; min-height:0; overflow:hidden; background:#e7dfe6; }
+  .product-configurator__panel.has-photo .product-configurator__photo img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; }
+}
+@media (max-width:720px) and (max-height:700px) {
+  .product-configurator__panel.has-photo { grid-template-rows:clamp(10rem,30svh,13rem) minmax(0,1fr); }
+}
+@media (max-width:720px) { .product-configurator__panel.has-photo.is-drink .product-configurator__photo { background:#fff; } }

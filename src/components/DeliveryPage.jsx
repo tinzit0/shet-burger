@@ -6,7 +6,7 @@ import MenuCover from './MenuCover';
 import PublicCoupons from './PublicCoupons';
 import StoreClosed from './StoreClosed';
 
-export default function DeliveryPage({ onAdd, stock, storeOpen, products, content }) {
+export default function DeliveryPage({ onAdd, stock, storeOpen, products, content, cart = [], onChangeQuantity }) {
   const [selection, setSelection] = useState(null);
   return <>
     {!storeOpen && <StoreClosed content={content}/>}
@@ -15,7 +15,7 @@ export default function DeliveryPage({ onAdd, stock, storeOpen, products, conten
       if (onAdd(product, variant, customization) !== false) setSelection(null);
     }}/>}
     <PublicCoupons/>
-    <MenuSection onAdd={onAdd} stock={stock} storeOpen={storeOpen} products={products} content={content}/>
+    <MenuSection onAdd={onAdd} cart={cart} onChangeQuantity={onChangeQuantity} stock={stock} storeOpen={storeOpen} products={products} content={content}/>
     <FooterCTA footerOnly/>
   </>;
 }

@@ -56,7 +56,7 @@ export default function DeliveryMap({ zones, point, onPick, activeZoneId }) {
     layersRef.current.zones?.remove();
     const group = L.featureGroup(zones.filter(zone => zone.active !== false).map(zone => L.polygon(zone.polygon, {
       color: zone.color, weight: zone.id === activeZoneId ? 3 : 2, fillColor: zone.color, fillOpacity: zone.id === activeZoneId ? 0.28 : 0.12,
-    }).bindTooltip(`${zone.label} · ${money(zone.fee)}`, { sticky: true, direction: 'top' }).on('click', event => pickRef.current?.([event.latlng.lat, event.latlng.lng]))));
+    }).bindTooltip(`${zone.label} · ${money(zone.fee)}`, { sticky: true, direction: 'top' })));
     group.addTo(map);
     layersRef.current.zones = group;
     if (!layersRef.current.fitted && group.getLayers().length) { map.fitBounds(group.getBounds(), { padding: [12, 12] }); layersRef.current.fitted = true; }

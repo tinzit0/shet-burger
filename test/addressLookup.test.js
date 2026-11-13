@@ -116,3 +116,10 @@ test('en una calle larga sin número exacto usa el tramo que cae dentro de una z
   assert.equal(result.precise, false);
   assert.deepEqual(result.point, CENTRO_POINT);
 });
+
+test('al mover el pin toma la calle y el número del punto, si existen', async () => {
+  const { addressFromReverse } = await import('../src/lib/addressLookup.js');
+  assert.deepEqual(addressFromReverse([{ properties: { type: 'street', name: 'Barros Arana' } }, { properties: { street: 'Barros Arana', housenumber: '599' } }]), { street: 'Barros Arana', number: '599' });
+  assert.deepEqual(addressFromReverse([{ properties: { type: 'street', name: 'Río Loa' } }]), { street: 'Río Loa', number: '' });
+  assert.equal(addressFromReverse([]), null);
+});

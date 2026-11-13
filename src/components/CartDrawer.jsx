@@ -1,10 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Copy, MapPin, Minus, Plus, ShoppingBag, Trash2, Upload, X } from 'lucide-react';
 import { business, directionsUrl } from '../config';
 import { calculateOrderTotal, composeDeliveryAddress, getDeliveryFee, getDeliveryZone, DELIVERY_UNAVAILABLE_MESSAGE, DELIVERY_ZONES } from '../lib/delivery';
 import { zoneForPoint } from '../lib/geo';
 const DeliveryMap = lazy(() => import('./DeliveryMap'));
-import { lookupDeliveryAddress } from '../lib/addressLookup';
+import { lookupDeliveryAddress, reverseGeocode } from '../lib/addressLookup';
 import { customizationUnavailable } from '../lib/customization';
 import BurgerPhoto from './BurgerPhoto';
 import { productImage } from '../lib/productImages';
@@ -28,7 +28,9 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
  const [lookupAttempt, setLookupAttempt] = useState(0);
  const paymentReady=mode==='pickup'||Boolean(form.zone && addressLookup.status === 'ready');
  const [addressFields, setAddressFields] = useState({ street: '', number: '', population: '' });
+ const skipLookupRef = useRef(false), reverseRef = useRef(0);
  const updateAddress = (field, value) => {
+   reverseRef.current++;
    const fields = { ...addressFields, [field]: value };
    setAddressFields(fields);
    setForm(current => ({ ...current, address: composeDeliveryAddress(fields), zone: '', point: null }));
@@ -37,6 +39,8 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
  };
  useEffect(() => {
    if (mode !== 'delivery') return;
+   // Fields just filled from the map pin: the zone is already known, don't search again.
+   if (skipLookupRef.current) { skipLookupRef.current = false; return; }
    const address = form.address.trim();
    if (!addressFields.street.trim() || !/\d/.test(addressFields.number)) return;
    let cancelled = false;
@@ -62,6 +66,20 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
    setForm(current => ({ ...current, point, zone: zone?.id || '' }));
    setAddressLookup(zone ? { status: 'ready', message: '', formattedAddress: form.address } : { status: 'unavailable', message: DELIVERY_UNAVAILABLE_MESSAGE, formattedAddress: '' });
    setError('');
+   // Fill street and number from where the pin landed.
+   const request = ++reverseRef.current;
+   reverseGeocode(point).then(found => {
+     if (!found || request !== reverseRef.current) return;
+     setAddressFields(current => {
+       // Same street without a mapped number: keep what they typed. Another street: the old number no longer applies.
+       const sameStreet = found.street.trim().toLowerCase() === current.street.trim().toLowerCase();
+       const next = { ...current, street: found.street, number: found.number || (sameStreet ? current.number : '') };
+       if (next.street === current.street && next.number === current.number) return current;
+       skipLookupRef.current = true;
+       setForm(prev => ({ ...prev, address: composeDeliveryAddress(next) }));
+       return next;
+     });
+   });
  };
  const unavailableItems=cart.filter(item=>stock[item.product.id]===false||customizationUnavailable(item.customization,stock));
  const suggestions=storeOpen?products.filter(product=>product.category===upsellCategory&&stock[product.id]!==false&&!product.optionGroup).slice(0,4):[];

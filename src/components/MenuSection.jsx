@@ -1,14 +1,12 @@
 import { useState } from 'react';
-import { ArrowUpRight, Plus, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Minus, Plus, Sparkles } from 'lucide-react';
 import { categories } from '../data';
 import BurgerPhoto from './BurgerPhoto';
 import ProductConfigurator from './ProductConfigurator';
-import QuantityControl from './QuantityControl';
 import { standaloneExtra } from '../lib/customization';
 import { productImage } from '../lib/productImages';
 
-export default function MenuSection({ onAdd, stock = {}, storeOpen = true, products = [], content }) {
-  const [quantities, setQuantities] = useState({});
+export default function MenuSection({ onAdd, cart = [], onChangeQuantity, stock = {}, storeOpen = true, products = [], content }) {
   const visibleProducts = products.filter(product => !['extras','salsas'].includes(product.category) || standaloneExtra(product));
   const [variants, setVariants] = useState({});
   const [configuring, setConfiguring] = useState(null);
@@ -16,10 +14,10 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true, produ
 
   const addProduct = (product, variant) => {
     if (product.category === 'burgers' || product.category === 'promos' || product.optionGroup) {
-      setConfiguring({ product, variant, quantity: quantities[product.id] || 1 });
+      setConfiguring({ product, variant, quantity: 1 });
       return;
     }
-    onAdd(product, variant, { quantity: quantities[product.id] || 1 });
+    onAdd(product, variant, { quantity: 1 });
   };
 
   return <>
@@ -40,7 +38,8 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true, produ
           <div className="editorial-products">
             {categoryProducts.map(product => {
               const hasPhoto = Boolean(productImage(product));
-              const hasQuantity = ['bebidas','fritos','extras'].includes(product.category);
+              // Lines of this product already in the cart: the + turns into a − n + stepper on the newest line.
+              const lines = cart.filter(item => item.product.id === product.id), inCart = lines.reduce((sum, item) => sum + item.quantity, 0), lastLine = lines[lines.length - 1];
               const pattern = visibleProducts.indexOf(product) % 2 === 0 ? content.menuPaperWhite : content.menuPaperPink;
               const sold = stock[product.id] === false || !storeOpen;
               const unavailableLabel = !storeOpen ? 'TIENDA CERRADA' : stock[product.id] === false ? 'AGOTADO' : '';
@@ -52,11 +51,15 @@ export default function MenuSection({ onAdd, stock = {}, storeOpen = true, produ
                   : product.category === 'promos'
                     ? 'ELEGIR Y PERSONALIZAR'
                     : 'AGREGAR AL PEDIDO';
-              return <article className={`menu-item${hasPhoto ? '' : ' menu-item--text'}${hasPhoto && product.category === 'bebidas' ? ' menu-item--drink-photo' : ''}${hasQuantity && product.category !== 'bebidas' ? ' menu-item--with-quantity' : ''}${sold ? ' is-sold-out' : ''}${pattern ? ' has-brand-paper' : ''}`} style={pattern ? { backgroundImage: `url(${JSON.stringify(pattern)})` } : undefined} id={`product-${product.id}`} key={product.id} data-product-id={product.id}>
+              return <article className={`menu-item${hasPhoto ? '' : ' menu-item--text'}${hasPhoto && product.category === 'bebidas' ? ' menu-item--drink-photo' : ''}${inCart ? ' is-in-cart' : ''}${sold ? ' is-sold-out' : ''}${pattern ? ' has-brand-paper' : ''}`} style={pattern ? { backgroundImage: `url(${JSON.stringify(pattern)})` } : undefined} id={`product-${product.id}`} key={product.id} data-product-id={product.id}>
                 {hasPhoto && <div className="menu-item-photo" data-tilt><BurgerPhoto product={product} sizes="(max-width: 620px) 90vw, (max-width: 1179px) 44vw, 29vw"/>{sold ? <span className="menu-item-photo__unavailable">{storeOpen ? 'AGOTADO' : 'PEDIDOS CERRADOS'}</span> : product.featured && <span className="menu-item-photo__badge"><Sparkles aria-hidden="true"/> SELLO SHET</span>}</div>}
                 <div className="menu-item-copy"><div className="menu-item-title"><h3>{product.name}</h3>{unavailableLabel && <span className="menu-item__status">{unavailableLabel}</span>}</div>{product.category === 'burgers' ? <div className="menu-item-price"><b>{product.prices[0][1]}</b></div> : product.optionGroup ? <div className="menu-item-price"><span>{product.prices[0][0]}</span><b>{product.prices[0][1]}</b></div> : <div className="menu-item-options" role="group" aria-label={`Opción de ${product.name}`}>{product.prices.map(variant => <button type="button" key={variant[0]} disabled={sold} aria-pressed={selected[0] === variant[0]} onClick={() => setVariants(items => ({ ...items, [product.id]: variant }))}>{variant[0]} <b>{variant[1]}</b></button>)}</div>}<p>{product.description}</p></div>
-                {hasQuantity && <QuantityControl label={product.name} value={quantities[product.id] || 1} min={1} max={25} disabled={sold} onChange={value => setQuantities(items => ({ ...items, [product.id]: value }))}/>}
-                <button className="menu-item-add" type="button" disabled={sold} aria-label={`${sold ? 'No disponible' : 'Elegir'} ${product.name} desde ${product.prices[0][1]}`} onClick={() => addProduct(product, selected)}><span><span className="menu-item-add__desktop">{sold ? (storeOpen ? 'AGOTADO' : 'CERRADA') : chooseLabel}</span><span className="menu-item-add__mobile">{sold ? 'NO' : 'ELEGIR'}</span><b>{product.prices[0][1]}</b></span><Plus aria-hidden="true"/></button>
+                {inCart > 0 ? <div className="menu-item-add menu-item-stepper" role="group" aria-label={`${product.name} en tu pedido`}>
+                  <span className="menu-item-add__desktop">EN TU PEDIDO</span>
+                  <button type="button" onClick={() => onChangeQuantity?.(lastLine.key, lastLine.quantity - 1)} aria-label={`Quitar un ${product.name}`}><Minus aria-hidden="true"/></button>
+                  <output aria-live="polite">{inCart}</output>
+                  <button type="button" disabled={sold || lastLine.quantity >= 25} onClick={() => onChangeQuantity?.(lastLine.key, lastLine.quantity + 1)} aria-label={`Agregar otro ${product.name}`}><Plus aria-hidden="true"/></button>
+                </div> : <button className="menu-item-add" type="button" disabled={sold} aria-label={`${sold ? 'No disponible' : 'Elegir'} ${product.name} desde ${product.prices[0][1]}`} onClick={() => addProduct(product, selected)}><span><span className="menu-item-add__desktop">{sold ? (storeOpen ? 'AGOTADO' : 'CERRADA') : chooseLabel}</span><span className="menu-item-add__mobile">{sold ? 'NO' : 'ELEGIR'}</span><b>{product.prices[0][1]}</b></span><Plus aria-hidden="true"/></button>}
               </article>;
             })}
           </div>

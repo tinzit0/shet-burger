@@ -149,3 +149,24 @@ export async function lookupDeliveryAddress(address, { signal, fetcher = globalT
   if (/\b(talcahuano|hualpen|san pedro de la paz|chiguayante|penco|tome|coronel|lota|hualqui)\b/.test(normalize(value))) throw unavailable(null);
   throw Object.assign(new Error('No encontramos esa dirección. Revisa la calle y el número, o marca tu casa en el mapa.'), { code: 'NEEDS_PIN', point: null });
 }
+
+/** Street and house number at a map point (Photon reverse), for filling the form after the pin moves. */
+export function addressFromReverse(features) {
+  const places = (features || []).map(feature => feature?.properties || {}).filter(place => place.countrycode?.toUpperCase() !== 'XX');
+  const street = place => place.street || (place.type === 'street' ? place.name : '');
+  const withNumber = places.find(place => street(place) && place.housenumber);
+  const best = withNumber || places.find(place => street(place));
+  return best ? { street: street(best), number: String(best.housenumber || '').trim() } : null;
+}
+
+export async function reverseGeocode([lat, lng], { signal, fetcher = globalThis.fetch } = {}) {
+  const endpoint = (import.meta.env?.VITE_PHOTON_URL?.trim() || 'https://photon.komoot.io/api/').replace(/\/api\/?$/, '/reverse');
+  const url = new URL(endpoint);
+  url.search = new URLSearchParams({ lat: String(lat), lon: String(lng), limit: '5', radius: '0.15' }).toString();
+  try {
+    const response = await fetcher(url.toString(), { signal });
+    if (!response.ok) return null;
+    const { features } = await response.json();
+    return addressFromReverse(features);
+  } catch { return null; }
+}

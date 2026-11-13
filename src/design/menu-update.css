@@ -92,3 +92,41 @@
  .menu-reference .menu-category .menu-item > .quantity-control { align-self:flex-start; margin:.5rem 1rem; }
  .menu-reference .menu-category .menu-item--drink-photo .menu-item-photo { min-height:0; width:100%; aspect-ratio:4/3; }
 }
+
+/* ── + turns into − n + once the product is in the cart ── */
+.menu-item-stepper { gap:.35rem; padding:.3rem; cursor:default; }
+.menu-item-stepper > .menu-item-add__desktop { flex:1; padding-left:.7rem; font-size:.7rem; }
+.menu-item-stepper > button { display:grid; place-items:center; width:2.4rem; height:2.4rem; padding:0; border:0; border-radius:50%; background:var(--negro,#0a0a0a); color:var(--blanco,#fff); cursor:pointer; transition:transform .15s; }
+.menu-item-stepper > button:active:not(:disabled) { transform:scale(.9); }
+.menu-item-stepper > button:disabled { opacity:.35; cursor:not-allowed; }
+.menu-item-stepper > button svg { width:1rem; height:1rem; }
+.menu-item-stepper > output { min-width:1.6rem; font:400 1.35rem/1 var(--font-street,sans-serif); text-align:center; }
+.menu-item-add.menu-item-stepper:hover { transform:none; background:var(--color-pink); color:var(--color-ink); }
+/* Compact cards (round + button): the stepper stands vertically, + on top. */
+.menu-reference .menu-item-add.menu-item-stepper { flex-direction:column-reverse; justify-content:center; gap:.2rem; width:2.6rem; height:auto; min-height:0; padding:.2rem; border-radius:999px; background:var(--color-pink); color:var(--color-ink); }
+.menu-reference .menu-item-add.menu-item-stepper:hover { transform:none; background:var(--color-pink); }
+.menu-reference .menu-item-stepper > .menu-item-add__desktop { display:none; }
+.menu-reference .menu-item-stepper > button { width:2.2rem; height:2.2rem; }
+.menu-reference .menu-item-stepper > output { min-width:0; font-size:1.15rem; }
+@media (max-width:620px) { .menu-reference .menu-item-add.menu-item-stepper { width:2.2rem; } .menu-reference .menu-item-stepper > button { width:1.85rem; height:1.85rem; } .menu-reference .menu-item-stepper > output { font-size:1rem; } }
+/* Wide desktop cards (full-width button): horizontal stepper with label. */
+@media (min-width:1024px) {
+  .menu-reference .menu-category .menu-item-add.menu-item-stepper { flex-direction:row; justify-content:flex-end; width:auto; padding:.3rem; border-radius:.5rem; }
+  .menu-reference .menu-category .menu-item-stepper > .menu-item-add__desktop { display:block; flex:1; }
+  .menu-reference .menu-category .menu-item-stepper > button { width:2.4rem; height:2.4rem; }
+  .menu-reference .menu-category .menu-item-stepper > output { min-width:1.6rem; font-size:1.35rem; }
+}
+
+/* ── Bottom bar to reach the cart once something was added ── */
+.cart-bar { position:fixed; z-index:950; left:50%; bottom:max(.85rem, calc(env(safe-area-inset-bottom) + .5rem)); display:flex; align-items:center; gap:.75rem; width:min(30rem, calc(100% - 6rem)); min-height:3.4rem; padding:.45rem .6rem .45rem .45rem; border:2px solid var(--negro,#0a0a0a); border-radius:999px; background:var(--rosa,#f09ac4); color:var(--negro,#0a0a0a); box-shadow:0 .8rem 2rem rgb(0 0 0 / 35%); transform:translateX(-50%); cursor:pointer; animation:cart-bar-in .35s var(--ease-out,ease-out); }
+.cart-bar__count { display:grid; place-items:center; flex:none; width:2.4rem; height:2.4rem; border-radius:50%; background:var(--negro,#0a0a0a); color:var(--blanco,#fff); font:400 1.15rem/1 var(--font-street,sans-serif); }
+.cart-bar__label { flex:1; overflow:hidden; font:400 1.05rem/1 var(--font-street,sans-serif); letter-spacing:.04em; text-align:left; text-overflow:ellipsis; white-space:nowrap; }
+.cart-bar > b { flex:none; font:400 1.1rem/1 var(--font-street,sans-serif); }
+.cart-bar.is-added { animation:cart-bar-pop .4s var(--ease-out,ease-out); background:var(--blanco,#fff); }
+.cart-bar:focus-visible { outline:3px solid var(--blanco,#fff); outline-offset:3px; }
+@keyframes cart-bar-in { from { opacity:0; transform:translate(-50%, 1rem); } }
+@keyframes cart-bar-pop { 40% { transform:translateX(-50%) scale(1.05); } }
+@media (min-width:721px) { .cart-bar { width:min(30rem, calc(100% - 22rem)); } }
+@media (prefers-reduced-motion:reduce) { .cart-bar, .cart-bar.is-added { animation:none; } }
+body.has-cart-bar .whatsapp-button { bottom:calc(max(.85rem, env(safe-area-inset-bottom) + .5rem) + 4.2rem); }
+body.has-cart-bar .site-footer { padding-bottom:6rem; }

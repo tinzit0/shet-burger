@@ -71,7 +71,7 @@ test('sin cobertura muestra el mensaje solicitado y no devuelve una tarifa', asy
 test('no usa resultados de otra calle u otra comuna', async () => {
   assert.equal(pointFromPhoton([feature(...NONGUEN_POINT, { street: 'Otra Calle' })], 'Los Boldos 123'), null);
   assert.equal(pointFromPhoton([feature(...NONGUEN_POINT, { city: 'Talcahuano' })], 'Los Boldos 123'), null);
-  await assert.rejects(lookupDeliveryAddress('Los Boldos 123', { googleKey: '', fetcher: photon([feature(...NONGUEN_POINT, { street: 'Otra Calle' })]) }), /No llegamos a esa zona/);
+  await assert.rejects(lookupDeliveryAddress('Los Boldos 123', { googleKey: '', fetcher: photon([feature(...NONGUEN_POINT, { street: 'Otra Calle' })]) }), error => error.code === 'NEEDS_PIN' && /No encontramos esa dirección/.test(error.message));
 });
 
 test('prefiere el resultado con el mismo número de casa', () => {
@@ -99,4 +99,20 @@ test('toma el punto de Google solo para una dirección exacta en Concepción', (
   assert.equal(pointFromGeocode(otherCity), null);
   const noNumber = googleResult(); noNumber.address_components = noNumber.address_components.filter(item => !item.types.includes('street_number'));
   assert.equal(pointFromGeocode(noNumber), null);
+});
+
+test('reconoce la calle aunque el mapa use el nombre oficial completo', async () => {
+  const fetcher = photon([feature(...COLLAO_POINT, { street: 'Avenida Ignacio Collao', housenumber: '1202' })]);
+  const result = await lookupDeliveryAddress('Avenida Collao 1202, Concepción', { googleKey: '', fetcher });
+  assert.equal(result.zone.id, 'collao');
+  assert.equal(result.precise, true);
+});
+
+test('en una calle larga sin número exacto usa el tramo que cae dentro de una zona', async () => {
+  const CENTRO_POINT = [-36.8269, -73.0513];
+  const fetcher = photon([feature(...PENCO_POINT, { street: undefined, type: 'street', name: 'Barros Arana' }), feature(...CENTRO_POINT, { street: undefined, type: 'street', name: 'Barros Arana' })]);
+  const result = await lookupDeliveryAddress('Barros Arana 500, Concepción', { googleKey: '', fetcher });
+  assert.equal(result.zone.id, 'concepcion-centro');
+  assert.equal(result.precise, false);
+  assert.deepEqual(result.point, CENTRO_POINT);
 });

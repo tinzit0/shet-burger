@@ -41,3 +41,8 @@ test('usa las tarifas guardadas por el admin', () => {
   const zones = [{ ...DELIVERY_ZONES[0], fee: 1500 }];
   assert.equal(getDeliveryZoneFromAddress('Nonguén · Calle 1', zones).fee, 1500);
 });
+
+test('la Universidad del Bío-Bío (Av. Collao 1202) queda en Collao', () => {
+  assert.equal(zoneForPoint([-36.8231, -73.0125], DELIVERY_ZONES).id, 'collao');
+  assert.equal(zoneForPoint([-36.8174, -73.0012], DELIVERY_ZONES).id, 'valle-noble');
+});

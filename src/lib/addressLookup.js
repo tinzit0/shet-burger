@@ -56,28 +56,34 @@ async function geocodeWithGoogle(address) {
   return results.length === 1 ? pointFromGeocode(results[0]) : null;
 }
 
+const STREET_WORDS = /\b(avenida|av|calle|pasaje|pje|psje|camino|diagonal|general|gral)\b/g;
+const streetTokens = text => normalize(text).replace(/[^a-z0-9 ]/g, ' ').replace(STREET_WORDS, ' ').split(/\s+/).filter(Boolean);
+/** "Av. Collao 1202, Concepción" → tokens of the street part only: ["collao"]. */
+const enteredStreet = address => streetTokens(String(address || '').split(/\s\d/)[0]);
+/** Same street when one name contains all the words of the other ("Collao" ~ "Avenida Ignacio Collao"). */
+const sameStreet = (a, b) => a.length > 0 && b.length > 0 && (a.every(token => b.includes(token)) || b.every(token => a.includes(token)));
+const enteredNumber = address => String(address || '').match(/\s(\d+)[a-z]?\b/i)?.[1] || '';
+
 /**
- * Photon (OpenStreetMap) features → the best point on the street the customer typed.
+ * Photon (OpenStreetMap) features → points on the street the customer typed.
+ * Returns the exact house when OSM has the number; otherwise every segment of that street
+ * (long streets cross several zones), so the caller can pick the segment inside a zone.
  * A feature on another street or in another city is never used.
  */
 export function pointFromPhoton(features, address) {
-  const entered = normalizeStreet(address);
+  const street = enteredStreet(address), number = enteredNumber(address);
   const candidates = (features || []).filter(feature => {
     const place = feature?.properties || {};
     const coordinates = feature?.geometry?.coordinates;
     if (place.countrycode?.toUpperCase() !== 'CL' || normalize(place.city) !== 'concepcion') return false;
     if (!Array.isArray(coordinates) || !coordinates.every(Number.isFinite)) return false;
-    const street = normalizeStreet(place.street || (place.type === 'street' ? place.name : ''));
-    return street && ` ${entered} `.includes(` ${street} `);
+    return sameStreet(street, streetTokens(place.street || (place.type === 'street' ? place.name : '')));
   });
-  const withNumber = candidates.find(feature => {
-    const number = String(feature.properties.housenumber || '').replace(/[^0-9]/g, '');
-    return number && new RegExp(`\\b${number}\\b`).test(address);
-  });
-  const best = withNumber || candidates[0];
-  if (!best) return null;
-  const [lng, lat] = best.geometry.coordinates;
-  return { point: [lat, lng], precise: Boolean(withNumber) };
+  const toPoint = feature => [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+  const exact = number && candidates.find(feature => String(feature.properties.housenumber || '').replace(/[^0-9]/g, '') === number);
+  if (exact) return { point: toPoint(exact), precise: true };
+  if (!candidates.length) return null;
+  return { point: toPoint(candidates[0]), precise: false, alternatives: candidates.map(toPoint) };
 }
 
 async function geocodeWithPhoton(address, { signal, fetcher }) {
@@ -102,6 +108,7 @@ async function geocodeWithPhoton(address, { signal, fetcher }) {
 }
 
 const unavailable = point => Object.assign(new Error(DELIVERY_UNAVAILABLE_MESSAGE), { code: 'DELIVERY_UNAVAILABLE', point });
+const needsPin = point => Object.assign(new Error('No encontramos tu número exacto. Mueve el pin a tu casa en el mapa para calcular el despacho.'), { code: 'NEEDS_PIN', point });
 
 /**
  * Finds where the address is on the map and which delivery polygon contains it.
@@ -119,15 +126,26 @@ export async function lookupDeliveryAddress(address, { signal, fetcher = globalT
   if (!located) {
     try { located = await geocodeWithPhoton(value, { signal, fetcher }); } catch { networkFailed = true; }
   }
+  const sectorZone = detectDeliveryZone(value, zones);
+  if (located && !located.precise && located.alternatives?.length) {
+    // Street found but not the house: use the segment in the written sector, else the zone most of the street falls in.
+    const hits = located.alternatives.map(point => ({ point, zone: zoneForPoint(point, zones) })).filter(hit => hit.zone);
+    const inSector = sectorZone && hits.find(hit => hit.zone.id === sectorZone.id);
+    const counts = hits.reduce((map, hit) => map.set(hit.zone.id, (map.get(hit.zone.id) || 0) + 1), new Map());
+    const best = inSector || hits.sort((a, b) => counts.get(b.zone.id) - counts.get(a.zone.id))[0];
+    if (best) return { zone: best.zone, point: best.point, precise: false, source: 'map' };
+  }
   if (located) {
     const zone = zoneForPoint(located.point, zones);
     if (zone) return { zone, point: located.point, precise: located.precise, source: 'map' };
     // An exact house outside every polygon is out of coverage, whatever sector was typed.
     if (located.precise) throw unavailable(located.point);
   }
-  const sectorZone = detectDeliveryZone(value, zones);
   if (sectorZone) return { zone: sectorZone, point: polygonCenter(sectorZone.polygon), precise: false, source: 'sector' };
-  if (located) throw unavailable(located.point);
+  // Only an exact house can be declared out of coverage; a street-level guess needs the customer's pin.
+  if (located) throw located.precise ? unavailable(located.point) : needsPin(located.point);
   if (networkFailed) throw new Error('No pudimos consultar el mapa. Marca tu casa en el mapa o incluye tu sector (ej.: Los Boldos 123, Nonguén).');
-  throw unavailable(null);
+  // Another municipality is out of coverage; an address the map simply can't find needs the pin.
+  if (/\b(talcahuano|hualpen|san pedro de la paz|chiguayante|penco|tome|coronel|lota|hualqui)\b/.test(normalize(value))) throw unavailable(null);
+  throw Object.assign(new Error('No encontramos esa dirección. Revisa la calle y el número, o marca tu casa en el mapa.'), { code: 'NEEDS_PIN', point: null });
 }

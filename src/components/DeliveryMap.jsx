@@ -33,7 +33,8 @@ export function useLeafletMap(containerRef, options = {}) {
       L.marker(SHOP_POINT, { icon: shopIcon(L), interactive: false, keyboard: false }).addTo(map);
       setState({ L, map });
     });
-    return () => { cancelled = true; map?.remove(); };
+    // Stop any pan/zoom in flight first: removing a map mid-animation throws inside Leaflet.
+    return () => { cancelled = true; if (map) { map.stop(); map.off(); map.remove(); } };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return state;
@@ -78,7 +79,7 @@ export default function DeliveryMap({ zones, point, onPick, activeZoneId }) {
         .on('dragend', event => { const { lat, lng } = event.target.getLatLng(); pickRef.current?.([lat, lng]); })
         .addTo(map);
     } else layersRef.current.pin.setLatLng(point);
-    if (userPickRef.current !== point) map.setView(point, Math.max(map.getZoom(), 16), { animate: true });
+    if (userPickRef.current !== point) map.setView(point, Math.max(map.getZoom(), 16), { animate: false });
   }, [leaflet, point]);
 
   return <div className="delivery-map" ref={containerRef} role="application" aria-label="Mapa de zonas de despacho. Toca el mapa para marcar tu casa."/>;

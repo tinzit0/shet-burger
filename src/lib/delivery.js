@@ -5,12 +5,12 @@ import { formatPoint, parsePointFromAddress } from './geo.js';
 // Polygon vertices are [lat, lng].
 export const DELIVERY_ZONES = Object.freeze([
   { id: 'nonguen', label: 'Nonguén', fee: 1000, color: '#EC3478', polygon: [[-36.826, -73.016], [-36.826, -72.998], [-36.835, -72.985], [-36.86, -72.975], [-36.865, -72.99], [-36.85, -73.01], [-36.84, -73.022]] },
-  { id: 'collao', label: 'Collao', fee: 1000, color: '#8E44AD', polygon: [[-36.806, -73.037], [-36.806, -73.013], [-36.826, -73.013], [-36.826, -73.016], [-36.834, -73.0195], [-36.834, -73.037]] },
-  { id: 'valle-noble', label: 'Valle Noble', fee: 1000, color: '#2E86DE', polygon: [[-36.808, -73.013], [-36.808, -72.997], [-36.8205, -72.998], [-36.826, -72.998], [-36.826, -73.013]] },
+  { id: 'collao', label: 'Collao', fee: 1000, color: '#8E44AD', polygon: [[-36.806, -73.037], [-36.806, -73.009], [-36.826, -73.009], [-36.826, -73.016], [-36.834, -73.0195], [-36.834, -73.037]] },
+  { id: 'valle-noble', label: 'Valle Noble', fee: 1000, color: '#2E86DE', polygon: [[-36.808, -73.009], [-36.808, -72.997], [-36.8205, -72.998], [-36.826, -72.998], [-36.826, -73.009]] },
   { id: 'san-guillermo', label: 'San Guillermo', fee: 1000, color: '#16A085', polygon: [[-36.802, -72.997], [-36.802, -72.972], [-36.818, -72.965], [-36.822, -72.965], [-36.8205, -72.98], [-36.8205, -72.998], [-36.808, -72.997]] },
   { id: 'palomares', label: 'Palomares', fee: 1000, color: '#F39C12', polygon: [[-36.8205, -72.998], [-36.826, -72.998], [-36.835, -72.985], [-36.838, -72.97], [-36.822, -72.965], [-36.8205, -72.98]] },
   { id: 'km-10', label: 'Km 10', fee: 1000, color: '#27AE60', polygon: [[-36.812, -72.952], [-36.812, -72.925], [-36.835, -72.925], [-36.835, -72.952]] },
-  { id: 'concepcion-centro', label: 'Concepción Centro', fee: 3000, color: '#C0392B', polygon: [[-36.8195, -73.063], [-36.8195, -73.0395], [-36.835, -73.0395], [-36.835, -73.063]] },
+  { id: 'concepcion-centro', label: 'Concepción Centro', fee: 3000, color: '#C0392B', polygon: [[-36.8195, -73.063], [-36.8195, -73.037], [-36.834, -73.037], [-36.835, -73.063]] },
 ].map(zone => Object.freeze({ ...zone, active: true })));
 
 export const getDeliveryZone = (id, zones = DELIVERY_ZONES) => zones.find(zone => zone.id === id) || null;

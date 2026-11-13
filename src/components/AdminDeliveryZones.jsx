@@ -156,8 +156,8 @@ export default function AdminDeliveryZones({ zones: initialZones, token, onSaved
       <button type="button" onClick={undo} disabled={!history.length}><Undo2/> Deshacer</button>
       <button type="button" className="admin-zones__save" onClick={save} disabled={busy || !dirty}><Save/> {busy ? 'GUARDANDO…' : dirty ? 'GUARDAR CAMBIOS' : 'GUARDADO'}</button>
     </div></div>
-    <p className="admin-zones__help">Elige una zona y dibuja su borde: <b>clic en el mapa</b> agrega un punto, <b>arrastra</b> un punto para moverlo, <b>doble clic</b> sobre un punto lo borra y los <b>puntos chicos</b> de cada borde agregan uno nuevo. El cliente paga la tarifa de la zona donde cae su casa.</p>
-    {conflicts.length > 0 && <p className="admin-zones__warning" role="status">Hay zonas que se superponen ({conflicts.join(' · ')}). Donde se cruzan se cobra la que está más arriba en la lista.</p>}
+    <p className="admin-zones__help">Elige una zona y dibuja su borde: <b>clic en el mapa</b> agrega un punto, <b>arrastra</b> un punto para moverlo, <b>doble clic</b> sobre un punto lo borra y los <b>puntos chicos</b> de cada borde agregan uno nuevo. El cliente solo escribe su dirección y paga la tarifa de la zona donde cae su casa. Puedes hacer anillos, como en Toteat: una zona cercana al local <b>dentro</b> de otra más grande; manda la que está <b>más arriba en la lista</b> (súbela con las flechas).</p>
+    {conflicts.length > 0 && <p className="admin-zones__warning" role="status">Zonas que se cruzan: {conflicts.join(' · ')}. Donde se cruzan se cobra la que está más arriba en la lista; si es un anillo, deja la zona chica arriba de la grande.</p>}
     {error && <p className="admin-error" role="alert">{error}</p>}
     {notice && <p className="admin-zones__notice" role="status">{notice}</p>}
     <div className="admin-zones__layout">

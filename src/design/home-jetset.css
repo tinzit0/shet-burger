@@ -140,3 +140,19 @@
 @keyframes hint-nudge { 0%,100% { translate:0 0; } 50% { translate:.35rem 0; } }
 @media (min-width:900px) { .community__hint { display:none; } }
 @media (prefers-reduced-motion:reduce) { .community__hint-label svg { animation:none; } }
+
+/* ── Premium pass: every section shares the header's side gutter, roomier rhythm on desktop ── */
+.home-page :is(.mood-board,.location,.site-footer) { padding-inline:var(--gutter); }
+.crew__head { max-width:none; margin-inline:0; padding-inline:var(--gutter); }
+.info-strip > div:first-child { padding-left:var(--gutter); }
+.home-page .mood-board__photo { overflow:hidden; }
+.mood-board__photo > img { transition:scale .9s var(--ease-out); }
+.home-page .mood-board__photo:hover > img { scale:1.045; }
+.home-page .location__grid { box-shadow:0 30px 60px -30px rgb(240 154 196 / 35%); }
+@media (min-width:900px) {
+  .home-page .mood-board { padding-top:clamp(4.5rem,7vw,7rem); }
+  .home-page .location { padding-block:clamp(4.5rem,7vw,7rem) clamp(3rem,5vw,5rem); }
+  .crew { padding-block:clamp(4rem,6vw,6rem); }
+  .home-page .site-footer { padding-block:2.5rem; }
+}
+@media (prefers-reduced-motion:reduce) { .mood-board__photo > img { transition:none; } .home-page .mood-board__photo:hover > img { scale:1; } }

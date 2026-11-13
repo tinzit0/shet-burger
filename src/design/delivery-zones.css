@@ -65,3 +65,10 @@
 .admin-password__toggle svg { width:1rem; height:1rem; }
 .admin-password__done { display:grid; justify-items:start; gap:.6rem; margin-top:1rem; }
 .admin-password__done > svg { width:2.25rem; height:2.25rem; padding:.4rem; border-radius:50%; background:#27AE60; color:#fff; }
+
+/* Number field when the map pin has no house number */
+.delivery-address-fields label.is-missing { color:#c2185b; }
+.delivery-address-fields label.is-missing input { border-color:#c2185b; box-shadow:0 0 0 3px rgb(194 24 91 / 18%); animation:number-nudge .5s ease-out; }
+.delivery-number-missing { margin:.5rem 0 0; padding:.55rem .75rem; border-left:3px solid #c2185b; background:rgb(194 24 91 / 8%); color:#7a0f3a; font-size:.8rem; line-height:1.4; }
+@keyframes number-nudge { 25% { transform:translateX(-3px); } 75% { transform:translateX(3px); } }
+@media (prefers-reduced-motion:reduce) { .delivery-address-fields label.is-missing input { animation:none; } }

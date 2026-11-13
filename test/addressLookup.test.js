@@ -123,3 +123,10 @@ test('al mover el pin toma la calle y el número del punto, si existen', async (
   assert.deepEqual(addressFromReverse([{ properties: { type: 'street', name: 'Río Loa' } }]), { street: 'Río Loa', number: '' });
   assert.equal(addressFromReverse([]), null);
 });
+
+test('con Google toma calle y número del punto en Concepción', async () => {
+  const { addressFromGoogle } = await import('../src/lib/addressLookup.js');
+  const part = (long_name, type) => ({ long_name, types: [type] });
+  assert.deepEqual(addressFromGoogle([{ address_components: [part('152', 'street_number'), part('Río Loa', 'route'), part('Concepción', 'locality')] }]), { street: 'Río Loa', number: '152' });
+  assert.equal(addressFromGoogle([{ address_components: [part('Colón', 'route'), part('Talcahuano', 'locality')] }]), null);
+});

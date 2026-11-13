@@ -159,7 +159,32 @@ export function addressFromReverse(features) {
   return best ? { street: street(best), number: String(best.housenumber || '').trim() } : null;
 }
 
-export async function reverseGeocode([lat, lng], { signal, fetcher = globalThis.fetch } = {}) {
+/** Google reverse result → { street, number } when it is a street address in Concepción. */
+export function addressFromGoogle(results = []) {
+  for (const result of results) {
+    const parts = result.address_components || [];
+    const get = type => parts.find(part => part.types.includes(type))?.long_name || '';
+    if (!get('route') || normalize(get('locality')) !== 'concepcion') continue;
+    return { street: get('route'), number: get('street_number') };
+  }
+  return null;
+}
+
+async function reverseWithGoogle([lat, lng]) {
+  const maps = await loadMaps();
+  const { results } = await new maps.Geocoder().geocode({ location: { lat, lng } });
+  const withNumber = results.filter(result => (result.address_components || []).some(part => part.types.includes('street_number')));
+  return addressFromGoogle(withNumber.length ? withNumber : results);
+}
+
+/**
+ * Street and number where the pin landed. Google (if a key is configured) knows house numbers
+ * across Concepción; OpenStreetMap only has them on some streets, so the number may come back empty.
+ */
+export async function reverseGeocode([lat, lng], { signal, fetcher = globalThis.fetch, googleKey = import.meta.env?.VITE_GOOGLE_MAPS_API_KEY } = {}) {
+  if (googleKey?.trim()) {
+    try { const found = await reverseWithGoogle([lat, lng]); if (found?.number) return found; } catch { /* fall back to OpenStreetMap */ }
+  }
   const endpoint = (import.meta.env?.VITE_PHOTON_URL?.trim() || 'https://photon.komoot.io/api/').replace(/\/api\/?$/, '/reverse');
   const url = new URL(endpoint);
   url.search = new URLSearchParams({ lat: String(lat), lon: String(lng), limit: '5', radius: '0.15' }).toString();

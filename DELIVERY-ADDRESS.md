@@ -9,6 +9,10 @@
 5. **El pedido guarda la ubicación:** la dirección queda como `Zona · calle · lat,lng`. En el admin, el detalle del pedido tiene el botón «ABRIR UBICACIÓN EN MAPS» para el repartidor.
 6. **El servidor valida la tarifa** leyendo la zona en la tabla `delivery_zones` (ya no hay tarifas fijas en el SQL), también para cupones de despacho gratis.
 
+## Número de casa al tocar el mapa
+
+Cuando el cliente toca el mapa o arrastra el pin, se llenan la calle y el número de ese punto. OpenStreetMap (gratis) no tiene los números de casa en gran parte de Nonguén; en ese caso se llena la calle y se le pide al cliente escribir el número (el pin y la zona se mantienen). Con una clave de Google (`VITE_GOOGLE_MAPS_API_KEY`, ver «Google opcional» más abajo) el número se completa solo en casi todo Concepción.
+
 ## Instalar (una vez)
 
 Ejecutar `supabase/delivery-polygons.sql` en Supabase › SQL Editor. Crea la tabla con las 7 zonas iniciales, la función de guardado del admin y reemplaza las tarifas fijas de las funciones de pedido. Se puede volver a ejecutar sin problema. Mientras no se ejecute, el sitio usa los mismos contornos iniciales desde el código y el admin avisa que falta instalarlo al guardar.

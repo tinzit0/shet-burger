@@ -28,11 +28,21 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
  const [lookupAttempt, setLookupAttempt] = useState(0);
  const paymentReady=mode==='pickup'||Boolean(form.zone && addressLookup.status === 'ready');
  const [addressFields, setAddressFields] = useState({ street: '', number: '', population: '' });
- const skipLookupRef = useRef(false), reverseRef = useRef(0);
+ const skipLookupRef = useRef(false), reverseRef = useRef(0), numberRef = useRef(null), pinnedRef = useRef(false);
+ const [numberMissing, setNumberMissing] = useState(false);
  const updateAddress = (field, value) => {
    reverseRef.current++;
+   if (field === 'number') setNumberMissing(false);
    const fields = { ...addressFields, [field]: value };
    setAddressFields(fields);
+   // House number typed after choosing the spot on the map: keep that pin and its zone.
+   if (field === 'number' && pinnedRef.current && form.point) {
+     skipLookupRef.current = true;
+     setForm(current => ({ ...current, address: composeDeliveryAddress(fields) }));
+     setError('');
+     return;
+   }
+   pinnedRef.current = false;
    setForm(current => ({ ...current, address: composeDeliveryAddress(fields), zone: '', point: null }));
    setAddressLookup({ status: 'idle', message: '', formattedAddress: '' });
    setError('');
@@ -62,6 +72,7 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
    return () => { cancelled = true; controller.abort(); window.clearTimeout(timer); };
  }, [form.address, addressFields.street, addressFields.number, mode, lookupAttempt, zones]);
  const pickPoint = point => {
+   pinnedRef.current = true;
    const zone = zoneForPoint(point, zones);
    setForm(current => ({ ...current, point, zone: zone?.id || '' }));
    setAddressLookup(zone ? { status: 'ready', message: '', formattedAddress: form.address } : { status: 'unavailable', message: DELIVERY_UNAVAILABLE_MESSAGE, formattedAddress: '' });
@@ -70,6 +81,9 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
    const request = ++reverseRef.current;
    reverseGeocode(point).then(found => {
      if (!found || request !== reverseRef.current) return;
+     const sameStreetNow = found.street.trim().toLowerCase() === addressFields.street.trim().toLowerCase();
+     // The map has no house number here: ask for it instead of leaving it blank.
+     if (!found.number && !(sameStreetNow && addressFields.number.trim())) { setNumberMissing(true); window.setTimeout(() => numberRef.current?.focus({ preventScroll: false }), 50); } else setNumberMissing(false);
      setAddressFields(current => {
        // Same street without a mapped number: keep what they typed. Another street: the old number no longer applies.
        const sameStreet = found.street.trim().toLowerCase() === current.street.trim().toLowerCase();
@@ -96,8 +110,9 @@ export default function CartDrawer({zones=DELIVERY_ZONES,cart,onClose,onChange,o
    {mode==='delivery'?<>
      <div className="delivery-address-fields">
        <label htmlFor="order-delivery-street">Calle<input id="order-delivery-street" aria-describedby="delivery-address-help" required maxLength="80" autoComplete="address-line1" placeholder="Ej.: Río Itata" value={addressFields.street} onChange={event=>updateAddress('street',event.target.value)}/></label>
-       <label htmlFor="order-delivery-number">Número<input id="order-delivery-number" required maxLength="10" placeholder="50" pattern=".*[0-9].*" value={addressFields.number} onChange={event=>updateAddress('number',event.target.value)}/></label>
+       <label htmlFor="order-delivery-number" className={numberMissing?'is-missing':''}>Número<input ref={numberRef} id="order-delivery-number" aria-invalid={numberMissing||undefined} aria-describedby={numberMissing?'delivery-number-missing':undefined} required maxLength="10" placeholder={numberMissing?'N° casa':'50'} pattern=".*[0-9].*" value={addressFields.number} onChange={event=>updateAddress('number',event.target.value)}/></label>
      </div>
+     {numberMissing&&<p id="delivery-number-missing" className="delivery-number-missing" role="status">Ya marcamos tu calle en el mapa. <b>Escribe el número de tu casa</b> para que el repartidor la encuentre.</p>}
      <small id="delivery-address-help">Escribe tu calle y número; no hace falta la población. La ubicamos en el mapa y el despacho se cobra según la zona donde cae tu casa. Si el pin no quedó justo, tócalo o arrástralo.</small>
      <Suspense fallback={<div className="delivery-map delivery-map--loading">Cargando mapa…</div>}><DeliveryMap zones={zones} point={form.point} activeZoneId={form.zone} onPick={pickPoint}/></Suspense>
      <details className="delivery-coverage"><summary>Consultar zonas de reparto y tarifas</summary><ul>{zones.map(zone=><li key={zone.id}><span>{zone.label}</span><b>{money(zone.fee)}</b></li>)}</ul></details>

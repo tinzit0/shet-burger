@@ -19,3 +19,6 @@ export const directionsUrl = location.configured
   : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(business.pickupAddress)}`;
 
 export const pickupMapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(business.pickupAddress)}&output=embed`;
+
+// Hora diaria de apertura que muestran los avisos de local cerrado (formato 24 h).
+export const openingTime = import.meta.env.VITE_OPENING_TIME || '18:00';

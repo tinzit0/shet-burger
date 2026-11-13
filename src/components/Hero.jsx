@@ -24,6 +24,5 @@ export default function Hero({ content }) {
         </div>
       </div>
     </div>
-    <a className="hero__cue" href="#poster-title"><span>DESLIZA</span><i aria-hidden="true"/></a>
   </section>;
 }

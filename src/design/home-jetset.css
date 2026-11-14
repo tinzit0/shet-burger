@@ -2,7 +2,7 @@
 
 /* ── Scroll marquee: black band, giant words drifting with the scroll ── */
 .scroll-marquee { overflow:hidden; padding:clamp(1.5rem,3vw,2.75rem) 0; background:var(--negro); color:var(--rosa); }
-.scroll-marquee__row { display:flex; width:max-content; gap:.35em; font:400 clamp(3.25rem,9vw,9.5rem)/.95 var(--font-street); letter-spacing:.01em; white-space:nowrap; translate:calc(-30% + var(--scroll-progress, 0) * var(--dir, 1) * 28%) 0; transition:translate .25s ease-out; will-change:translate; }
+.scroll-marquee__row { display:flex; width:max-content; gap:.35em; font:400 clamp(3.25rem,9vw,9.5rem)/.95 var(--font-street); letter-spacing:.01em; white-space:nowrap; translate:calc(-24% + var(--scroll-progress, 0) * var(--dir, 1) * 12%) 0; transition:translate .9s cubic-bezier(.22,.61,.36,1); will-change:translate; }
 .scroll-marquee__row span { display:inline-flex; align-items:center; gap:.35em; }
 .scroll-marquee__row.is-outline { color:transparent; -webkit-text-stroke:max(1.5px,.018em) var(--rosa); }
 .scroll-marquee__star { width:.42em; height:.42em; color:var(--magenta); }

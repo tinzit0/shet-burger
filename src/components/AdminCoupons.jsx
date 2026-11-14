@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
-import { loadCoupons, saveCoupon } from '../lib/coupons';
+import { loadCoupons, saveCoupon, deleteCoupon } from '../lib/coupons';
 import { couponLabel, couponConditions, promotionTypes } from '../lib/couponRules';
 import { categories } from '../data';
 
 const empty = { code: '', title: '', description: '', discount_type: 'percent', value: '', min_subtotal: 0, min_quantity: 2, buy_quantity: 2, pay_quantity: 1, scope: 'all', target: '', expires_at: '', active: true, published: true };
+// Convierte un cupón guardado de vuelta al formato del formulario para editarlo.
+const localInput = iso => { if (!iso) return ''; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
+export const couponToForm = (coupon, products = []) => {
+  const ids = coupon.product_ids || [], label = coupon.scope_label || '';
+  const scope = !ids.length ? 'all' : label.startsWith('Producto') ? 'product' : 'category';
+  const target = scope === 'product' ? ids[0] : scope === 'category' ? (products.find(p => p.id === ids[0])?.category || '') : '';
+  return { ...empty, code: coupon.code || '', title: coupon.title || '', description: coupon.description || '', discount_type: coupon.discount_type, value: ['percent','fixed','quantity_percent'].includes(coupon.discount_type) ? String(coupon.value ?? '') : '', min_subtotal: coupon.min_subtotal ?? 0, min_quantity: coupon.min_quantity ?? 2, buy_quantity: coupon.buy_quantity ?? 2, pay_quantity: coupon.pay_quantity ?? 1, scope, target, expires_at: localInput(coupon.expires_at), active: coupon.active !== false, published: coupon.published !== false };
+};
 export default function AdminCoupons({ token, products = [] }) {
-  const [coupons, setCoupons] = useState([]), [form, setForm] = useState(empty), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
+  const [coupons, setCoupons] = useState([]), [form, setForm] = useState(empty), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState(''), [view, setView] = useState('create'), [confirmId, setConfirmId] = useState(null), [editingId, setEditingId] = useState(null);
   const refresh = async () => { const result = await loadCoupons(token, true); if (result.error) throw result.error; setCoupons(result.data || []); };
   useEffect(() => { refresh().catch(error => setError(error.message)); }, [token]);
   const persist = async coupon => {
@@ -14,6 +22,16 @@ export default function AdminCoupons({ token, products = [] }) {
     catch (error) { setError(error.code === '23505' ? 'Ya existe un cupón con ese código.' : error.message); return false; }
     finally { setBusy(false); }
   };
+  const remove = async coupon => {
+    if (confirmId !== coupon.id) { setConfirmId(coupon.id); return; }
+    setBusy(true); setError(''); setNotice(''); setConfirmId(null);
+    try { const result = await deleteCoupon(coupon.id, token); if (result.error) throw result.error; await refresh(); setNotice(`Cupón ${coupon.code} eliminado. Ya no se puede usar en la página.`); }
+    catch (error) { setError(error.code === 'PGRST202' ? 'Falta ejecutar supabase/coupon-delete.sql en Supabase.' : error.message); }
+    finally { setBusy(false); }
+  };
+  const switchView = next => { setView(next); setError(''); setNotice(''); setConfirmId(null); if (editingId) { setEditingId(null); setForm(empty); } };
+  const startEdit = coupon => { setForm(couponToForm(coupon, products)); setEditingId(coupon.id); setView('create'); setError(''); setNotice(''); setConfirmId(null); window.scrollTo({ top: document.querySelector('.admin-coupons')?.offsetTop || 0 }); };
+  const cancelEdit = () => { setEditingId(null); setForm(empty); setView('list'); setError(''); };
   const needsValue = ['percent','fixed','quantity_percent'].includes(form.discount_type);
   const submit = async event => {
     event.preventDefault();
@@ -21,11 +39,13 @@ export default function AdminCoupons({ token, products = [] }) {
     if (form.discount_type !== 'free_delivery' && form.scope !== 'all' && !selected.length) { setError('Elige productos participantes.'); return; }
     if (form.discount_type === 'buy_x_pay_y' && Number(form.pay_quantity) >= Number(form.buy_quantity)) { setError('La cantidad a pagar debe ser menor que la cantidad que lleva el cliente.'); return; }
     const scope_label = form.scope === 'category' ? `Categoría: ${categories.find(c => c.id === form.target)?.label || form.target} (productos seleccionados al crear la promoción).` : form.scope === 'product' ? `Producto: ${selected[0]?.name}.` : 'Todos los productos.';
-    if (await persist({ ...form, product_ids: form.discount_type === 'free_delivery' || form.scope === 'all' ? [] : selected.map(p => p.id), scope_label: form.discount_type === 'free_delivery' ? 'Despacho.' : scope_label, value: needsValue ? Number(form.value) : 1, min_subtotal: Number(form.min_subtotal), min_quantity: Number(form.min_quantity), buy_quantity: Number(form.buy_quantity), pay_quantity: Number(form.pay_quantity), expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null })) setForm(empty);
+    if (await persist({ ...form, ...(editingId ? { id: editingId, edit: true } : {}), product_ids: form.discount_type === 'free_delivery' || form.scope === 'all' ? [] : selected.map(p => p.id), scope_label: form.discount_type === 'free_delivery' ? 'Despacho.' : scope_label, value: needsValue ? Number(form.value) : 1, min_subtotal: Number(form.min_subtotal), min_quantity: Number(form.min_quantity), buy_quantity: Number(form.buy_quantity), pay_quantity: Number(form.pay_quantity), expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null })) { setForm(empty); setEditingId(null); setView('list'); }
   };
-  return <section className="admin-coupons"><div className="admin-section-title"><h2>Cupones y promociones</h2></div><p>Elige el beneficio, los productos participantes y sus condiciones. El cliente lo activa con el código en el carrito.</p>
+  return <section className="admin-coupons"><div className="admin-section-title"><h2>Cupones y promociones</h2></div>
+    <nav className="admin-tabs coupon-subtabs"><button type="button" className={view==='create'?'active':''} onClick={() => switchView('create')}>{editingId ? 'EDITAR PROMOCIÓN' : 'CREAR PROMOCIÓN'}</button><button type="button" className={view==='list'?'active':''} onClick={() => switchView('list')}>CUPONES CREADOS <b>{coupons.length}</b></button></nav>
+    {view==='create'&&<>{editingId?<p className="coupon-editing">Editando <strong>{coupons.find(c => c.id === editingId)?.code}</strong>. Los pedidos ya hechos mantienen el descuento con que se compraron.</p>:<p>Elige el beneficio, los productos participantes y sus condiciones. El cliente lo activa con el código en el carrito.</p>}
     <form className="coupon-form" onSubmit={submit}>
-      <label>Código<input required pattern="[A-Za-z0-9_-]{3,30}" maxLength="30" placeholder="SHET10" value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}/><small>Entre 3 y 30 letras, números, guiones o guiones bajos.</small></label>
+      <label>Código<input required pattern="[A-Za-z0-9_\-]{3,30}" maxLength="30" placeholder="SHET10" value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}/><small>Entre 3 y 30 letras, números, guiones o guiones bajos.</small></label>
       <label>Nombre de la promoción<input maxLength="80" placeholder="Martes de 2×1" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}/></label>
       <label>Tipo de promoción<select value={form.discount_type} onChange={e => setForm({ ...form, discount_type: e.target.value, value: '' })}>{promotionTypes.map(([id,label]) => <option key={id} value={id}>{label}</option>)}</select></label>
       {needsValue&&<label>{form.discount_type === 'fixed' ? 'Descuento ($)' : 'Descuento (%)'}<input required type="number" min="1" max={form.discount_type === 'fixed' ? 1000000 : 100} step="1" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })}/></label>}
@@ -37,9 +57,9 @@ export default function AdminCoupons({ token, products = [] }) {
       <label>Vencimiento (opcional)<input type="datetime-local" value={form.expires_at} onChange={e => setForm({ ...form, expires_at: e.target.value })}/></label>
       <label className="coupon-check"><input type="checkbox" checked={form.published} onChange={e => setForm({ ...form, published: e.target.checked })}/>Mostrar en la página de pedidos</label>
       <div className="promotion-preview"><strong>Vista previa: {form.title||'Tu promoción'}</strong><span>{couponLabel({...form,value:form.value||0})}</span><small>Un código por pedido. {form.discount_type==='free_delivery'?'Solo delivery dentro de cobertura.':'No incluye despacho.'}</small></div>
-      <button className="admin-submit" disabled={busy} type="submit">{busy ? 'GUARDANDO…' : 'CREAR PROMOCIÓN'}</button>
-    </form>
+      <div className="coupon-form-actions"><button className="admin-submit" disabled={busy} type="submit">{busy ? 'GUARDANDO…' : editingId ? 'GUARDAR CAMBIOS' : 'CREAR PROMOCIÓN'}</button>{editingId&&<button type="button" className="coupon-cancel-edit" disabled={busy} onClick={cancelEdit}>CANCELAR</button>}</div>
+    </form></>}
     {error && <p className="admin-error" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
-    <div className="coupon-list">{coupons.map(coupon => <article key={coupon.id}><div><strong>{coupon.title||coupon.code}</strong><b>{coupon.code} · {couponLabel(coupon)}</b><span>Mínimo ${Number(coupon.min_subtotal).toLocaleString('es-CL')} · {coupon.active?'Activa':'Pausada'}</span><small>{couponConditions(coupon)}</small><small>{coupon.expires_at ? `Vence ${new Date(coupon.expires_at).toLocaleString('es-CL')}` : 'Sin vencimiento'} · {coupon.published ? 'Visible en la página' : 'Solo con código'}</small></div><button type="button" disabled={busy} onClick={() => persist({ ...coupon, active: !coupon.active })}>{coupon.active ? 'PAUSAR' : 'ACTIVAR'}</button></article>)}</div>{!coupons.length && !error && <p>Aún no hay promociones creadas.</p>}
+    {view==='list'&&<><div className="coupon-list">{coupons.map(coupon => <article key={coupon.id}><div><strong>{coupon.title||coupon.code}</strong><b>{coupon.code} · {couponLabel(coupon)}</b><span>Mínimo ${Number(coupon.min_subtotal).toLocaleString('es-CL')} · {coupon.active?'Activa':'Pausada'}</span><small>{couponConditions(coupon)}</small><small>{coupon.expires_at ? `Vence ${new Date(coupon.expires_at).toLocaleString('es-CL')}` : 'Sin vencimiento'} · {coupon.published ? 'Visible en la página' : 'Solo con código'}</small></div><div className="coupon-actions"><button type="button" disabled={busy} onClick={() => startEdit(coupon)}>EDITAR</button><button type="button" disabled={busy} onClick={() => persist({ ...coupon, active: !coupon.active })}>{coupon.active ? 'PAUSAR' : 'ACTIVAR'}</button>{confirmId===coupon.id&&<button type="button" disabled={busy} onClick={() => setConfirmId(null)}>CANCELAR</button>}<button type="button" className={`coupon-delete${confirmId===coupon.id?' is-confirm':''}`} disabled={busy} onClick={() => remove(coupon)}>{confirmId===coupon.id ? 'SÍ, ELIMINAR' : 'ELIMINAR'}</button></div></article>)}</div>{!coupons.length && !error && <p className="coupon-empty">Aún no hay promociones creadas.</p>}</>}
   </section>;
 }

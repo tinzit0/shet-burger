@@ -17,6 +17,7 @@ import './design/footer.css';
 import './design/overlays.css';
 import './design/admin.css';
 import './design/coupons.css';
+import './design/admin-insights.css';
 import './design/menu-update.css';
 import './design/headings.css';
 import './design/store-closed.css';

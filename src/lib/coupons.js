@@ -10,3 +10,5 @@ export const findCoupon = code => supabase.from('coupons').select('*').eq('code'
 export const saveCoupon = (coupon, token = null) => supabase.rpc('admin_save_coupon', {
   p_coupon: { ...coupon, code: normalizeCouponCode(coupon.code) }, p_token: token,
 });
+
+export const deleteCoupon = (id, token = null) => supabase.rpc('admin_delete_coupon', { p_id: id, p_token: token });

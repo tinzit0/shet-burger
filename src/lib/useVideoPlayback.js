@@ -16,23 +16,37 @@ export default function useVideoPlayback({ src, lazy = false }) {
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let visible = false, nearby = !lazy, userPaused = false, manual = false, disposed = false;
+    let visible = false, nearby = !lazy, userPaused = false, manual = false, disposed = false, retry = 0;
     const allowed = () => manual || (!reduced.matches && !navigator.connection?.saveData);
     const shouldPlay = () => visible && allowed() && !userPaused && !document.hidden;
+    // iOS blocks autoplay in Low Power Mode and after some interruptions; the
+    // next tap anywhere on the page counts as a gesture and lets it start.
+    const onGesture = () => { removeGesture(); sync(); };
+    const addGesture = () => ['touchend', 'pointerup', 'keydown'].forEach(type => document.addEventListener(type, onGesture, { passive: true }));
+    const removeGesture = () => ['touchend', 'pointerup', 'keydown'].forEach(type => document.removeEventListener(type, onGesture));
     const sync = () => {
       if (disposed) return;
       if (nearby && allowed() && !video.getAttribute('src')) { video.src = src; video.load(); }
       if (shouldPlay() && video.getAttribute('src')) {
         // A pause can reject an earlier play promise with AbortError; it must
         // never overwrite the user's latest choice to play or pause.
-        if (video.paused) video.play().catch(() => {});
+        if (video.paused) video.play().catch(error => { if (error?.name === 'NotAllowedError') addGesture(); });
       } else video.pause();
+    };
+    // Safari can pause or stall a muted inline video by itself (scroll, memory,
+    // a lost loop); if it should still be playing, start it again shortly after.
+    const resume = () => {
+      clearTimeout(retry);
+      retry = setTimeout(() => { if (shouldPlay() && video.paused) sync(); }, 250);
     };
     const onPlay = () => {
       if (!shouldPlay()) { video.pause(); return; }
+      removeGesture();
       setPlaying(true);
     };
-    const onPause = () => setPlaying(false);
+    const onPause = () => { setPlaying(false); resume(); };
+    const onEnded = () => { video.currentTime = 0; resume(); };
+    const onPageShow = event => { if (event.persisted) sync(); };
     toggleRef.current = () => {
       if (!video.paused) { userPaused = true; video.pause(); return; }
       userPaused = false;
@@ -47,8 +61,12 @@ export default function useVideoPlayback({ src, lazy = false }) {
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
     video.addEventListener('loadeddata', sync);
+    video.addEventListener('canplay', sync);
+    video.addEventListener('ended', onEnded);
+    video.addEventListener('stalled', resume);
     reduced.addEventListener('change', sync);
     document.addEventListener('visibilitychange', sync);
+    window.addEventListener('pageshow', onPageShow);
     player.observe(video);
     loader.observe(video);
     sync();
@@ -61,8 +79,14 @@ export default function useVideoPlayback({ src, lazy = false }) {
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
       video.removeEventListener('loadeddata', sync);
+      video.removeEventListener('canplay', sync);
+      video.removeEventListener('ended', onEnded);
+      video.removeEventListener('stalled', resume);
       reduced.removeEventListener('change', sync);
       document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('pageshow', onPageShow);
+      clearTimeout(retry);
+      removeGesture();
       video.pause();
     };
   }, [src, lazy]);

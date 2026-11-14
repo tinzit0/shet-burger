@@ -26,17 +26,20 @@ export function TapeVideo() {
   </section>;
 }
 
-/** Giant words on black that slide sideways while the page scrolls (ScrollReveals sets --scroll-progress on [data-drift]). */
+/** Giant words on black running as an endless carousel; the two rows travel in opposite directions. */
 const marqueeRows = [
-  [['PIDE SHET', '#MUERDELATENTACIÓN', 'HECHA AL MOMENTO'], 1],
-  [['NONGUÉN', 'PINK BOX', 'FAT SMASH'], -1],
+  ['PIDE SHET', '#MUERDELATENTACIÓN', 'HECHA AL MOMENTO'],
+  ['NONGUÉN', 'PINK BOX', 'FAT SMASH'],
 ];
 const Star = () => <svg className="scroll-marquee__star" viewBox="0 0 24 24"><path d="M12 0c.6 6.4 5.6 11.4 12 12-6.4.6-11.4 5.6-12 12-.6-6.4-5.6-11.4-12-12C6.4 11.4 11.4 6.4 12 0z" fill="currentColor"/></svg>;
 
 export function ScrollMarquee({ rows = marqueeRows }) {
   return <div className="scroll-marquee" aria-hidden="true">
-    {rows.map(([phrases, dir], index) => <div key={index} className={`scroll-marquee__row${index % 2 ? ' is-outline' : ''}`} style={{ '--dir': dir }} data-drift>
-      {Array.from({ length: 6 }, (_, i) => <span key={i}>{phrases[i % phrases.length]}<Star/></span>)}
+    {rows.map((phrases, index) => <div key={index} className={`scroll-marquee__row${index % 2 ? ' is-outline is-reverse' : ''}`}>
+      {/* Two identical halves so translating by -50% loops without a seam. */}
+      {[0, 1].map(half => <div key={half} className="scroll-marquee__half">
+        {[...phrases, ...phrases].map((phrase, i) => <span key={i}>{phrase}<Star/></span>)}
+      </div>)}
     </div>)}
   </div>;
 }

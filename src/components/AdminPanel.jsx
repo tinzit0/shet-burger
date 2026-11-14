@@ -12,8 +12,9 @@ import AdminCoupons from './AdminCoupons';
 import { AdminKitchen, AdminSummary, useNow } from './AdminInsights';
 import { isLate, minutesSince } from '../lib/insights';
 
-// Aviso sonoro corto sin archivos de audio: dos tonos con Web Audio.
-const chime=()=>{try{const ctx=new (window.AudioContext||window.webkitAudioContext)();[880,1175].forEach((freq,i)=>{const osc=ctx.createOscillator(),gain=ctx.createGain(),t=ctx.currentTime+i*.18;osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.25,t+.02);gain.gain.exponentialRampToValueAtTime(.0001,t+.35);osc.connect(gain).connect(ctx.destination);osc.start(t);osc.stop(t+.4)});setTimeout(()=>ctx.close(),1200)}catch{}};
+// Aviso de pedido nuevo: timbre de tres notas ascendentes repetido 3 veces, onda cuadrada
+// (más penetrante que una sinusoidal) con compresor para que suene fuerte sin distorsionar.
+const chime=()=>{try{const ctx=new (window.AudioContext||window.webkitAudioContext)(),comp=ctx.createDynamicsCompressor(),master=ctx.createGain();comp.threshold.value=-10;comp.ratio.value=4;master.gain.value=.9;master.connect(comp).connect(ctx.destination);const notes=[988,1319,1760];for(let r=0;r<3;r++)notes.forEach((freq,i)=>{const t=ctx.currentTime+r*.75+i*.13,osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='square';osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.7,t+.01);gain.gain.exponentialRampToValueAtTime(.0001,t+.22);osc.connect(gain).connect(master);osc.start(t);osc.stop(t+.25)});if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]);setTimeout(()=>ctx.close(),3000)}catch{}};
 const readSound=()=>{try{return localStorage.getItem('shet-admin-sound')!=='off'}catch{return true}};
 
 const money=value=>`$${Number(value||0).toLocaleString('es-CL')}`;

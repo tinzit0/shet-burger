@@ -228,3 +228,19 @@
 .delivery-quote .delivery-quote__address { margin-block: 0.5rem; color: var(--color-ink); font-weight: 600; overflow-wrap: anywhere; }
 .delivery-quote__total { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #a9457530; font-size: 0.85rem; }
 .delivery-quote__total > strong { font-size: 1.25rem; white-space: nowrap; }
+
+/* Resumen del carrito más compacto en celular: deja más espacio para el mapa y los productos. */
+@media (max-width: 560px) {
+  .cart-drawer__footer { padding-top: 0.75rem; padding-bottom: calc(0.6rem + env(safe-area-inset-bottom)); }
+  .cart-price-breakdown > div { margin-bottom: 0.2rem; font-size: 0.78rem; }
+  .cart-price-breakdown > .cart-total { margin-top: 0.45rem; padding-top: 0.45rem; font-size: 0.9rem; }
+  .cart-total strong { font-size: 1.2rem; }
+  .cart-delivery-hint { margin: 0.25rem 0 0.6rem; font-size: 0.68rem; line-height: 1.35; }
+  .cart-main-action { min-height: 2.9rem; }
+  .cart-clear { min-height: 2.25rem; margin-top: 0.15rem; }
+}
+/* Etapas del seguimiento: en celular cada nombre se queda en su columna. */
+@media (max-width: 560px) {
+  .tracker-line { gap: 0.25rem; }
+  .tracker-stage p { margin: 0.5rem 0 0; font-size: 0.66rem; overflow-wrap: anywhere; hyphens: auto; }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Clock3, Download, MessageCircle, TrendingDown, TrendingUp } from 'lucide-react';
-import { ORDER_STAGES, getOrderStage } from '../lib/orderStatus';
+import { ORDER_STAGES, getOrderStage, orderStatusLabel, stageLabel } from '../lib/orderStatus';
 import { couponPerformance, customerInsights, daySummary, hourlyOrders, kitchenQueue, ordersCsv, productRanking, whatsappLink } from '../lib/insights';
 
 const money = value => `$${Math.round(Number(value || 0)).toLocaleString('es-CL')}`;
@@ -88,7 +88,7 @@ export function AdminKitchen({ orders, onAdvance, busyId }) {
           <header><strong>#{order.order_number || order.id}</strong><span className="kitchen-timer"><Clock3/> {order.minutes} min</span></header>
           <p>{order.customer?.name || order.customer_name || 'Cliente'} · {(order.mode || order.fulfillment) === 'delivery' ? 'Delivery' : 'Retiro'}</p>
           <ul>{(order.items || []).map((item, i) => <li key={i}><b>{item.quantity}×</b> {item.product?.name || item.name}{item.variant ? ` (${item.variant})` : ''}{item.note && <small>Nota: {item.note}</small>}</li>)}</ul>
-          <footer><em>{order.status}</em>{next && <button type="button" disabled={busyId === order.id} onClick={() => onAdvance(order, next)}>{busyId === order.id ? 'GUARDANDO…' : `→ ${next.status.toUpperCase()}`}</button>}</footer>
+          <footer><em>{orderStatusLabel(order)}</em>{next && <button type="button" disabled={busyId === order.id} onClick={() => onAdvance(order, next)}>{busyId === order.id ? 'GUARDANDO…' : `→ ${stageLabel(next.stage, order).toUpperCase()}`}</button>}</footer>
         </article>;
       })}</div>
     </>}

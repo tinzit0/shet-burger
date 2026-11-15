@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getOrderStage, isFinishedOrder, ORDER_STAGES } from '../src/lib/orderStatus.js';
+import { getOrderStage, isFinishedOrder, ORDER_STAGES, orderStatusLabel, stageLabel } from '../src/lib/orderStatus.js';
 
 test('mantiene las cuatro fases en orden',()=>{
   assert.deepEqual(ORDER_STAGES.map(item=>item.stage),[0,1,2,3]);
@@ -13,4 +13,11 @@ test('el texto del estado prevalece frente a una fase antigua',()=>{
 test('solo considera terminados los pedidos entregados',()=>{
   assert.equal(isFinishedOrder({status:'En preparación'}),false);
   assert.equal(isFinishedOrder({status:'Pedido entregado'}),true);
+});
+
+test('el estado listo se muestra según delivery o retiro',()=>{
+  assert.equal(orderStatusLabel({status:'Listo para servir',fulfillment:'delivery'}),'Listo para reparto');
+  assert.equal(orderStatusLabel({status:'Listo para servir',mode:'pickup'}),'Listo para retiro');
+  assert.equal(orderStatusLabel({status:'Listo para servir'}),'Listo para retiro');
+  assert.equal(stageLabel(1,{fulfillment:'delivery'}),'En preparación');
 });

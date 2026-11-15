@@ -89,7 +89,7 @@ export default function ProductConfigurator({ product, products, initialVariant,
       {productImage(product) && <div className="product-configurator__photo"><BurgerPhoto product={product} sizes="(max-width: 620px) 100vw, 30rem"/></div>}
       <div className="product-configurator__content">
         <div className="product-configurator__scroll">
-        <span>ARMA TU PEDIDO</span>
+        <span>{storeOpen ? 'ARMA TU PEDIDO' : 'DETALLE · PEDIDOS CERRADOS'}</span>
         <h2 id="product-configurator-title">{product.name}</h2>
         <p>{product.description}</p>
         {product.prices.length > 1 && <fieldset className="product-configurator__variants">
@@ -126,7 +126,7 @@ export default function ProductConfigurator({ product, products, initialVariant,
         {storeOpen && !productAvailable && <p className="product-configurator__warning">Este producto está agotado por el momento.</p>}
         {unavailableCustomization && <p className="product-configurator__warning" role="alert">Una selección se agotó. Retira el adicional o elige otro producto.</p>}
         {product.category === 'bebidas' && <QuantityControl label={product.name} value={quantity} min={1} max={25} disabled={!storeOpen} onChange={setQuantity}/>}
-        <label className="product-configurator__note"><span><MessageSquareText/> Instrucciones especiales <small>Opcional</small></span><textarea maxLength="240" rows="3" value={note} onChange={event => setNote(event.target.value)} placeholder="Ej: sin pepinillos, sin cebolla o salsa aparte"/><small>{note.length}/240</small></label>
+        {storeOpen && <label className="product-configurator__note"><span><MessageSquareText/> Instrucciones especiales <small>Opcional</small></span><textarea maxLength="240" rows="3" value={note} onChange={event => setNote(event.target.value)} placeholder="Ej: sin pepinillos, sin cebolla o salsa aparte"/><small>{note.length}/240</small></label>}
         </div>
         <button className="product-configurator__submit" type="submit" disabled={!storeOpen || !productAvailable || unavailableCustomization || (product.burgerChoiceCount > 0 && !availableBurgers.length) || (drinkChoiceCount > 0 && !availableDrinks.length) || (product.optionGroup && !optionValue)}><span>{!storeOpen ? 'TIENDA CERRADA' : !productAvailable ? 'PRODUCTO AGOTADO' : drinkChoiceCount > 0 && !availableDrinks.length ? 'SIN BEBIDAS DISPONIBLES' : product.optionGroup && !optionValue ? `ELIGE ${product.optionGroup.label.toUpperCase()}` : 'AGREGAR AL PEDIDO'}</span><b>{money(total * quantity)}</b><Check/></button>
       </div>

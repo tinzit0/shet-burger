@@ -89,11 +89,16 @@
 .admin-item-detail > small { display: block; margin-top: 0.35rem; color: var(--color-muted-dark); line-height: 1.4; }
 .admin-item-detail > small strong { color: var(--color-pink-deep); }
 .admin-modal__total strong { font: 700 1.5rem var(--font-display); }
-.admin-status { margin-top: 1rem; padding: 0.75rem; background: white; font-size: var(--text-sm); }
-.admin-status-actions { display: grid; gap: 0.4rem; margin-top: 1rem; }
-.admin-status-actions > span { font-size: var(--text-xs); font-weight: 700; }
-.admin-status-actions button, .admin-delete-order { min-height: 2.75rem; border: 1px solid var(--color-line-dark); background: white; font-size: var(--text-xs); cursor: pointer; }
-.admin-status-actions button.active { background: var(--color-pink); }
+.admin-status { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.25rem; padding: 0.85rem 1rem; border: 1px solid var(--color-line-dark); border-left: 3px solid var(--color-pink-deep); background: white; }
+.admin-status > svg { flex: none; width: 1.15rem; height: 1.15rem; color: var(--color-pink-deep); }
+.admin-status > span { display: grid; gap: 0.15rem; font-size: var(--text-sm); font-weight: 700; line-height: 1.2; }
+.admin-status small { color: var(--color-muted-dark); font-size: 0.65rem; letter-spacing: 0.1em; }
+.admin-status-actions { display: grid; gap: 0.4rem; margin-top: 1.25rem; }
+.admin-status-actions > span { margin-bottom: 0.2rem; font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; }
+.admin-status-actions button, .admin-delete-order { min-height: 2.75rem; padding: 0 1rem; border: 1px solid var(--color-line-dark); background: white; color: var(--color-ink); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em; cursor: pointer; transition: background var(--duration-fast), border-color var(--duration-fast); }
+.admin-status-actions button:hover:not(:disabled):not(.active) { border-color: var(--color-ink); }
+.admin-status-actions button.active { border-color: var(--color-pink-deep); background: var(--color-pink); }
+.admin-status-actions button:disabled, .admin-delete-order:disabled { cursor: progress; opacity: 0.6; }
 .admin-delete-order { width: 100%; margin-top: 1rem; color: #8e2538; }
 .admin-error { color: #8e2538; font-size: var(--text-sm); }
 
@@ -240,3 +245,12 @@
   .admin-catalog-groups article > div:last-child { grid-column: 1 / -1; }
   .admin-catalog-groups article button { flex: 1; justify-content: center; }
 }
+
+/* Order detail modal: one line per contact fact, consistent spacing. */
+.admin-modal .admin-mode { display: block; margin-top: 0.25rem; line-height: 1.5; }
+.admin-modal .admin-customer-phone { display: flex; width: fit-content; min-height: 2.25rem; margin-top: 0.35rem; letter-spacing: 0.06em; }
+.admin-modal .admin-customer-phone svg { flex: none; width: 1rem; height: 1rem; }
+.admin-modal .admin-receipt-row { margin-top: 1rem; border: 1px solid var(--color-line-dark); }
+.admin-modal .admin-error { margin: 0.75rem 0 0; }
+.admin-modal .admin-mode { text-transform: uppercase; }
+.admin-modal__total { align-items: baseline; }

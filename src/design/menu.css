@@ -247,3 +247,7 @@
   .menu-reference .menu-item-add > svg { display: block; width: 0.9rem; height: 0.9rem; }
   .menu-reference .menu-item--text { grid-template-columns: minmax(0, 1fr) 2.7rem; height: auto; min-height: 6rem; }
 }
+
+/* Closed store: the card stays fully visible so people can browse; only ordering is off. */
+.menu-item.is-closed .menu-item-add--view { border: 1px solid rgb(240 155 196 / 55%); background: transparent; color: var(--color-pink); }
+.menu-item.is-closed .menu-item-add--view:hover { background: var(--color-pink); color: var(--color-ink); }

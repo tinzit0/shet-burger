@@ -170,5 +170,3 @@
 
 /* Dark corner behind the #MUERDE LA TENTACIÓN caption so it reads on bright frames */
 .tape-video__media::after { content:''; position:absolute; z-index:1; inset:auto 0 0 auto; width:85%; height:55%; background:radial-gradient(ellipse at 100% 100%,rgb(0 0 0 / 62%),transparent 70%); pointer-events:none; }
-/* DELIVERY / PARA LLEVAR cards: short white-background clips that sit like the GIF stickers. */
-.crew__card .crew__clip { display:block; width:100%; height:100%; object-fit:contain; }

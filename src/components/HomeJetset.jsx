@@ -2,7 +2,6 @@ import { ArrowUpRight } from 'lucide-react';
 import Asterisk from './Asterisk';
 import planchaVideo from '../../assets/videos shet o fotos/video1.mp4';
 import useVideoPlayback from '../lib/useVideoPlayback';
-import LoopClip from './LoopClip';
 
 /** Muted, looping background video that only loads near the viewport. */
 export function AutoVideo({ src, poster, className = '', label }) {
@@ -50,20 +49,18 @@ const crew = [
   { src: '/assets/caricaturas/abrazo.gif', still: '/assets/caricaturas/abrazo-still.png', name: 'BFF', alt: 'Lata y hamburguesa SHET abrazándose' },
   { src: '/assets/caricaturas/tocino.gif', still: '/assets/caricaturas/tocino-still.png', name: 'BACON LOVERS', alt: 'Hamburguesa SHET comiendo tocino' },
   { src: '/assets/caricaturas/pepinillo.gif', still: '/assets/caricaturas/pepinillo-still.png', name: 'AJÍ PEPINILLO', alt: 'Hamburguesa SHET se come un ají y arde por lo picante' },
-  { clip: 'delivery', name: 'DELIVERY', alt: 'Auto de reparto SHET con la hamburguesa al volante y el tocino de copiloto, avanzando por la calle' },
-  { clip: 'pickup', name: 'PARA LLEVAR', alt: 'Hamburguesa SHET con una hamburguesa en la mano y la caja SHET Burger para llevar' },
   { src: '/assets/caricaturas/cool.gif', still: '/assets/caricaturas/cool-still.png', name: 'LOS COOL', alt: 'Hamburguesa y tocino SHET con lentes de sol y papas fritas' },
   { src: '/assets/caricaturas/playa.gif', still: '/assets/caricaturas/playa-still.png', name: 'BACON BEACH', alt: 'Tocino SHET descansando bajo un quitasol' },
 ];
-// Two rounds of seven fill wide screens while keeping the scroll speed the same as before.
-const loop = [0, 1].flatMap(round => crew.map(member => ({ ...member, key: `${member.name}-${round}`, hidden: round > 0 })));
+// Three rounds of five fill wide screens without a gap at the loop seam.
+const loop = [0, 1, 2].flatMap(round => crew.map(member => ({ ...member, key: `${member.name}-${round}`, hidden: round > 0 })));
 
 function CrewCard({ member }) {
   return <li className="crew__card" aria-hidden={member.hidden || undefined}>
-    {member.clip ? <LoopClip clip={member.clip} className="crew__clip" label={member.hidden ? undefined : member.alt}/> : <picture>
+    <picture>
       <source media="(prefers-reduced-motion: reduce)" srcSet={member.still}/>
       <img src={member.src} alt={member.hidden ? '' : member.alt} width="160" height="160" loading="lazy" decoding="async"/>
-    </picture>}
+    </picture>
     <span>{member.name}</span>
   </li>;
 }

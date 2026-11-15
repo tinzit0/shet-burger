@@ -2,6 +2,7 @@ import { ArrowUpRight } from 'lucide-react';
 import Asterisk from './Asterisk';
 import planchaVideo from '../../assets/videos shet o fotos/video1.mp4';
 import useVideoPlayback from '../lib/useVideoPlayback';
+import CarClip, { CAR_POSTER } from './CarClip';
 
 /** Muted, looping background video that only loads near the viewport. */
 export function AutoVideo({ src, poster, className = '', label }) {
@@ -49,7 +50,7 @@ const crew = [
   { src: '/assets/caricaturas/abrazo.gif', still: '/assets/caricaturas/abrazo-still.png', name: 'BFF', alt: 'Lata y hamburguesa SHET abrazándose' },
   { src: '/assets/caricaturas/tocino.gif', still: '/assets/caricaturas/tocino-still.png', name: 'BACON LOVERS', alt: 'Hamburguesa SHET comiendo tocino' },
   { src: '/assets/caricaturas/pepinillo.gif', still: '/assets/caricaturas/pepinillo-still.png', name: 'AJÍ PEPINILLO', alt: 'Hamburguesa SHET se come un ají y arde por lo picante' },
-  { src: '/assets/caricaturas/auto.gif', still: '/assets/caricaturas/auto-still.png', name: 'DELIVERY', alt: 'Auto de reparto SHET con la hamburguesa al volante y el tocino de copiloto, avanzando por la calle' },
+  { video: true, still: CAR_POSTER, name: 'DELIVERY', alt: 'Auto de reparto SHET con la hamburguesa al volante y el tocino de copiloto, avanzando por la calle' },
   { src: '/assets/caricaturas/bolsa.gif', still: '/assets/caricaturas/bolsa-still.png', name: 'PARA LLEVAR', alt: 'Hamburguesa SHET saltando con su bolsa de pedido' },
   { src: '/assets/caricaturas/cool.gif', still: '/assets/caricaturas/cool-still.png', name: 'LOS COOL', alt: 'Hamburguesa y tocino SHET con lentes de sol y papas fritas' },
   { src: '/assets/caricaturas/playa.gif', still: '/assets/caricaturas/playa-still.png', name: 'BACON BEACH', alt: 'Tocino SHET descansando bajo un quitasol' },
@@ -59,10 +60,10 @@ const loop = [0, 1].flatMap(round => crew.map(member => ({ ...member, key: `${me
 
 function CrewCard({ member }) {
   return <li className="crew__card" aria-hidden={member.hidden || undefined}>
-    <picture>
+    {member.video ? <CarClip className="crew__clip" label={member.hidden ? undefined : member.alt}/> : <picture>
       <source media="(prefers-reduced-motion: reduce)" srcSet={member.still}/>
       <img src={member.src} alt={member.hidden ? '' : member.alt} width="160" height="160" loading="lazy" decoding="async"/>
-    </picture>
+    </picture>}
     <span>{member.name}</span>
   </li>;
 }

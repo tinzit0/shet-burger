@@ -99,16 +99,18 @@ export default function App(){
  useEffect(()=>{
   if(!path.startsWith('/admin')||(!adminAllowed&&!demoAdmin))return;
   let active=true;
-  const refresh=async()=>{const{loadOrders}=await ordersApi();const{data}=await loadOrders();if(active&&data)setOrders(data)};
+  const refresh=async()=>{const{loadOrders}=await ordersApi();const{data}=await loadOrders({demo:demoAdmin});if(active&&data)setOrders(data)};
   refresh();
-  let unsubscribe=()=>{};ordersApi().then(({subscribeToOrders})=>{if(active)unsubscribe=subscribeToOrders(refresh)});
-  const refreshTimer=window.setInterval(refresh,8000);
+  let unsubscribe=()=>{};ordersApi().then(({subscribeToOrders})=>{if(active)unsubscribe=subscribeToOrders(refresh,{demo:demoAdmin})});
+  const refreshTimer=window.setInterval(refresh,5000);
+  const onVisible=()=>{if(document.visibilityState==='visible')refresh()};
+  document.addEventListener('visibilitychange',onVisible);
   const onFocus=()=>refresh();
   window.addEventListener('focus',onFocus);
-  return()=>{active=false;unsubscribe();window.clearInterval(refreshTimer);window.removeEventListener('focus',onFocus)};
+  return()=>{active=false;unsubscribe();window.clearInterval(refreshTimer);window.removeEventListener('focus',onFocus);document.removeEventListener('visibilitychange',onVisible)};
  },[adminAllowed,demoAdmin,path]);
- const statusUpdate=async(id,status,stage)=>{const previous=orders;setOrders(items=>items.map(order=>order.id===id?{...order,status,stage}:order));const{updateStoredOrder}=await ordersApi();const{error}=await updateStoredOrder(id,status,stage);if(error){setOrders(previous);window.alert(`No se pudo actualizar el pedido: ${error.message}`);return false}return true};
- const deleteOrder=async id=>{const previous=orders,previousCustomer=customerOrders,isSame=order=>order.id!==id&&order.order_number!==id;setOrders(items=>items.filter(isSame));setCustomerOrders(items=>items.filter(isSame));if(latestOrder&&(latestOrder.id===id||latestOrder.order_number===id))setTrackOpen(false);const{deleteStoredOrder}=await ordersApi();const{error}=await deleteStoredOrder(id);if(error){setOrders(previous);setCustomerOrders(previousCustomer);window.alert(`No se pudo eliminar el pedido: ${error.message}`);return false}return true};
+ const statusUpdate=async(id,status,stage)=>{const previous=orders;setOrders(items=>items.map(order=>order.id===id?{...order,status,stage}:order));const{updateStoredOrder}=await ordersApi();const{error}=await updateStoredOrder(id,status,stage,{demo:demoAdmin});if(error){setOrders(previous);window.alert(`No se pudo actualizar el pedido: ${error.message}`);return false}return true};
+ const deleteOrder=async id=>{const previous=orders,previousCustomer=customerOrders,isSame=order=>order.id!==id&&order.order_number!==id;setOrders(items=>items.filter(isSame));setCustomerOrders(items=>items.filter(isSame));if(latestOrder&&(latestOrder.id===id||latestOrder.order_number===id))setTrackOpen(false);const{deleteStoredOrder}=await ordersApi();const{error}=await deleteStoredOrder(id,{demo:demoAdmin});if(error){setOrders(previous);setCustomerOrders(previousCustomer);window.alert(`No se pudo eliminar el pedido: ${error.message}`);return false}return true};
  const toggleStore=async()=>{const next=!storeOpen;setStoreOpen(next);localStorage.setItem('shet-store-open',String(next));const{updateStoreOpen}=await storeApi();const{error}=await updateStoreOpen(next,demoToken||null);if(error){setStoreOpen(!next);localStorage.setItem('shet-store-open',String(!next));window.alert(`No se pudo cambiar el estado global de la tienda: ${error.message}`);return false}return {ok:true,synced:true}};
  const toggleStock=async id=>{const next=stock[id]===false;const nextStock={...stock,[id]:next};setStock(nextStock);localStorage.setItem('shet-demo-stock',JSON.stringify(nextStock));const{updateProductAvailability}=await storeApi();const{error}=await updateProductAvailability(id,next,demoToken||null);if(error){const previous={...nextStock,[id]:!next};setStock(previous);localStorage.setItem('shet-demo-stock',JSON.stringify(previous));window.alert(`No se pudo cambiar la disponibilidad global: ${error.message}`);return false}return {ok:true,synced:true}};
  const openAccount=()=>{if(user){setAccountOpen(true);return}setAuthOpen(true)};

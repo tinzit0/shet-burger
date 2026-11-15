@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { anonSupabase, supabase } from './supabase';
 import { getOrderStage } from './orderStatus';
 
 export const normalizeOrder = order => ({
@@ -43,10 +43,15 @@ export async function getReceiptUrl(path) {
   return data?.signedUrl || null;
 }
 
-export async function loadOrders() {
-  if (!supabase) return { data: null, error: new Error('Supabase no configurado') };
-  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-  return { data: data?.map(normalizeOrder) || [], error };
+// Panel requests: the password admin always goes through the session-less client (see supabase.js).
+const adminDb = demo => (demo && anonSupabase) || supabase;
+
+export async function loadOrders({ demo = false } = {}) {
+  const db = adminDb(demo);
+  if (!db) return { data: null, error: new Error('Supabase no configurado') };
+  const { data, error } = await db.from('orders').select('*').order('created_at', { ascending: false });
+  // On error keep what is on screen instead of wiping the list.
+  return { data: error ? null : (data || []).map(normalizeOrder), error };
 }
 
 export async function loadCustomerOrders(userId) {
@@ -69,37 +74,38 @@ export async function loadPublicOrder(orderNumber) {
   return { data: result.data ? normalizeOrder(result.data) : null, error: result.error };
 }
 
-export async function updateStoredOrder(id, status, stage) {
-  if (!supabase) return { error: new Error('Supabase no configurado') };
-  const key = /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id)) ? 'id' : 'order_number';
-  return supabase.from('orders').update({ status, stage }).eq(key, id);
+const orderKey = id => /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id)) ? 'id' : 'order_number';
+// RLS turns a forbidden update/delete into "0 rows, no error"; treat that as a failure so the
+// panel does not show a change that other devices will never see.
+const notSaved = () => new Error('El cambio no se guardó en el servidor. Vuelve a iniciar sesión en el panel.');
+
+export async function updateStoredOrder(id, status, stage, { demo = false } = {}) {
+  const db = adminDb(demo);
+  if (!db) return { error: new Error('Supabase no configurado') };
+  const { data, error } = await db.from('orders').update({ status, stage }).eq(orderKey(id), id).select('id');
+  return { data, error: error || (data?.length ? null : notSaved()) };
 }
 
-export async function deleteStoredOrder(id) {
-  if (!supabase) return { error: new Error('Supabase no configurado') };
-  const key = /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id)) ? 'id' : 'order_number';
-  const { data: order, error: readError } = await supabase.from('orders').select('receipt_path').eq(key, id).single();
-  if (readError) {
-    // Algunos esquemas demo no permiten leer la fila antes de borrarla.
-    // Intentamos igualmente eliminar el pedido para no dejarlo visible.
-    const deletion = await supabase.from('orders').delete().eq(key, id);
-    return deletion.error ? { error: readError } : deletion;
-  }
+export async function deleteStoredOrder(id, { demo = false } = {}) {
+  const db = adminDb(demo);
+  if (!db) return { error: new Error('Supabase no configurado') };
+  const key = orderKey(id);
+  const { data: order } = await db.from('orders').select('receipt_path').eq(key, id).maybeSingle();
   if (order?.receipt_path) {
-    // La eliminación del pedido no debe bloquearse si el rol demo no tiene
-    // permiso para borrar archivos del bucket. En producción, el admin sí
-    // podrá limpiarlo mediante la política de Storage correspondiente.
-    await supabase.storage.from('order-receipts').remove([order.receipt_path]);
+    // Best effort: a missing Storage permission must not block deleting the order.
+    await db.storage.from('order-receipts').remove([order.receipt_path]);
   }
-  return supabase.from('orders').delete().eq(key, id);
+  const { data, error } = await db.from('orders').delete().eq(key, id).select('id');
+  return { data, error: error || (data?.length ? null : notSaved()) };
 }
 
-export function subscribeToOrders(onChange) {
-  if (!supabase) return () => {};
+export function subscribeToOrders(onChange, { demo = false } = {}) {
+  const db = demo ? adminDb(true) : supabase;
+  if (!db) return () => {};
   const channelName = `shared-orders-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const channel = supabase
+  const channel = db
     .channel(channelName)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, onChange)
     .subscribe();
-  return () => { void supabase.removeChannel(channel); };
+  return () => { void db.removeChannel(channel); };
 }

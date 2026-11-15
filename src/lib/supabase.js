@@ -6,6 +6,11 @@ const url = import.meta.env.VITE_SUPABASE_URL || 'https://kxldsjodgfonrrlwjbws.s
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_J5s_2YqtASIYSqu2k00SGA_copdr39x';
 
 export const supabase = url && key ? createClient(url, key) : null;
+
+// The password-based admin panel reads and edits orders through the anon role's demo policies.
+// A separate client without session keeps that true even when the same browser is also signed in
+// as a Google customer (whose session would otherwise limit the panel to that customer's orders).
+export const anonSupabase = url && key ? createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'shet-admin-anon' } }) : null;
 export const supabaseConfigured = Boolean(supabase);
 
 export async function signInWithGoogle(redirectPath = '/') {

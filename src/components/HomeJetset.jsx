@@ -1,4 +1,3 @@
-import { ArrowUpRight } from 'lucide-react';
 import Asterisk from './Asterisk';
 import planchaVideo from '../../assets/videos shet o fotos/video1.mp4';
 import useVideoPlayback from '../lib/useVideoPlayback';
@@ -44,10 +43,11 @@ export function ScrollMarquee({ rows = marqueeRows }) {
   </div>;
 }
 
-// The animated GIF characters, repeated to fill the loop. Reduced motion swaps them for their stills.
+// The animated GIF characters, repeated to fill the loop. The hug and bacon GIFs also get a body motion in CSS
+// (crew__card--<motion>); the pepper, Los Cool and beach GIFs carry their own story. Reduced motion swaps them for still, unmoving images.
 const crew = [
-  { src: '/assets/caricaturas/abrazo.gif', still: '/assets/caricaturas/abrazo-still.png', name: 'BFF', alt: 'Lata y hamburguesa SHET abrazándose' },
-  { src: '/assets/caricaturas/tocino.gif', still: '/assets/caricaturas/tocino-still.png', name: 'BACON LOVERS', alt: 'Hamburguesa SHET comiendo tocino' },
+  { src: '/assets/caricaturas/abrazo.gif', still: '/assets/caricaturas/abrazo-still.png', name: 'BFF', motion: 'sway', alt: 'Lata y hamburguesa SHET abrazándose' },
+  { src: '/assets/caricaturas/tocino.gif', still: '/assets/caricaturas/tocino-still.png', name: 'BACON LOVERS', motion: 'munch', alt: 'Hamburguesa SHET comiendo tocino' },
   { src: '/assets/caricaturas/pepinillo.gif', still: '/assets/caricaturas/pepinillo-still.png', name: 'AJÍ PEPINILLO', alt: 'Hamburguesa SHET se come un ají y arde por lo picante' },
   { src: '/assets/caricaturas/cool.gif', still: '/assets/caricaturas/cool-still.png', name: 'LOS COOL', alt: 'Hamburguesa y tocino SHET con lentes de sol y papas fritas' },
   { src: '/assets/caricaturas/playa.gif', still: '/assets/caricaturas/playa-still.png', name: 'BACON BEACH', alt: 'Tocino SHET descansando bajo un quitasol' },
@@ -56,7 +56,7 @@ const crew = [
 const loop = [0, 1, 2].flatMap(round => crew.map(member => ({ ...member, key: `${member.name}-${round}`, hidden: round > 0 })));
 
 function CrewCard({ member }) {
-  return <li className="crew__card" aria-hidden={member.hidden || undefined}>
+  return <li className={member.motion ? `crew__card crew__card--${member.motion}` : 'crew__card'} aria-hidden={member.hidden || undefined}>
     <picture>
       <source media="(prefers-reduced-motion: reduce)" srcSet={member.still}/>
       <img src={member.src} alt={member.hidden ? '' : member.alt} width="160" height="160" loading="lazy" decoding="async"/>
@@ -80,12 +80,3 @@ export function CrewCarousel() {
   </section>;
 }
 
-/** Plain facts strip: when we open, where to pick up, how delivery works. */
-export function InfoStrip({ openingTime }) {
-  return <section className="info-strip" aria-label="Información de SHET Burger">
-    <div><small>HORARIO</small><b>ABRIMOS {openingTime} HRS</b></div>
-    <div><small>RETIRO</small><b>RÍO LOA 130 · NONGUÉN</b></div>
-    <div><small>DELIVERY</small><b>COSTO SEGÚN TU POBLACIÓN</b></div>
-    <a href="/delivery" data-route>VER LA CARTA <ArrowUpRight aria-hidden="true"/></a>
-  </section>;
-}

@@ -1,4 +1,4 @@
-import { openingTime } from './config';
+import useOpeningTime, { setOpeningTime } from './lib/openingTime';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import Header from './components/Header';
 import ClosedPopup from './components/ClosedPopup';
@@ -43,6 +43,7 @@ export default function App(){
  useEffect(()=>{localStorage.setItem('shet-demo-orders',JSON.stringify(orders))},[orders]);
  useEffect(()=>{localStorage.setItem('shet-demo-stock',JSON.stringify(stock))},[stock]);
  useEffect(()=>{localStorage.setItem('shet-store-open',String(storeOpen))},[storeOpen]);
+ useEffect(()=>{setOpeningTime(siteContent.openingTime)},[siteContent.openingTime]);const openingTime=useOpeningTime();
  useEffect(()=>{localStorage.setItem('shet-managed-products',JSON.stringify(products))},[products]);
  useEffect(()=>{localStorage.setItem('shet-site-content',JSON.stringify(siteContent))},[siteContent]);
  useEffect(()=>{localStorage.removeItem('shet-admin-auth')},[]);
@@ -122,7 +123,7 @@ export default function App(){
  const saveContent=async content=>{const next={...defaultSiteContent,...content};const {saveManagedContent}=await contentApi();const result=await saveManagedContent(next,demoToken||null);if(result.error)return {ok:false,error:result.error};setSiteContent(next);return {ok:true,synced:true}};
  const uploadProductImage=async(file,productId)=>{const{uploadManagedImage}=await contentApi();return uploadManagedImage(file,productId)};
  const connectAdmin=async redirectPath=>{localStorage.removeItem('shet-admin-auth');localStorage.removeItem('shet-demo-admin-token');setDemoToken('');const{signInWithGoogle}=await supabaseApi();return signInWithGoogle(redirectPath)};
- const adminProps={products,stock,onToggleStock:toggleStock,orders,onUpdateOrder:statusUpdate,onDeleteOrder:deleteOrder,storeOpen,onToggleStore:toggleStore,storeSyncState,user,authReady:authReady&&(!user||adminAllowed!==null),adminAllowed,onSignOut:logoutAdmin,demoAdmin,onDemoLogin:demoLogin};
+ const adminProps={siteContent,onSaveContent:saveContent,products,stock,onToggleStock:toggleStock,orders,onUpdateOrder:statusUpdate,onDeleteOrder:deleteOrder,storeOpen,onToggleStore:toggleStore,storeSyncState,user,authReady:authReady&&(!user||adminAllowed!==null),adminAllowed,onSignOut:logoutAdmin,demoAdmin,onDemoLogin:demoLogin};
  if(path==='/admin/content'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} demoToken={demoToken} onLogin={()=>connectAdmin('/admin/content')}/></Suspense>;
  if(path==='/admin/content')return <Suspense fallback={<AdminLoading/>}><AdminContentEditor products={products} siteContent={siteContent} onSaveProduct={saveProduct} onDeleteProduct={removeProduct} onSaveContent={saveContent} onUploadImage={uploadProductImage}/></Suspense>;
  if(path==='/admin/analytics'&&(!authReady||(!user&&!demoAdmin)||(!demoAdmin&&!adminAllowed)))return <Suspense fallback={<AdminLoading/>}><AdminPanel {...adminProps} demoToken={demoToken} onLogin={()=>connectAdmin('/admin/analytics')}/></Suspense>;

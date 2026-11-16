@@ -1,8 +1,10 @@
 import { ArrowUpRight } from 'lucide-react';
 import { instagramUrl } from '../data';
-import { business, openingTime } from '../config';
+import { business } from '../config';
+import useOpeningTime from '../lib/openingTime';
 
 export default function FooterCTA({ footerOnly = false }) {
+  const openingTime = useOpeningTime();
   return <>
     {!footerOnly && <section className="footer-cta" id="pedir"><h2 data-reveal>¿HAMBRE?<br/><em>PIDE SHET.</em></h2><a className="button button--primary" href="/delivery" data-route>PEDIR AHORA <ArrowUpRight/></a></section>}
     <footer className="site-footer">

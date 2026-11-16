@@ -254,3 +254,24 @@
 .admin-modal .admin-error { margin: 0.75rem 0 0; }
 .admin-modal .admin-mode { text-transform: uppercase; }
 .admin-modal__total { align-items: baseline; }
+
+/* ── Horario: hora de apertura ── */
+.admin-hours__card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; padding: 1.5rem; border: 1px solid var(--color-line-dark); border-radius: 0.75rem; background: #fff; }
+.admin-hours__field { display: grid; gap: 0.6rem; align-content: start; }
+.admin-hours__field label { display: flex; align-items: center; gap: 0.45rem; font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.admin-hours__field label svg { width: 1rem; height: 1rem; }
+.admin-hours__field input { min-height: 3.5rem; padding: 0.5rem 0.9rem; border: 2px solid var(--color-ink); border-radius: 0.5rem; background: #fff; color: var(--color-ink); font: inherit; font-size: 1.75rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.admin-hours__field input:focus-visible { outline: 3px solid var(--color-pink); outline-offset: 2px; }
+.admin-hours__field small, .admin-hours__note { color: #555; font-size: var(--text-sm); line-height: 1.45; }
+.admin-hours__preview { display: grid; gap: 0.4rem; align-content: center; padding: 1.1rem 1.25rem; border-radius: 0.6rem; background: var(--color-ink); color: var(--color-cream); }
+.admin-hours__preview span { color: var(--color-pink); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.12em; }
+.admin-hours__preview strong { font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.admin-hours__preview em { color: var(--color-pink); font-style: normal; font-size: 0.55em; }
+.admin-hours__preview small { opacity: 0.75; font-size: var(--text-sm); }
+.admin-hours__save { justify-self: start; display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.9rem; padding: 0.7rem 1.3rem; border: 0; border-radius: var(--radius-pill); background: var(--color-ink); color: var(--color-cream); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; cursor: pointer; transition: transform 160ms var(--ease-out), opacity 160ms; }
+.admin-hours__save svg { width: 1rem; height: 1rem; }
+.admin-hours__save:active:not(:disabled) { transform: scale(0.97); }
+.admin-hours__save:disabled { opacity: 0.5; cursor: default; }
+.admin-hours__ok { color: #257043; font-size: var(--text-sm); font-weight: 600; }
+.admin-hours__save, .admin-hours__ok, .admin-hours__card > .admin-error, .admin-hours__note { grid-column: 1 / -1; }
+@media (max-width: 640px) { .admin-hours__card { grid-template-columns: 1fr; padding: 1rem; } }

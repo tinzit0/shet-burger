@@ -275,3 +275,48 @@
 .admin-hours__ok { color: #257043; font-size: var(--text-sm); font-weight: 600; }
 .admin-hours__save, .admin-hours__ok, .admin-hours__card > .admin-error, .admin-hours__note { grid-column: 1 / -1; }
 @media (max-width: 640px) { .admin-hours__card { grid-template-columns: 1fr; padding: 1rem; } }
+
+/* Pagos por confirmar: el dueño revisa cada comprobante antes de que el pedido entre a cocina. */
+.admin-section-title > span { color: var(--color-muted-dark); font-size: var(--text-xs); text-align: right; }
+.admin-stats article.is-attention { border-color: var(--color-pink-deep); background: #fce5ef; }
+.admin-payment-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 34rem), 1fr)); gap: 0.75rem; }
+.admin-payment-card { display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; padding: 1rem; border: 1px solid var(--color-pink-deep); background: white; }
+.admin-payment-card__thumb { overflow: hidden; display: grid; place-items: center; min-height: 12rem; border-radius: var(--radius-sm); background: var(--color-bone); }
+.admin-payment-card__thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.admin-payment-card__thumb span { display: grid; justify-items: center; gap: 0.4rem; color: var(--color-muted-dark); font-size: var(--text-xs); font-weight: 700; }
+.admin-payment-card__thumb svg { width: 1.5rem; color: var(--color-pink-deep); }
+.admin-payment-card__body { display: flex; min-width: 0; flex-direction: column; gap: 0.35rem; }
+.admin-payment-card__body header { display: flex; justify-content: space-between; gap: 0.5rem; color: var(--color-muted-dark); font-size: var(--text-xs); }
+.admin-payment-card__body header strong { color: var(--color-ink); overflow-wrap: anywhere; }
+.admin-payment-card__body header small.is-late { color: #b42318; font-weight: 700; }
+.admin-payment-card h3 { margin: 0; font: 700 1.25rem var(--font-display); overflow-wrap: anywhere; }
+.admin-payment-card p { margin: 0; color: var(--color-muted-dark); font-size: var(--text-xs); }
+.admin-payment-card p a { color: inherit; }
+.admin-payment-card__amount { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-top: 0.25rem; padding: 0.6rem 0.75rem; background: #fce5ef; }
+.admin-payment-card__amount span { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.admin-payment-card__amount b { font: 700 1.5rem var(--font-display); font-variant-numeric: tabular-nums; }
+.admin-payment-card .admin-receipt-row { padding: 0.5rem 0; border-bottom: 0; }
+.admin-payment-card footer { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: auto; }
+.admin-confirm-payment, .admin-payment-card__detail { display: inline-flex; min-height: 2.75rem; flex: 1 1 auto; align-items: center; justify-content: center; gap: 0.4rem; padding: 0 1rem; border: 1px solid var(--color-ink); border-radius: var(--radius-pill); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; cursor: pointer; transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease; }
+.admin-confirm-payment { background: #286536; border-color: #286536; color: white; }
+.admin-confirm-payment svg { width: 1rem; }
+.admin-payment-card__detail { background: transparent; color: var(--color-ink); }
+.admin-confirm-payment:active:not(:disabled), .admin-payment-card__detail:active { transform: scale(0.97); }
+.admin-confirm-payment:disabled { opacity: 0.6; cursor: progress; }
+@media (hover: hover) and (pointer: fine) { .admin-confirm-payment:hover:not(:disabled) { background: #1f5029; } }
+.admin-payment-check { display: grid; gap: 0.5rem; margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--color-pink-deep); background: #fce5ef; }
+.admin-payment-check > span { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; color: var(--color-pink-deep); }
+.admin-payment-check p { margin: 0; font-size: var(--text-sm); }
+.admin-payment-check .admin-receipt-row { margin-top: 0; }
+.admin-payment-check .admin-confirm-payment { width: 100%; }
+@media (max-width: 560px) {
+  .admin-section-title:has(> span) { align-items: start; flex-direction: column; }
+  .admin-section-title > span { text-align: left; }
+  .admin-payment-card { grid-template-columns: 1fr; }
+  .admin-payment-card__thumb { min-height: 10rem; max-height: 14rem; }
+}
+/* Dentro de la tarjeta el número y el cliente ya están arriba: solo queda el botón del visor. */
+.admin-payment-card .admin-receipt-row > div, .admin-payment-check .admin-receipt-row > div { display: none; }
+.admin-payment-card .admin-receipt-row, .admin-payment-check .admin-receipt-row { padding: 0; border: 0; background: transparent; }
+.admin-payment-card .admin-receipt-row button, .admin-payment-check .admin-receipt-row button { display: inline-flex; width: 100%; align-items: center; justify-content: center; gap: 0.4rem; font-weight: 700; letter-spacing: 0.06em; }
+.admin-payment-card .admin-receipt-row button svg, .admin-payment-check .admin-receipt-row button svg { width: 1rem; }

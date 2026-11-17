@@ -9,7 +9,7 @@ const item = (id, name, price, quantity, extra = {}) => ({ product: { id, name }
 const order = (n, created_at, status, extra = {}) => ({ id: `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`, order_number: `SHET-${n}`, created_at, status, stage: 0, fulfillment: 'retiro', customer_name: 'Cliente', customer_phone: '', total: 12000, discount_amount: 0, items: [item('doble', 'Doble Cheddar', 9000, 1)], ...extra });
 const base = [
   order(1, minutesAgo(32), 'En preparación', { customer_name: 'Camila Rojas', customer_phone: '+56 9 8765 4321', items: [item('doble', 'Doble Cheddar', 9000, 2, { note: 'Sin pepinillos' }), item('papas', 'Papas', 3000, 1)], total: 21000 }),
-  order(2, minutesAgo(6), 'Pedido recibido', { customer_name: 'Diego', customer_phone: '912345678', fulfillment: 'delivery', items: [item('bbq', 'BBQ Beast', 10000, 1)], total: 13000, coupon_code: 'SHET10', discount_amount: 1000 }),
+  order(2, minutesAgo(6), 'Pago confirmado', { customer_name: 'Diego', customer_phone: '912345678', fulfillment: 'delivery', items: [item('bbq', 'BBQ Beast', 10000, 1)], total: 13000, coupon_code: 'SHET10', discount_amount: 1000 }),
   order(3, daysAgo(7), 'Pedido entregado', { total: 9000 }),
   order(4, daysAgo(14), 'Pedido entregado', { customer_name: 'Camila Rojas', customer_phone: '987654321' }),
   order(5, daysAgo(30), 'Pedido entregado', { customer_name: 'Pedro Soto', customer_phone: '955555555', total: 18000 }),
@@ -29,12 +29,13 @@ try {
     await page.route('**/rest/v1/orders*', async route => {
       const req = route.request();
       if (req.method() === 'GET') return route.fulfill({ json: orders });
-      if (req.method() === 'PATCH') { patches.push(req.postDataJSON()); return route.fulfill({ status: 204, body: '' }); }
+      if (req.method() === 'PATCH') { patches.push(req.postDataJSON()); return route.fulfill({ json: [{ id: new URL(req.url()).searchParams.get('id')?.replace('eq.', '') }] }); }
       return route.fulfill({ status: 204, body: '' });
     });
     await page.route('**/rest/v1/rpc/*', route => route.fulfill({ json: [] }));
     await page.goto('http://127.0.0.1:5173/admin');
-    await page.getByRole('button', { name: /^PEDIDOS/ }).waitFor();
+    // El panel abre en POR CONFIRMAR; los pedidos ya confirmados viven en PEDIDOS.
+    await page.getByRole('button', { name: /^PEDIDOS/ }).click();
     await page.getByText('Esperando hace 32 min · ATRASADO').waitFor();
     assert.ok(await page.locator('.admin-tab-alert').count(), 'la pestaña COCINA marca atrasos');
 
@@ -57,7 +58,7 @@ try {
     assert.ok(await page.locator('.kitchen-ticket').first().evaluate(el => el.classList.contains('is-late')));
     assert.match(await page.locator('.kitchen-totals').innerText(), /2×\s*Doble Cheddar \(Simple\)/);
     await page.screenshot({ path: `${out}/insights-kitchen-${width}.png`, fullPage: true });
-    await page.locator('.kitchen-ticket').first().getByRole('button', { name: /LISTO PARA SERVIR/ }).click();
+    await page.locator('.kitchen-ticket').first().getByRole('button', { name: /LISTO PARA RETIRO/ }).click();
     await page.waitForFunction(() => document.querySelectorAll('.kitchen-ticket').length === 1);
     assert.deepEqual(patches.at(-1), { status: 'Listo para servir', stage: 2 });
 

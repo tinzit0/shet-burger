@@ -1,8 +1,12 @@
 export const business = {
-  name: import.meta.env.VITE_BUSINESS_NAME || 'SHET BURGER SpA',
-  bank: import.meta.env.VITE_BANK_NAME || 'Banco Estado',
-  account: import.meta.env.VITE_BANK_ACCOUNT || 'Cuenta por configurar',
-  rut: import.meta.env.VITE_BUSINESS_RUT || 'RUT por configurar',
+  // Datos de transferencia del dueño. Van fijos en el código para que una
+  // variable antigua del hosting no muestre una cuenta equivocada al cliente.
+  name: 'SHET SpA',
+  rut: '78.201.534-6',
+  bank: 'Banco de Chile',
+  accountType: 'Cuenta corriente',
+  account: '00-021-05251-89',
+  email: 'shetburger@gmail.com',
   pickupAddress: import.meta.env.VITE_PICKUP_ADDRESS || 'Río Loa 130, Nonguén, Concepción, Chile',
 };
 

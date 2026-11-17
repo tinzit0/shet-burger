@@ -1,4 +1,4 @@
-import { getOrderStage } from './orderStatus.js';
+import { getOrderStage, isAwaitingPayment } from './orderStatus.js';
 
 // Cálculos del panel del dueño. Todo sale de los pedidos ya cargados:
 // no necesita tablas nuevas ni consultas extra a Supabase.
@@ -19,7 +19,8 @@ const active = orders => orders.filter(o => !o.cancelled);
 export const minutesSince = (order, now = Date.now()) => Math.max(0, Math.floor((now - time(order)) / 60000));
 
 // Pedidos sin entregar que llevan demasiado tiempo esperando.
-export const isLate = (order, now = Date.now()) => getOrderStage(order) < 2 && minutesSince(order, now) >= LATE_MINUTES;
+// Los pagos aún sin confirmar no cuentan: cocina no los prepara todavía.
+export const isLate = (order, now = Date.now()) => !isAwaitingPayment(order) && getOrderStage(order) < 2 && minutesSince(order, now) >= LATE_MINUTES;
 
 export function daySummary(orders, now = Date.now()) {
   const today = startOfDay(now), lastWeek = today - 7 * DAY, elapsed = now - today;
@@ -107,7 +108,7 @@ export const whatsappLink = (phone, message) => {
 
 // Lo que cocina tiene que preparar ahora: suma por producto de los pedidos abiertos.
 export function kitchenQueue(orders, now = Date.now()) {
-  const open = active(orders).filter(o => getOrderStage(o) < 2).sort((a, b) => time(a) - time(b));
+  const open = active(orders).filter(o => !isAwaitingPayment(o) && getOrderStage(o) < 2).sort((a, b) => time(a) - time(b));
   const totals = new Map();
   for (const order of open) for (const item of order.items || []) {
     const label = variantOf(item) ? `${itemName(item)} (${variantOf(item)})` : itemName(item);

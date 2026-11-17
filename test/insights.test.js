@@ -41,11 +41,13 @@ test('clientes frecuentes y dormidos por teléfono', () => {
 
 test('cola de cocina suma productos de pedidos abiertos y marca atrasos', () => {
   const open = { created_at: new Date(now - 25 * 60000).toISOString(), status: 'En preparación', items: [{ product: { name: 'Doble' }, quantity: 2 }] };
-  const fresh = { created_at: new Date(now - 5 * 60000).toISOString(), status: 'Pedido recibido', items: [{ product: { name: 'Doble' }, quantity: 1 }, { product: { name: 'Papas' }, quantity: 1 }] };
-  const q = kitchenQueue([open, fresh, at(0, 18, { items: [{ product: { name: 'Doble' }, quantity: 9 }] })], now);
+  const fresh = { created_at: new Date(now - 5 * 60000).toISOString(), status: 'Pago confirmado', stage: 0, items: [{ product: { name: 'Doble' }, quantity: 1 }, { product: { name: 'Papas' }, quantity: 1 }] };
+  const unpaid = { created_at: new Date(now - 40 * 60000).toISOString(), status: 'Pedido recibido', items: [{ product: { name: 'Doble' }, quantity: 5 }] };
+  const q = kitchenQueue([open, fresh, unpaid, at(0, 18, { items: [{ product: { name: 'Doble' }, quantity: 9 }] })], now);
   assert.deepEqual(q.items, [{ name: 'Doble', quantity: 3 }, { name: 'Papas', quantity: 1 }]);
   assert.deepEqual(q.orders.map(o => [o.minutes, o.late]), [[25, true], [5, false]]);
   assert.equal(isLate({ ...open, status: 'Listo para servir' }, now), false);
+  assert.equal(isLate(unpaid, now), false);
 });
 
 test('CSV escapa separadores y abre bien en Excel', () => {

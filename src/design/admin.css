@@ -344,3 +344,11 @@
 .admin-rejection-note p { margin: 0; font-size: var(--text-sm); }
 .admin-order.is-rejected em { color: #8e2538; }
 .admin-order.is-rejected strong { text-decoration: line-through; text-decoration-color: rgb(142 37 56 / 45%); }
+
+/* Pedidos: línea que separa los que están en curso de los entregados */
+.admin-orders-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.75rem 0 0.75rem; color: var(--color-muted-dark); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; }
+.admin-orders-divider::before, .admin-orders-divider::after { content: ""; flex: 1; height: 1px; background: var(--color-ink); opacity: 0.25; }
+.admin-orders-divider span { flex: none; }
+.admin-orders-divider ~ .admin-order { background: var(--color-bone); }
+.admin-orders-none { margin: 0; padding: 1rem 1.25rem; border: 1px dashed var(--color-line-dark); color: var(--color-muted-dark); font-size: var(--text-sm); }
+.admin-order:has(+ .admin-orders-divider) { border-bottom: 1px solid var(--color-line-dark); }

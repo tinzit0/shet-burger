@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Clock3, Download, MessageCircle, TrendingDown, TrendingUp } from 'lucide-react';
 import { ORDER_STAGES, getOrderStage, orderStatusLabel, stageLabel } from '../lib/orderStatus';
-import { couponPerformance, customerInsights, daySummary, hourlyOrders, kitchenQueue, ordersCsv, productRanking, whatsappLink } from '../lib/insights';
+import { categorySales, couponPerformance, customerInsights, dailySales, hourlyOrders, kitchenQueue, ordersCsv, PERIODS, periodSummary, productRanking, weekdaySales, whatsappLink } from '../lib/insights';
+
+const DAY_MS = 86400000;
+const DAY_NAMES = { Lun: 'lunes', Mar: 'martes', Mié: 'miércoles', Jue: 'jueves', Vie: 'viernes', Sáb: 'sábado', Dom: 'domingo' };
 
 const money = value => `$${Math.round(Number(value || 0)).toLocaleString('es-CL')}`;
 const hourLabel = h => `${String(h).padStart(2, '0')}:00`;
@@ -29,42 +32,91 @@ function HourChart({ hours }) {
   </div>;
 }
 
-export function AdminSummary({ orders, products }) {
+// Barras de una sola serie con tooltip por barra (ventas por día, por día de la semana).
+function BarChart({ rows, label, labelEvery = 1 }) {
+  const max = Math.max(1, ...rows.map(r => r.value));
+  return <div className="insight-chart insight-chart--single" role="img" aria-label={label}>
+    <div className="insight-chart__bars">{rows.map((r, i) => <div className={`insight-chart__col${r.current ? ' is-current' : ''}`} key={r.key} tabIndex={0} aria-label={r.tip.join(', ')}>
+      <div className="insight-chart__tip">{r.tip.map((line, j) => j ? <span key={j}>{line}</span> : <strong key={j}>{line}</strong>)}</div>
+      <div className="insight-chart__pair"><b className="is-today" style={{ height: `${r.value / max * 100}%` }}/></div>
+      <small className={i % labelEvery && i !== rows.length - 1 ? 'is-hidden' : ''}>{r.label}</small>
+    </div>)}</div>
+  </div>;
+}
+
+function Change({ value, compare }) {
+  if (value === null) return <small>Sin datos para comparar con {compare}</small>;
+  const Icon = value >= 0 ? TrendingUp : TrendingDown;
+  return <small className={value >= 0 ? 'is-up' : 'is-down'}><Icon/> {value >= 0 ? '+' : ''}{value}% vs. {compare}</small>;
+}
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+export function AdminSummary({ orders, products, allOrders = orders }) {
   const now = useNow(60000);
-  const [range, setRange] = useState(7);
-  const day = useMemo(() => daySummary(orders, now), [orders, now]);
+  const [period, setPeriod] = useState('7');
+  const stats = useMemo(() => periodSummary(orders, period, now, allOrders), [orders, period, now, allOrders]);
+  const { range } = stats, days = (now - range.start) / DAY_MS;
+  const daily = useMemo(() => dailySales(orders, period, now), [orders, period, now]);
+  const weekdays = useMemo(() => weekdaySales(orders, now), [orders, now]);
+  const categories = useMemo(() => categorySales(orders, products, range.start, now), [orders, products, range.start, now]);
   const hourly = useMemo(() => hourlyOrders(orders, now), [orders, now]);
-  const ranking = useMemo(() => productRanking(orders, products, now, range), [orders, products, now, range]);
-  const coupons = useMemo(() => couponPerformance(orders), [orders]);
+  const ranking = useMemo(() => productRanking(orders, products, now, days), [orders, products, now, days]);
+  const coupons = useMemo(() => couponPerformance(orders.filter(o => new Date(o.created_at || now).getTime() >= range.start)), [orders, range.start, now]);
   const customers = useMemo(() => customerInsights(orders, now), [orders, now]);
-  const topMax = Math.max(1, ...ranking.top.map(p => p.quantity));
+  const periodLabel = PERIODS.find(p => p.id === period).label.toLowerCase();
+  const topMax = Math.max(1, ...ranking.top.map(p => p.quantity)), catMax = Math.max(1, ...categories.map(c => c.revenue));
+  const bestDay = weekdays.reduce((best, d) => d.sales > best.sales ? d : best, weekdays[0]);
+  const dailyTotal = daily.reduce((t, d) => t + d.sales, 0);
+  const share = channel => stats.orders ? Math.round(channel.orders / stats.orders * 100) : 0;
   const download = () => {
     const blob = new Blob([ordersCsv(orders)], { type: 'text/csv;charset=utf-8' }), url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = `pedidos-shet-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(url);
   };
-  const Trend = day.change > 0 ? TrendingUp : TrendingDown;
   return <section className="admin-insights">
     <div className="admin-section-title"><h2>Resumen del negocio</h2><button type="button" className="insight-button" onClick={download} disabled={!orders.length}><Download/> EXPORTAR PEDIDOS (EXCEL)</button></div>
+    <div className="insight-range insight-range--period" role="group" aria-label="Período de las estadísticas">{PERIODS.map(p => <button type="button" key={p.id} className={period === p.id ? 'active' : ''} aria-pressed={period === p.id} onClick={() => setPeriod(p.id)}>{p.label.toUpperCase()}</button>)}</div>
 
     <div className="insight-kpis">
-      <article><span>Ventas de hoy</span><strong>{money(day.sales)}</strong>{day.change === null ? <small>Sin datos del {new Date(now).toLocaleDateString('es-CL', { weekday: 'long' })} pasado</small> : <small className={day.change >= 0 ? 'is-up' : 'is-down'}><Trend/> {day.change >= 0 ? '+' : ''}{day.change}% vs. el {new Date(now).toLocaleDateString('es-CL', { weekday: 'long' })} pasado a esta hora</small>}</article>
-      <article><span>Pedidos de hoy</span><strong>{day.orders}</strong><small>{day.delivery} delivery · {day.orders - day.delivery} retiro</small></article>
-      <article><span>Ticket promedio</span><strong>{money(day.average)}</strong><small>Lo que gasta cada cliente hoy</small></article>
+      <article><span>Ventas · {periodLabel}</span><strong>{money(stats.sales)}</strong><Change value={stats.change.sales} compare={range.compare}/></article>
+      <article><span>Pedidos</span><strong>{stats.orders}</strong><Change value={stats.change.orders} compare={range.compare}/></article>
+      <article><span>Ticket promedio</span><strong>{money(stats.average)}</strong><Change value={stats.change.average} compare={range.compare}/></article>
+      <article><span>Productos vendidos</span><strong>{stats.units}</strong><small>{stats.orders ? `${(stats.units / stats.orders).toFixed(1).replace('.', ',')} por pedido` : 'Sin pedidos en el período'}</small></article>
+      <article><span>Clientes</span><strong>{stats.customers}</strong><small>{plural(stats.newCustomers, 'nuevo', 'nuevos')} · {stats.returning} que vuelven</small></article>
+      <article><span>Descuentos en cupones</span><strong>{money(stats.discount)}</strong><small>{plural(stats.couponOrders, 'pedido', 'pedidos')} con cupón</small></article>
+      <article><span>Pedidos rechazados</span><strong>{stats.rejected}</strong><small>{stats.rejectedRate}% de los pedidos recibidos</small></article>
       <article><span>Hora peak</span><strong>{hourly.peakHour === null ? '—' : hourLabel(hourly.peakHour)}</strong><small>{hourly.peakHour === null ? 'Aún faltan datos de semanas anteriores' : 'Ten la plancha lista antes de esa hora'}</small></article>
+    </div>
+
+    <article className="insight-card"><header><h3>Ventas por día</h3><p>{period === 'today' ? 'Últimos 14 días' : `${money(dailyTotal)} en ${daily.length} días · promedio ${money(dailyTotal / daily.length)} diario`}</p></header>
+      <BarChart label="Ventas por día" labelEvery={daily.length > 16 ? 5 : 1} rows={daily.map((d, i) => ({ key: d.date, value: d.sales, current: i === daily.length - 1, label: new Date(d.date).getDate(), tip: [new Date(d.date).toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' }), money(d.sales), plural(d.orders, 'pedido', 'pedidos')] }))}/>
+    </article>
+
+    <div className="insight-grid">
+      <article className="insight-card"><header><h3>Delivery vs. retiro</h3><p>{periodLabel}</p></header>
+        {stats.orders ? <><div className="insight-split" role="img" aria-label={stats.channels.map(c => `${c.label} ${share(c)}%`).join(', ')}>{stats.channels.filter(c => c.orders).map(c => <b key={c.id} className={`is-${c.id}`} style={{ flexGrow: c.orders }}/>)}</div>
+          <ul className="insight-legend">{stats.channels.map(c => <li key={c.id}><i className={`is-${c.id}`}/><div><strong>{c.label} · {share(c)}%</strong><span>{plural(c.orders, 'pedido', 'pedidos')} · {money(c.sales)} · ticket {money(c.orders ? c.sales / c.orders : 0)}</span></div></li>)}</ul></> : <p className="insight-empty">Sin pedidos en este período.</p>}
+      </article>
+      <article className="insight-card"><header><h3>Ventas por categoría</h3><p>Antes de descuentos.</p></header>
+        {categories.length ? <ol className="insight-rank">{categories.map(c => <li key={c.id}><div><strong>{c.label}</strong><span>{c.quantity} u. · {money(c.revenue)}</span></div><i style={{ width: `${c.revenue / catMax * 100}%` }}/></li>)}</ol> : <p className="insight-empty">Sin ventas en este período.</p>}
+      </article>
     </div>
 
     <article className="insight-card"><header><h3>Pedidos por hora</h3><p>Compara el ritmo de hoy con un {new Date(now).toLocaleDateString('es-CL', { weekday: 'long' })} normal.</p></header><HourChart hours={hourly.hours}/></article>
 
     <div className="insight-grid">
-      <article className="insight-card"><header><h3>Lo más vendido</h3><div className="insight-range" role="group" aria-label="Período">{[7, 30].map(d => <button type="button" key={d} className={range === d ? 'active' : ''} onClick={() => setRange(d)}>{d} DÍAS</button>)}</div></header>
-        {ranking.top.length ? <ol className="insight-rank">{ranking.top.slice(0, 6).map(p => <li key={p.id}><div><strong>{p.name}</strong><span>{p.quantity} u. · {money(p.revenue)}</span></div><i style={{ width: `${p.quantity / topMax * 100}%` }}/></li>)}</ol> : <p className="insight-empty">Sin ventas en este período.</p>}
-        {ranking.stale.length > 0 && <div className="insight-tip"><AlertTriangle/><p><strong>{ranking.stale.length} productos sin ventas en {range} días:</strong> {ranking.stale.slice(0, 6).map(p => p.name).join(', ')}{ranking.stale.length > 6 ? '…' : ''}. Prueba una promoción o destácalos en la página.</p></div>}
+      <article className="insight-card"><header><h3>Lo más vendido</h3><p>{periodLabel}</p></header>
+        {ranking.top.length ? <ol className="insight-rank">{ranking.top.slice(0, 8).map(p => <li key={p.id}><div><strong>{p.name}</strong><span>{p.quantity} u. · {money(p.revenue)}</span></div><i style={{ width: `${p.quantity / topMax * 100}%` }}/></li>)}</ol> : <p className="insight-empty">Sin ventas en este período.</p>}
+        {ranking.stale.length > 0 && period !== 'today' && <div className="insight-tip"><AlertTriangle/><p><strong>{ranking.stale.length} productos sin ventas ({periodLabel}):</strong> {ranking.stale.slice(0, 6).map(p => p.name).join(', ')}{ranking.stale.length > 6 ? '…' : ''}. Prueba una promoción o destácalos en la página.</p></div>}
       </article>
-
-      <article className="insight-card"><header><h3>¿Funcionan tus cupones?</h3><p>Uso real en pedidos.</p></header>
-        {coupons.length ? <table className="insight-table"><thead><tr><th>Código</th><th>Usos</th><th>Descontado</th><th>Vendido</th></tr></thead><tbody>{coupons.map(c => <tr key={c.code}><td>{c.code}</td><td>{c.uses}</td><td>{money(c.discount)}</td><td>{money(c.sales)}</td></tr>)}</tbody></table> : <p className="insight-empty">Todavía ningún pedido usó un cupón.</p>}
+      <article className="insight-card"><header><h3>Mejores días</h3><p>Venta promedio · últimas 8 semanas</p></header>
+        {bestDay.sales ? <><BarChart label="Venta promedio por día de la semana" rows={weekdays.map(d => ({ key: d.name, value: d.sales, label: d.name, tip: [d.name, money(d.sales), `${String(d.orders).replace('.', ',')} pedidos en promedio`] }))}/><p className="insight-note">Tu día más fuerte es el <strong>{DAY_NAMES[bestDay.name]}</strong>, con {money(bestDay.sales)} en promedio.</p></> : <p className="insight-empty">Aún no hay ventas suficientes.</p>}
       </article>
     </div>
+
+    <article className="insight-card"><header><h3>¿Funcionan tus cupones?</h3><p>Uso real en pedidos · {periodLabel}</p></header>
+      {coupons.length ? <table className="insight-table"><thead><tr><th>Código</th><th>Usos</th><th>Descontado</th><th>Vendido</th></tr></thead><tbody>{coupons.map(c => <tr key={c.code}><td>{c.code}</td><td>{c.uses}</td><td>{money(c.discount)}</td><td>{money(c.sales)}</td></tr>)}</tbody></table> : <p className="insight-empty">Ningún pedido usó un cupón en este período.</p>}
+    </article>
 
     <article className="insight-card"><header><h3>Clientes</h3><p>{customers.total} clientes distintos · {customers.loyal.length} han vuelto a comprar.</p></header>
       <div className="insight-grid">

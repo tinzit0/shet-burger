@@ -135,3 +135,94 @@ export function ordersCsv(orders) {
   // Punto y coma + BOM: Excel en español lo abre con columnas y tildes correctas.
   return '﻿' + [header, ...rows].map(r => r.map(csvCell).join(';')).join('\r\n');
 }
+
+// ---------- Estadísticas por período (pestaña Resumen) ----------
+
+export const PERIODS = [
+  { id: 'today', label: 'Hoy' },
+  { id: '7', label: '7 días' },
+  { id: '30', label: '30 días' },
+  { id: 'month', label: 'Este mes' },
+];
+
+// Ventana del período y la ventana anterior equivalente hasta la misma altura
+// (hoy contra el mismo día de la semana pasada, 7 días contra los 7 anteriores, etc.).
+export function periodRange(period, now = Date.now()) {
+  const today = startOfDay(now);
+  if (period === 'month') {
+    const d = new Date(now), start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+    const prevStart = new Date(d.getFullYear(), d.getMonth() - 1, 1).getTime();
+    const prevEnd = Math.min(prevStart + (now - start), start);
+    return { start, end: now, prevStart, prevEnd, days: Math.round((today - start) / DAY) + 1, compare: 'el mes pasado a esta altura' };
+  }
+  const days = period === '30' ? 30 : period === '7' ? 7 : 1;
+  const start = today - (days - 1) * DAY, shift = days === 1 ? 7 * DAY : days * DAY;
+  const compare = days === 1 ? `el ${new Date(now).toLocaleDateString('es-CL', { weekday: 'long' })} pasado a esta hora` : `los ${days} días anteriores`;
+  return { start, end: now, prevStart: start - shift, prevEnd: now - shift, days, compare };
+}
+
+const between = (orders, from, to) => active(orders).filter(o => time(o) >= from && time(o) <= to);
+const pct = (value, previous) => previous ? Math.round((value - previous) / previous * 100) : null;
+const isDelivery = o => (o.mode || o.fulfillment) === 'delivery';
+const units = o => sum(o.items || [], i => Number(i.quantity) || 0);
+
+// Indicadores del período. `everything` incluye rechazados y pagos sin confirmar.
+export function periodSummary(orders, period, now = Date.now(), everything = orders) {
+  const range = periodRange(period, now);
+  const list = between(orders, range.start, range.end), prev = between(orders, range.prevStart, range.prevEnd);
+  const sales = sum(list, o => Number(o.total) || 0), prevSales = sum(prev, o => Number(o.total) || 0);
+  const average = list.length ? Math.round(sales / list.length) : 0, prevAverage = prev.length ? Math.round(prevSales / prev.length) : 0;
+  const delivery = list.filter(isDelivery);
+  // Cliente nuevo: su primer pedido de la historia cae dentro del período.
+  const firstOrder = new Map();
+  for (const o of active(orders)) { const p = phoneOf(o); if (p.length >= 8 && (!firstOrder.has(p) || time(o) < firstOrder.get(p))) firstOrder.set(p, time(o)); }
+  const phones = new Set(list.map(phoneOf).filter(p => p.length >= 8));
+  const newCustomers = [...phones].filter(p => firstOrder.get(p) >= range.start).length;
+  const inRange = everything.filter(o => time(o) >= range.start && time(o) <= range.end);
+  const rejected = inRange.filter(isRejectedOrder).length;
+  return {
+    range, sales, orders: list.length, average, units: sum(list, units),
+    previous: { sales: prevSales, orders: prev.length, average: prevAverage },
+    change: { sales: pct(sales, prevSales), orders: pct(list.length, prev.length), average: pct(average, prevAverage) },
+    channels: [
+      { id: 'delivery', label: 'Delivery', orders: delivery.length, sales: sum(delivery, o => Number(o.total) || 0) },
+      { id: 'pickup', label: 'Retiro', orders: list.length - delivery.length, sales: sales - sum(delivery, o => Number(o.total) || 0) },
+    ],
+    customers: phones.size, newCustomers, returning: phones.size - newCustomers,
+    discount: sum(list, o => Number(o.discount_amount) || 0), couponOrders: list.filter(o => o.coupon_code).length,
+    rejected, rejectedRate: inRange.length ? Math.round(rejected / inRange.length * 100) : 0,
+  };
+}
+
+// Ventas por día del período (hoy muestra las últimas 2 semanas para tener contexto).
+export function dailySales(orders, period, now = Date.now()) {
+  const range = periodRange(period, now), days = period === 'today' ? 14 : range.days;
+  const first = startOfDay(now) - (days - 1) * DAY;
+  const rows = Array.from({ length: days }, (_, i) => ({ date: first + i * DAY, sales: 0, orders: 0 }));
+  for (const o of between(orders, first, now)) {
+    const row = rows[Math.round((startOfDay(time(o)) - first) / DAY)];
+    if (row) { row.sales += Number(o.total) || 0; row.orders += 1; }
+  }
+  return rows;
+}
+
+// Promedio de ventas por día de la semana en las últimas `weeks` semanas (lunes primero).
+export function weekdaySales(orders, now = Date.now(), weeks = 8) {
+  const from = startOfDay(now) - weeks * 7 * DAY, names = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const rows = names.map(name => ({ name, sales: 0, orders: 0 }));
+  for (const o of between(orders, from, now)) { const row = rows[(new Date(time(o)).getDay() + 6) % 7]; row.sales += Number(o.total) || 0; row.orders += 1; }
+  return rows.map(r => ({ ...r, sales: Math.round(r.sales / weeks), orders: Math.round(r.orders / weeks * 10) / 10 }));
+}
+
+const CATEGORY_LABELS = { burgers: 'Hamburguesas', promos: 'Promos', fritos: 'Papas y fritos', bebidas: 'Bebidas', extras: 'Extras', salsas: 'Salsas' };
+// Ingresos por categoría del menú (antes de descuentos).
+export function categorySales(orders, products = [], from = 0, to = Date.now()) {
+  const byId = new Map(products.map(p => [p.id, p.category])), byName = new Map(products.map(p => [p.name, p.category])), rows = new Map();
+  for (const o of between(orders, from, to)) for (const item of o.items || []) {
+    const key = item.product?.category || byId.get(item.product?.id) || byName.get(itemName(item)) || 'otros';
+    const row = rows.get(key) || { id: key, label: CATEGORY_LABELS[key] || 'Otros', revenue: 0, quantity: 0 };
+    row.revenue += (Number(item.price) || 0) * (Number(item.quantity) || 0); row.quantity += Number(item.quantity) || 0;
+    rows.set(key, row);
+  }
+  return [...rows.values()].sort((a, b) => b.revenue - a.revenue);
+}

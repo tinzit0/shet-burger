@@ -121,3 +121,30 @@
   .admin-new-order, .insight-chart__tip { transition: opacity 120ms ease; }
   @starting-style { .admin-new-order { transform: none; } }
 }
+
+/* Resumen ampliado: período, barras de una serie y reparto delivery/retiro */
+.insight-range--period { flex-wrap: wrap; }
+.insight-range--period button { min-height: 2.5rem; padding-inline: 1rem; transition: background var(--duration-fast), color var(--duration-fast), transform 140ms var(--ease-out); }
+.insight-range button:active { transform: scale(0.97); }
+.insight-chart--single .insight-chart__pair b { width: min(1.5rem, 70%); }
+.insight-chart--single .insight-chart__col.is-current small { color: var(--color-ink); font-weight: 800; }
+.insight-chart .insight-chart__col small.is-hidden { visibility: hidden; }
+.insight-split { display: flex; gap: 2px; height: 1.25rem; margin-bottom: 1rem; }
+.insight-split b { flex-basis: 0; min-width: 4px; }
+.insight-split b:first-child { border-radius: 4px 0 0 4px; }
+.insight-split b:last-child { border-radius: 0 4px 4px 0; }
+.insight-split b:only-child { border-radius: 4px; }
+.insight-split .is-delivery, .insight-legend .is-delivery { background: var(--series-today); }
+.insight-split .is-pickup, .insight-legend .is-pickup { background: var(--series-typical); }
+.insight-legend { display: grid; gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
+.insight-legend li { display: flex; align-items: flex-start; gap: 0.6rem; }
+.insight-legend i { flex: none; width: 0.75rem; height: 0.75rem; margin-top: 0.2rem; border-radius: 2px; }
+.insight-legend strong, .insight-legend span { display: block; }
+.insight-legend strong { font-size: var(--text-sm); }
+.insight-legend span { color: var(--color-muted-dark); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.insight-note { margin: 0.25rem 0 0; color: var(--color-muted-dark); font-size: var(--text-xs); }
+.insight-note strong { color: var(--color-ink); }
+@media (max-width: 420px) {
+  .insight-chart--single .insight-chart__col:nth-child(even) small:not(.is-hidden) { visibility: visible; }
+  .insight-chart--single .insight-chart__col small { font-size: 0.6rem; }
+}

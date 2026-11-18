@@ -43,6 +43,12 @@ try {
     await page.locator('.insight-kpis').waitFor();
     assert.equal(await page.locator('.insight-kpis article').nth(1).locator('strong').innerText(), '2');
     assert.match(await page.locator('.insight-kpis article').first().innerText(), /\$34\.000/);
+    // 7 días por defecto; en 30 días entran los pedidos de hace 26 días.
+    assert.match(await page.locator('.insight-split').getAttribute('aria-label'), /Delivery 50%, Retiro 50%/);
+    await page.screenshot({ path: `${out}/insights-summary-7d-${width}.png`, fullPage: true });
+    await page.getByRole('button', { name: '30 DÍAS' }).click();
+    assert.equal(await page.locator('.insight-kpis article').nth(1).locator('strong').innerText(), '5');
+    assert.equal(await page.locator('.insight-chart--single').first().locator('.insight-chart__col').count(), 30);
     assert.match(await page.locator('.insight-table').innerText(), /SHET10\s+2/);
     assert.match(await page.locator('.insight-people').last().innerText(), /Pedro Soto/);
     const wa = await page.locator('.insight-people a').last().getAttribute('href');

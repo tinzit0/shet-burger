@@ -14,8 +14,16 @@ export const ORDER_STAGES = [
 export const PAYMENT_PENDING_STATUS = ORDER_STAGES[0].status;
 export const PAYMENT_CONFIRMED_STATUS = 'Pago confirmado';
 
+// Pedido rechazado por el dueño (pago que no coincide, producto agotado, etc.).
+// No se borra: el cliente ve el motivo en su seguimiento. Usa la fase 4, fuera
+// del flujo normal, para que no cuente en cocina, pendientes ni pedidos en curso.
+export const ORDER_REJECTED_STATUS = 'Pedido rechazado';
+export const REJECTED_STAGE = 4;
+export const isRejectedOrder = order => order?.status === ORDER_REJECTED_STATUS;
+
 export const getOrderStage = order => Number(
-  order?.status === PAYMENT_CONFIRMED_STATUS ? 0
+  isRejectedOrder(order) ? REJECTED_STAGE
+    : order?.status === PAYMENT_CONFIRMED_STATUS ? 0
     : ORDER_STAGES.find(item => item.status === order?.status)?.stage ?? order?.stage ?? 0,
 );
 
@@ -31,4 +39,4 @@ export const stageLabel = (stage, order) => {
   return ORDER_STAGES.find(item => item.stage === stage)?.status ?? ORDER_STAGES[0].status;
 };
 
-export const orderStatusLabel = order => stageLabel(getOrderStage(order), order);
+export const orderStatusLabel = order => isRejectedOrder(order) ? ORDER_REJECTED_STATUS : stageLabel(getOrderStage(order), order);

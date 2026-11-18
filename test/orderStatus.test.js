@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getOrderStage, isAwaitingPayment, isFinishedOrder, PAYMENT_CONFIRMED_STATUS, ORDER_STAGES, orderStatusLabel, stageLabel } from '../src/lib/orderStatus.js';
+import { getOrderStage, isAwaitingPayment, isFinishedOrder, isRejectedOrder, ORDER_REJECTED_STATUS, REJECTED_STAGE, PAYMENT_CONFIRMED_STATUS, ORDER_STAGES, orderStatusLabel, stageLabel } from '../src/lib/orderStatus.js';
 
 test('mantiene las cuatro fases en orden',()=>{
   assert.deepEqual(ORDER_STAGES.map(item=>item.stage),[0,1,2,3]);
@@ -29,4 +29,13 @@ test('los pedidos nuevos esperan la confirmación del pago',()=>{
   assert.equal(getOrderStage({status:PAYMENT_CONFIRMED_STATUS,stage:0}),0);
   assert.equal(orderStatusLabel({status:PAYMENT_CONFIRMED_STATUS}),'Pago confirmado');
   assert.equal(isAwaitingPayment({status:'En preparación'}),false);
+});
+
+test('un pedido rechazado sale del flujo y muestra su estado',()=>{
+  const order={status:ORDER_REJECTED_STATUS,stage:REJECTED_STAGE,rejection_reason:'Monto distinto'};
+  assert.equal(isRejectedOrder(order),true);
+  assert.equal(isAwaitingPayment(order),false);
+  assert.equal(getOrderStage({status:ORDER_REJECTED_STATUS,stage:0}),REJECTED_STAGE);
+  assert.equal(orderStatusLabel(order),'Pedido rechazado');
+  assert.equal(isRejectedOrder({status:'Pedido recibido'}),false);
 });

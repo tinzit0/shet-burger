@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { Check, Clock3, LogOut, PackageCheck, ShoppingBag, Truck, X } from 'lucide-react';
-import { getOrderStage, isDeliveryOrder, orderStatusLabel, stageLabel } from '../lib/orderStatus';
+import { getOrderStage, isDeliveryOrder, isRejectedOrder, orderStatusLabel, stageLabel } from '../lib/orderStatus';
 
 const money = value => `$${Number(value || 0).toLocaleString('es-CL')}`;
 const stageIcons = [
@@ -32,7 +32,7 @@ export default function CustomerAccount({ user, orders, loading, onClose, onSign
           return <article className="account-order" key={order.id}>
             <div className="account-order__top"><div><small>PEDIDO</small><strong>#{order.order_number || order.id}</strong></div><div><b>{money(order.total)}</b><span>{new Date(order.created_at || Date.now()).toLocaleDateString('es-CL')}</span></div></div>
             <div className="account-order__items">{order.items?.map((item,index)=><div className="account-order__item" key={`${order.id}-${index}`}><p><span>{item.quantity} × {item.product?.name || item.name || 'Producto'}{item.variant ? ` · ${item.variant}` : ''}</span><b>{money(Number(item.price || 0) * Number(item.quantity || 1))}</b></p>{item.burger_choices?.length>0&&<small>Hamburguesas: {item.burger_choices.join(', ')}</small>}{item.selections?.map(selection=><small key={`${selection.label}-${selection.value}`}>{selection.label}: {selection.value}</small>)}{item.note&&<small>Nota: {item.note}</small>}</div>)}</div>
-            {order.coupon_code&&<p className="order-coupon-detail">Cupón {order.coupon_code}: -{money(order.discount_amount)}</p>}<div className="account-progress">{stageIcons.map((Icon,index)=>{const label=stageLabel(index,order);return <div className={`${index<currentStage?'is-done ':''}${index===currentStage?'is-current':''}`.trim()} key={label}><span><Icon/></span><small>{label}</small>{index===currentStage&&<b>AHORA</b>}</div>})}</div>
+            {order.coupon_code&&<p className="order-coupon-detail">Cupón {order.coupon_code}: -{money(order.discount_amount)}</p>}{isRejectedOrder(order)?<div className="account-rejection" role="status"><span>MOTIVO DEL RECHAZO</span><p>{order.rejection_reason||'El local no pudo aceptar este pedido.'}</p><small>¿Dudas o ya transferiste? <a href={`https://wa.me/56956901911?text=${encodeURIComponent(`Hola, consulto por mi pedido #${order.order_number||order.id} que fue rechazado.`)}`} target="_blank" rel="noreferrer">Escríbenos por WhatsApp ↗︎</a></small></div>:<div className="account-progress">{stageIcons.map((Icon,index)=>{const label=stageLabel(index,order);return <div className={`${index<currentStage?'is-done ':''}${index===currentStage?'is-current':''}`.trim()} key={label}><span><Icon/></span><small>{label}</small>{index===currentStage&&<b>AHORA</b>}</div>})}</div>}
             <div className="account-order__status"><Truck/><span>{isDeliveryOrder(order)?'A domicilio':'Retiro en el carrito'}</span><b>{orderStatusLabel(order)}</b></div>
           </article>;
         })}</div>}

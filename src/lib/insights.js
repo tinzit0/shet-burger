@@ -1,4 +1,4 @@
-import { getOrderStage, isAwaitingPayment } from './orderStatus.js';
+import { getOrderStage, isAwaitingPayment, isRejectedOrder } from './orderStatus.js';
 
 // Cálculos del panel del dueño. Todo sale de los pedidos ya cargados:
 // no necesita tablas nuevas ni consultas extra a Supabase.
@@ -14,7 +14,7 @@ const nameOf = order => order.customer?.name || order.customer_name || 'Cliente'
 const itemName = item => item.product?.name || item.name || 'Producto';
 const variantOf = item => typeof item.variant === 'string' ? item.variant : item.variant?.label || item.variant?.name || '';
 const sum = (list, fn) => list.reduce((total, x) => total + fn(x), 0);
-const active = orders => orders.filter(o => !o.cancelled);
+const active = orders => orders.filter(o => !o.cancelled && !isRejectedOrder(o));
 
 export const minutesSince = (order, now = Date.now()) => Math.max(0, Math.floor((now - time(order)) / 60000));
 

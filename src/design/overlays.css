@@ -260,3 +260,12 @@
 .transfer-box button:active:not(:disabled) { transform: scale(0.97); }
 .transfer-box button { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; }
 .transfer-box button svg { width: 1rem; height: 1rem; flex: none; }
+
+/* Pedido rechazado: el motivo reemplaza la línea de fases */
+.tracker-status.is-rejected .tracker-status__top b { color: #8e2538; }
+.tracker-rejection, .account-rejection { display: grid; gap: 0.4rem; margin-top: 1rem; padding: 1rem; border-left: 3px solid #8e2538; background: #fbe9ec; color: var(--color-ink); }
+.account-rejection { margin: 1rem 0; }
+.tracker-rejection span, .account-rejection span { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; color: #8e2538; }
+.tracker-rejection p, .account-rejection p { margin: 0; font-size: var(--text-sm); line-height: 1.45; overflow-wrap: anywhere; }
+.tracker-rejection small, .account-rejection small { color: var(--color-muted-dark); font-size: var(--text-xs); }
+.tracker-rejection a, .account-rejection a { color: #8e2538; font-weight: 700; }

@@ -79,10 +79,12 @@ const orderKey = id => /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id)) ? 'id' :
 // panel does not show a change that other devices will never see.
 const notSaved = () => new Error('El cambio no se guardó en el servidor. Vuelve a iniciar sesión en el panel.');
 
-export async function updateStoredOrder(id, status, stage, { demo = false } = {}) {
+// `extra` lleva campos opcionales, como el motivo del rechazo.
+export async function updateStoredOrder(id, status, stage, { demo = false, extra = {} } = {}) {
   const db = adminDb(demo);
   if (!db) return { error: new Error('Supabase no configurado') };
-  const { data, error } = await db.from('orders').update({ status, stage }).eq(orderKey(id), id).select('id');
+  const { data, error } = await db.from('orders').update({ status, stage, ...extra }).eq(orderKey(id), id).select('id');
+  if (error && /rejection_reason/.test(error.message || '')) return { data, error: new Error('Falta activar los motivos de rechazo: ejecuta supabase/order-rejection.sql en Supabase.') };
   return { data, error: error || (data?.length ? null : notSaved()) };
 }
 

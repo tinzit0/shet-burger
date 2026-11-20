@@ -1,0 +1,64 @@
+/* Public coupons on the order page: each code is a printed ticket with a tear-off stub. */
+.public-coupons { --ticket-bg:var(--crema); --ticket-ink:var(--negro); --notch:14px;
+  position:relative; isolation:isolate; overflow:hidden; padding:clamp(56px,7vw,96px) max(20px,calc((100vw - 1120px)/2));
+  background:var(--negro); color:var(--blanco); }
+.public-coupons::before { content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:url('/assets/campaign/shet-pattern-1600.webp') center/cover; opacity:.06; mix-blend-mode:screen; }
+
+.public-coupons__head { display:grid; gap:14px; max-width:640px; margin-bottom:clamp(32px,4vw,48px); }
+.public-coupons__eyebrow { justify-self:start; padding:7px 12px 5px; background:var(--rosa); color:var(--negro); font:700 11px/1 var(--font-body); letter-spacing:.14em; transform:rotate(-2deg); }
+.public-coupons__head h2 { margin:0; color:inherit; font:400 clamp(40px,6vw,80px)/.92 var(--font-street); letter-spacing:-.005em; text-transform:uppercase; text-wrap:balance; }
+.public-coupons__head p { margin:0; color:var(--color-muted-light); font:500 16px/1.5 var(--font-body); }
+
+.public-coupons__list { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,500px),1fr)); gap:20px; margin:0; padding:0; list-style:none; }
+
+.coupon-ticket { filter:drop-shadow(0 12px 28px rgb(0 0 0 / 45%)); transition:transform 220ms cubic-bezier(.2,.8,.2,1); }
+.coupon-ticket__card { position:relative; display:grid; grid-template-columns:minmax(0,1fr) 168px; height:100%; min-height:200px; background:var(--ticket-bg); color:var(--ticket-ink); border-radius:10px;
+  /* Two half-circle notches where the stub tears off. */
+  -webkit-mask:radial-gradient(circle var(--notch) at calc(100% - 168px) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle var(--notch) at calc(100% - 168px) 100%,#0000 98%,#000) bottom/100% 51% no-repeat;
+  mask:radial-gradient(circle var(--notch) at calc(100% - 168px) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle var(--notch) at calc(100% - 168px) 100%,#0000 98%,#000) bottom/100% 51% no-repeat; }
+@media(hover:hover) and (pointer:fine) { .coupon-ticket:hover { transform:translateY(-3px); } }
+
+.coupon-ticket__body { display:grid; grid-template-columns:auto minmax(0,1fr); gap:clamp(16px,2vw,24px); align-items:start; padding:24px clamp(18px,2vw,26px); }
+.coupon-ticket__figure { display:grid; justify-items:center; align-content:center; min-width:104px; min-height:104px; padding:12px 10px 10px; background:var(--rosa); color:var(--negro); border-radius:6px; transform:rotate(-3deg); box-shadow:4px 4px 0 var(--negro); }
+.coupon-ticket__figure b { font:400 clamp(32px,3.4vw,44px)/.9 var(--font-street); letter-spacing:-.01em; white-space:nowrap; }
+.coupon-ticket__figure span { margin-top:6px; font:700 11px/1 var(--font-body); letter-spacing:.16em; }
+.coupon-ticket:nth-child(2n) .coupon-ticket__figure { background:var(--negro); color:var(--rosa); box-shadow:4px 4px 0 var(--magenta); transform:rotate(2deg); }
+
+.coupon-ticket__copy { display:grid; gap:10px; min-width:0; }
+.coupon-ticket__copy h3 { margin:0; font:400 clamp(22px,2vw,28px)/1 var(--font-street); text-transform:uppercase; overflow-wrap:anywhere; }
+.coupon-ticket__copy p { margin:0; font:500 15px/1.45 var(--font-body); overflow-wrap:anywhere; }
+.coupon-ticket__tags { display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 0; padding:0; list-style:none; }
+.coupon-ticket__tags li { padding:6px 10px 5px; border:1.5px solid var(--negro); border-radius:999px; font:700 11px/1 var(--font-body); letter-spacing:.06em; text-transform:uppercase; }
+.coupon-ticket__copy small { color:#5e5458; font:400 12px/1.45 var(--font-body); }
+
+.coupon-ticket__stub { position:relative; display:grid; align-content:center; justify-items:center; gap:10px; padding:20px 16px; text-align:center;
+  background:var(--rosa); color:var(--negro); border-left:2px dashed rgb(10 10 10 / 45%); }
+.coupon-ticket__stub > span:first-child { font:700 10px/1 var(--font-body); letter-spacing:.18em; opacity:.75; }
+.coupon-ticket__stub code { max-width:100%; font:400 clamp(24px,2.2vw,30px)/1 var(--font-street); letter-spacing:.04em; overflow-wrap:anywhere; user-select:all; }
+.coupon-ticket__stub button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 18px; border:0; border-radius:999px;
+  background:var(--negro); color:var(--blanco); font:700 12px/1 var(--font-body); letter-spacing:.1em; cursor:pointer;
+  transition:transform 160ms ease-out,background 200ms ease; }
+.coupon-ticket__stub button svg { width:16px; height:16px; }
+.coupon-ticket__stub button:active { transform:scale(.96); }
+.coupon-ticket__stub button.is-copied { background:#257043; }
+@media(hover:hover) and (pointer:fine) { .coupon-ticket__stub button:not(.is-copied):hover { background:var(--magenta); } }
+.coupon-ticket__stub button:focus-visible { outline:3px solid var(--blanco); outline-offset:3px; box-shadow:0 0 0 6px var(--negro); }
+.coupon-ticket:nth-child(2n) .coupon-ticket__stub { background:var(--magenta); color:var(--blanco); border-left-color:rgb(255 255 255 / 55%); }
+.coupon-ticket:nth-child(2n) .coupon-ticket__stub button:not(.is-copied) { background:var(--crema); color:var(--negro); }
+@media(hover:hover) and (pointer:fine) { .coupon-ticket:nth-child(2n) .coupon-ticket__stub button:not(.is-copied):hover { background:var(--negro); color:var(--blanco); } }
+
+/* Phone: the stub tears off the bottom instead of the side. */
+@media(max-width:560px) {
+  .coupon-ticket__card { grid-template-columns:1fr; grid-template-rows:auto auto;
+    -webkit-mask:radial-gradient(circle var(--notch) at 0 calc(100% - 132px),#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle var(--notch) at 100% calc(100% - 132px),#0000 98%,#000) right/51% 100% no-repeat;
+    mask:radial-gradient(circle var(--notch) at 0 calc(100% - 132px),#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle var(--notch) at 100% calc(100% - 132px),#0000 98%,#000) right/51% 100% no-repeat; }
+  .coupon-ticket__body { grid-template-columns:1fr; padding:22px 20px 20px; }
+  .coupon-ticket__figure { justify-self:start; }
+  .coupon-ticket__stub { height:132px; box-sizing:border-box; grid-template-columns:1fr auto; grid-template-rows:auto auto; justify-items:start; align-content:center; column-gap:12px; row-gap:6px; padding:18px 20px; text-align:left; border-left:0; border-top:2px dashed rgb(10 10 10 / 45%); }
+  .coupon-ticket:nth-child(2n) .coupon-ticket__stub { border-top-color:rgb(255 255 255 / 55%); }
+  .coupon-ticket__stub > span:first-child { grid-column:1; }
+  .coupon-ticket__stub code { grid-column:1; grid-row:2; }
+  .coupon-ticket__stub button { grid-column:2; grid-row:1 / 3; align-self:center; }
+}
+@media(prefers-reduced-motion:reduce) { .coupon-ticket,.coupon-ticket__stub button { transition:none; } .coupon-ticket:hover { transform:none; } }

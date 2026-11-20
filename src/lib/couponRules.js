@@ -43,7 +43,7 @@ export const couponLabel = coupon => {
   if (coupon.discount_type === 'free_delivery') return 'Delivery gratis';
   return coupon.discount_type === 'percent' ? `${coupon.value}% de descuento` : `$${Number(coupon.value).toLocaleString('es-CL')} de descuento`;
 };
-export const couponConditions = coupon => [coupon.scope_label || 'Todos los productos',
+export const couponConditions = coupon => [String(coupon.scope_label || 'Todos los productos').trim().replace(/([^.])$/, '$1.'),
   coupon.discount_type === 'buy_x_pay_y' ? 'Se bonifican las unidades de menor precio; se repite por cada grupo completo.' : '',
   coupon.discount_type === 'free_delivery' ? 'Solo pedidos a domicilio dentro de cobertura.' : 'No incluye despacho.',
   'No acumulable con otros códigos.',

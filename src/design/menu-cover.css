@@ -127,15 +127,9 @@
 .delivery-page .menu-reference-jump a { border-color:var(--color-line-light); border-radius:var(--radius-pill); background:transparent; color:var(--color-muted-light); letter-spacing:0; }
 .delivery-page .menu-reference-jump a:hover,.delivery-page .menu-reference-jump a:focus-visible { background:var(--color-pink); color:var(--color-ink); }
 .promotion-preview { display:grid; gap:8px; padding:16px; border:1px dashed #b29d82; border-radius:6px; background:#f7f1ed; }
-.public-coupons h3 { font-size:19px; }
-.public-coupons article p { font-size:14px; }
 @media(max-width:700px) {
  .menu-campaign__footer { grid-template-columns:1fr auto; gap:0 .75rem; padding:.65rem 1rem; font-size:.53rem; letter-spacing:.035em; }
  .menu-campaign__footer > span:last-child { grid-column:1 / -1; justify-self:start; color:#947c89; }
  .delivery-page .menu-reference-jump a { padding-inline:.85rem; font-size:.7rem; }
 }
 
-/* Best-seller rank: a giant outlined number behind the copy. */
-.menu-campaign__rank { position:absolute; z-index:1; right:clamp(20px,3vw,60px); bottom:-.12em; color:transparent; font:400 clamp(12rem,22vw,22rem)/.8 var(--font-street); -webkit-text-stroke:2px var(--accent); opacity:.45; pointer-events:none; }
-.menu-campaign__slide.is-active .menu-campaign__rank { animation:name-in 900ms cubic-bezier(.2,.8,.2,1) backwards; }
-@media(max-width:700px) { .menu-campaign__rank { top:calc(53% - 7rem); bottom:auto; right:16px; font-size:9rem; -webkit-text-stroke-width:1.5px; } }

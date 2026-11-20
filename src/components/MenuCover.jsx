@@ -59,7 +59,6 @@ export default function MenuCover({ storeOpen, stock = {}, products = [], onChoo
             </button>
             <span className="menu-campaign__sticker">{promo ? 'EL PLAN ES COMPARTIR' : 'INCLUYE PAPITAS'} <ArrowUpRight aria-hidden="true"/></span>
           </div>
-          <span className="menu-campaign__rank" aria-hidden="true">#{rank}</span>
           <div className="menu-campaign__name"><span>{rank === 1 ? 'LA MÁS PEDIDA' : `TOP ${rank} · LAS MÁS PEDIDAS`}</span><h2>{product.name}</h2><p>MUCHO SHET.<br/>CERO VUELTAS.</p></div>
           <div className="menu-campaign__details">
             <span className="menu-campaign__eyebrow">{promo ? 'JUNTOS SABE MEJOR' : 'HECHA AL MOMENTO · NONGUÉN'}</span>
